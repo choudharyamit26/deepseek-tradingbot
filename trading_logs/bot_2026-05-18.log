@@ -1,0 +1,5 @@
+2026-05-18 21:13:14  root              INFO      Logging to C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\bot_2026-05-18.log
+2026-05-18 21:13:14  risk_manager      INFO      Fetched balance from Dhan API: 3011.18
+2026-05-18 21:13:14  MAIN              INFO      Watchlist: 41 stocks from STOCK_CONFIGS
+2026-05-18 21:13:15  stock_trading_bot  INFO      Starting Intraday Stock Trading Bot
+2026-05-18 21:13:16  stock_trading_bot  INFO      Entry window: 9:30 AM - 3:00 PM IST | Max 2 signals/stock/day

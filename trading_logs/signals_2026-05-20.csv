@@ -1,0 +1,2 @@
+timestamp,symbol,signal_type,direction,entry_price,exit_price,quantity,stop_loss,target,confidence,reasoning,pnl,mode,market_regime,sector_regime,mtf_3m,mtf_15m,mtf_1h
+2026-05-20 13:34:41,MOTHERSON,ENTRY-SHORT,SELL,131.26,133.29,11,133.23,127.32,80,"Price below VWAP (-0.425%), RSI not oversold (33.88), volume spike (1.4x), ADX trending (27.36), and all timeframes bearish. Strong bearish momentum with last candle bearish and price declining.",-21.12,LIVE,BEARISH,NIFTY AUTO=NEUTRAL,BEARISH,NEUTRAL,NEUTRAL
