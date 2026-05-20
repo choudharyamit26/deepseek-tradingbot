@@ -1,6 +1,0 @@
-timestamp,symbol,signal_type,direction,entry_price,exit_price,quantity,stop_loss,target,confidence,reasoning,pnl,mode
-2026-05-18 20:46:38,INFY,ENTRY-LONG,BUY,1145.60,,17,1128.42,1179.97,70,"Price above SMA and EMA, MACD bullish, RSI not overbought, volume above average, near resistance breakout.",,DRY-RUN
-2026-05-18 20:46:49,BAJFINANCE,ENTRY-LONG,BUY,922.00,,21,908.17,949.66,70,"Price above VWAP and SMA/EMA, RSI bullish but not overbought, MACD positive, volume spike confirms momentum. Resistance at 925 may be tested.",,DRY-RUN
-2026-05-18 20:46:54,TATATECH,ENTRY-LONG,BUY,630.00,,31,620.55,648.90,70,"Price above VWAP and SMAs, RSI bullish but not overbought, MACD positive, volume spike above average, price near resistance but momentum strong.",,DRY-RUN
-2026-05-18 20:46:57,KAYNES,ENTRY-LONG,BUY,3102.00,,6,3055.47,3195.06,80,"RSI at 17 indicates oversold conditions, price near support and below VWAP, volume spike suggests buying interest. Expect mean reversion.",,DRY-RUN
-2026-05-18 20:47:00,YESBANK,ENTRY-LONG,BUY,21.82,,916,21.49,22.47,70,"Price above VWAP and SMA, EMA bullish crossover, volume spike, RSI neutral, MACD positive.",,DRY-RUN

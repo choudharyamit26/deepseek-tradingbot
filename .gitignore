@@ -1,0 +1,18 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+
+# Logs (generated daily, not source code)
+trading_logs/
+
+# IDE
+.vscode/
+.idea/
