@@ -3,6 +3,8 @@ goal:
   max_drawdown_pct: -8.0
   min_sharpe: 1.2
   reflection_every_n_trades: 5
+  min_trades_per_change: 30
+  min_eval_trades: 20
   target_return_pct: 5.0
 params:
   cooldown_seconds: 1800

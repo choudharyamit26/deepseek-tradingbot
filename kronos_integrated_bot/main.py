@@ -3,7 +3,6 @@ import os
 import sys
 import asyncio
 import logging
-import yaml
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -103,17 +102,9 @@ def format_signal_msg(symbol: str, tag: str, direction: str, quantity: int,
 
 
 # ── Self-improvement agent (reflection) ──────────────────────────────────────
-def load_strategy() -> dict:
-    path = cfg.STRATEGY_FILE
-    if path.exists():
-        with open(path) as f:
-            return yaml.safe_load(f)
-    return {"params": {}}
-
-
-def save_strategy(strategy: dict):
-    with open(cfg.STRATEGY_FILE, "w") as f:
-        yaml.dump(strategy, f, default_flow_style=False)
+# Strategy I/O and the reflection cycle live in reflect.py; run it between
+# sessions via: python -m kronos_integrated_bot.run_reflection
+from .reflect import load_strategy, save_strategy  # noqa: E402
 
 
 def apply_strategy_to_config(strategy: dict):
