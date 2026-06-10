@@ -1,4 +1,6 @@
 import logging
+import threading
+import time
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
@@ -150,11 +152,29 @@ STOCK_SECTOR_MAP = {
 class RegimeFilter:
     def __init__(self, dhan_api):
         self.dhan = dhan_api
+        # get_regime() is called once per stock per scan; without caching the
+        # same Nifty/sector daily history was refetched ~100x per cycle.
+        self._daily_cache: dict[str, tuple[float, pd.DataFrame]] = {}
+        self._live_price_cache: dict[str, tuple[float, float]] = {}
+        self._cache_lock = threading.Lock()
 
     REGIME_LOOKBACK_TRADING_DAYS = 15  # ~3 weeks calendar for intraday regime
     REGIME_SMA_WINDOW = 10  # 10-day SMA (~2 trading weeks)
+    DAILY_CACHE_TTL = 300   # daily index bars barely change intraday
+    LIVE_PRICE_TTL = 60     # index LTP for trend-vs-SMA comparison
 
     def _fetch_daily(self, security_id: str) -> pd.DataFrame:
+        now = time.time()
+        with self._cache_lock:
+            cached = self._daily_cache.get(security_id)
+            if cached and now - cached[0] < self.DAILY_CACHE_TTL:
+                return cached[1]
+        df = self._fetch_daily_uncached(security_id)
+        with self._cache_lock:
+            self._daily_cache[security_id] = (now, df)
+        return df
+
+    def _fetch_daily_uncached(self, security_id: str) -> pd.DataFrame:
         end = datetime.now(IST)
         start = end - timedelta(days=self.REGIME_LOOKBACK_TRADING_DAYS * 2)
         resp = self.dhan.dhan.historical_daily_data(
@@ -178,7 +198,23 @@ class RegimeFilter:
         return df
 
     def _fetch_live_index_prices(self, security_ids: list[str]) -> dict[str, float]:
-        """Fetch live index LTPs via IDX_I segment. Returns {security_id: ltp}."""
+        """Fetch live index LTPs via IDX_I segment, cached. Returns {security_id: ltp}.
+
+        Indices absent from the quote response are negatively cached (price 0)
+        so a permanently-missing index doesn't force a refetch on every call.
+        """
+        now = time.time()
+        with self._cache_lock:
+            entries = {sid: self._live_price_cache.get(sid) for sid in security_ids}
+        if all(e is not None and now - e[0] < self.LIVE_PRICE_TTL for e in entries.values()):
+            return {sid: e[1] for sid, e in entries.items() if e[1] > 0}
+        fresh = self._fetch_live_index_prices_uncached(security_ids)
+        with self._cache_lock:
+            for sid in security_ids:
+                self._live_price_cache[sid] = (now, fresh.get(sid, 0.0))
+        return fresh
+
+    def _fetch_live_index_prices_uncached(self, security_ids: list[str]) -> dict[str, float]:
         int_ids = []
         for sid in security_ids:
             try:

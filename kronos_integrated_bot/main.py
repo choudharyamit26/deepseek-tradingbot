@@ -196,8 +196,15 @@ async def main():
     kronos_integration.load()
 
     # Init AI
-    ai_analyzer = DeepSeekStockAnalyzer(api_key=cfg.DEEPSEEK_API_KEY,
-                                        alert_cb=send_telegram if cfg.TELEGRAM_ENABLED else None)
+    ai_analyzer = DeepSeekStockAnalyzer(
+        api_key=cfg.DEEPSEEK_API_KEY,
+        alert_cb=send_telegram if cfg.TELEGRAM_ENABLED else None,
+        # Prompt rulebook tracks the tuned strategy (applied above from YAML)
+        min_confidence=cfg.MIN_CONFIDENCE,
+        min_adx=cfg.MIN_ADX_TRENDING,
+        rsi_ob=cfg.RSI_OB_LIMIT,
+        rsi_os=cfg.RSI_OS_LIMIT,
+    )
 
     # Init Risk Manager
     risk_mgr = RiskManager(

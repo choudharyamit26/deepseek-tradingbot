@@ -406,7 +406,9 @@ class EnhancedIntradayBot(IntradayStockBot):
                 logger.info("%s -- daily ATR %.3f%% below stock floor %.3f%%, skipping", symbol, daily_atr, threshold)
                 return
 
-        regime_data = self.regime.get_regime(symbol)
+        # Off the event loop: get_regime makes blocking HTTP calls on cache miss
+        async with self._dhan_sem:
+            regime_data = await asyncio.to_thread(self.regime.get_regime, symbol)
 
         passed, reason = self._passes_prefilter(indicators_3m, regime_data)
         if not passed:

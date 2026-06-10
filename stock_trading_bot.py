@@ -339,7 +339,9 @@ class IntradayStockBot:
                 return
 
         # ── Fetch regime data early (needed for prefilter) ─────────────────────
-        regime_data = self.regime.get_regime(symbol)
+        # Off the event loop: get_regime makes blocking HTTP calls on cache miss
+        async with self._dhan_sem:
+            regime_data = await asyncio.to_thread(self.regime.get_regime, symbol)
 
         # ── IMPROVEMENT #1: Pre-filter before AI call ──────────────────────────
         passed, reason = self._passes_prefilter(indicators_3m, regime_data)
@@ -753,8 +755,9 @@ class IntradayStockBot:
                     # We're right at a candle boundary — wait a few seconds for data
                     await asyncio.sleep(5 - seconds_into_candle)
 
-                # Clear caches at start of scan loop
-                self.dhan.clear_historical_cache()
+                # Clear fast-moving caches at scan start; 15m/1h bars are kept
+                # and expire via their own (longer) TTLs.
+                self.dhan.clear_historical_cache(intervals=("3minute", "1minute"))
                 self.dhan.clear_live_quotes_cache()
 
                 # Pre-cache live quotes for all watchlist stocks at start of scan loop

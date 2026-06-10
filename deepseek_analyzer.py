@@ -1,5 +1,4 @@
 # deepseek_analyzer.py
-import hashlib
 import re
 import aiohttp
 import json
@@ -15,12 +14,20 @@ class DeepSeekStockAnalyzer:
     SL_TP_MIN_PCT = 0.2
     SL_TP_MAX_PCT = 5.0
 
-    def __init__(self, api_key, alert_cb=None):
+    def __init__(self, api_key, alert_cb=None, min_confidence=60, min_adx=18,
+                 rsi_ob=70, rsi_os=30):
         self.api_key = api_key
         self.base_url = "https://api.deepseek.com"
         self.model = "deepseek-v4-pro"
         self.alert_cb = alert_cb  # e.g. send_telegram; called on billing/quota errors
         self._billing_alerted = False
+        # Strategy thresholds injected into the prompt so the model reasons
+        # against the SAME rulebook the system enforces (these are tuned by
+        # the reflection agent via kronos_strategy.yaml).
+        self.min_confidence = min_confidence
+        self.min_adx = min_adx
+        self.rsi_ob = rsi_ob
+        self.rsi_os = rsi_os
 
     def prepare_market_context(self, symbol, market_data, technical_indicators,
                                recent_bars=None, previous_signal=None):
@@ -113,13 +120,13 @@ class DeepSeekStockAnalyzer:
 
         REASONING PROTOCOL — Follow each step BEFORE deciding:
         1. VIABILITY: Check mandatory rules for each direction.
-           BUY: price above VWAP, RSI < 70, ADX > 18.
-           SELL: price below VWAP, RSI > 30, ADX > 18.
+           BUY: price above VWAP, RSI < {self.rsi_ob}, ADX > {self.min_adx}.
+           SELL: price below VWAP, RSI > {self.rsi_os}, ADX > {self.min_adx}.
            If neither passes all its rules -> HOLD immediately.
         2. VOLUME: Evaluate volume_ratio with context.
-           Trending (price above VWAP+SMA20, ADX>22): vol >= 0.5 ok.
+           Trending (price above VWAP+SMA20, ADX>{self.min_adx + 4}): vol >= 0.5 ok.
            Breakout/Reversal: vol > 1.2 required.
-           vol < 0.5 always -> HOLD.
+           vol < 0.3 always -> HOLD (see penalty matrix below).
         3. CANDLES: Check last 5 candles — is price moving with or against your signal?
         4. MTF: Check multi-timeframe alignment. 15-min/1-hour disagree? Apply penalty.
         5. KRONOS: Does the Kronos forecast support or conflict? Apply penalty if conflict.
@@ -131,8 +138,8 @@ class DeepSeekStockAnalyzer:
         ═══════════════════════════════════════════════════════════
         Start at 95. Subtract each applicable penalty:
 
-        CRITICAL (any one -> HOLD, confidence < 60):
-        - ADX < 18                                    -> HOLD
+        CRITICAL (any one -> HOLD, confidence < {self.min_confidence}):
+        - ADX < {self.min_adx}                                    -> HOLD
         - Volume ratio < 0.3 in any market             -> HOLD
         - BUY when price below VWAP                    -> HOLD
         - SELL when price above VWAP                   -> HOLD
@@ -148,7 +155,7 @@ class DeepSeekStockAnalyzer:
         - MFI < 20 with stalling price (for SELL)      -> -12 points
 
         MINOR PENALTIES:
-        - ADX borderline (18-22)                       -> -5 points
+        - ADX borderline ({self.min_adx}-{self.min_adx + 4})                       -> -5 points
         - Volume ratio 0.8-1.0 (slightly below avg)   -> -3 points
         - Kronos range < 0.2% (low conviction)         -> -3 points
         - Sector regime opposes signal direction        -> -4 points
@@ -162,13 +169,15 @@ class DeepSeekStockAnalyzer:
         - Kronos strongly aligned (range > 0.5%)       -> +2 points
 
         Final confidence = 95 - (sum of penalties) + (sum of bonuses)
-        If final confidence < 60 -> signal = HOLD
+        If final confidence < {self.min_confidence} -> signal = HOLD.
+        The system discards any signal below {self.min_confidence}; do not
+        round up to sneak past the threshold.
 
-        PENALTY MATH EXAMPLES:
+        PENALTY MATH EXAMPLES (pass threshold = {self.min_confidence}):
         - Perfect setup: 95 + 5 bonuses = 100 -> strong PASS
-        - Good setup, slightly low volume: 95 - 8 = 87 -> PASS
-        - Weak volume + Kronos conflict: 95 - 8 - 8 = 79 -> borderline FAIL
-        - Very weak volume + MTF disagree: 95 - 12 - 7 = 76 -> FAIL  
+        - Good setup, slightly low volume: 95 - 8 = 87 -> {"PASS" if 87 >= self.min_confidence else "FAIL"}
+        - Weak volume + Kronos conflict: 95 - 8 - 8 = 79 -> {"PASS" if 79 >= self.min_confidence else "FAIL"}
+        - Very weak volume + MTF disagree: 95 - 12 - 7 = 76 -> {"PASS" if 76 >= self.min_confidence else "FAIL"}
         - Strong volume + all aligned: 95 + 2 + 3 = 100 -> strong PASS
 
         You MUST list each penalty/bonus applied in your penalty_breakdown field.
@@ -184,12 +193,6 @@ class DeepSeekStockAnalyzer:
                                                     previous_signal=previous_signal)
         if regime_context:
             user_prompt += f"\n\n        Context:\n        {regime_context}"
-
-        # Deterministic nonce: hash of key inputs pins model's internal state
-        # so identical requests always take the same token path at temp=0.
-        seed_raw = f"{symbol}|{market_data}|{indicators.get('rsi')}|{indicators.get('adx')}|{indicators.get('vwap_distance_pct')}|{recent_bars is not None}"
-        prompt_nonce = hashlib.md5(seed_raw.encode()).hexdigest()[:12]
-        user_prompt += f"\n\n        request_id={prompt_nonce}"
 
         # Inject recent P&L feedback — blunt caveman language to override AI's optimism bias
         if track_record:

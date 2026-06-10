@@ -122,7 +122,14 @@ class DhanStockTradingBot:
         self.dhan = dhanhq(DhanContext(self.client_id, self.access_token))
         self.security_ids = {**FNO_UNIVERSE, **ETF_LIQUID, **FILTERED_FNO_UNIVERSE, **VWAP_RECLAIM_STOCKS, **NIFTY50_UNIVERSE}
         self.historical_cache = {}  # key -> (timestamp, df)
-        self.historical_cache_ttl = 120  # seconds
+        self.historical_cache_ttl = 120  # seconds (default / 3-minute bars)
+        # Higher timeframes barely change between 3-min scans — no point
+        # refetching 15m/1h history every cycle for every stock.
+        self.historical_cache_ttl_by_interval = {
+            "3minute": 120,
+            "15minute": 600,
+            "60minute": 1800,
+        }
         self.live_quotes_cache = {}  # key -> (timestamp, qdata)
         self.live_quotes_cache_ttl = 10  # seconds
         # Optional candle persistence: when set to a directory, every fetched
@@ -158,8 +165,14 @@ class DhanStockTradingBot:
                 except Exception:
                     logger.exception("Alert callback failed")
 
-    def clear_historical_cache(self):
-        self.historical_cache.clear()
+    def clear_historical_cache(self, intervals=None):
+        """Clear cached candles. With intervals (e.g. ("3minute",)), only
+        those timeframes are dropped — higher TFs expire via their TTLs."""
+        if intervals is None:
+            self.historical_cache.clear()
+            return
+        for key in [k for k in self.historical_cache if k[1] in intervals]:
+            del self.historical_cache[key]
 
     def clear_live_quotes_cache(self):
         self.live_quotes_cache.clear()
@@ -268,9 +281,10 @@ class DhanStockTradingBot:
     def get_historical_data(self, security_id, interval="3minute", min_bars=5):
         cache_key = (str(security_id), interval, min_bars)
         now = time.time()
+        ttl = self.historical_cache_ttl_by_interval.get(interval, self.historical_cache_ttl)
         if cache_key in self.historical_cache:
             ts, df = self.historical_cache[cache_key]
-            if now - ts < self.historical_cache_ttl:
+            if now - ts < ttl:
                 return df
 
         df = self._get_historical_data_uncached(security_id, interval, min_bars)
