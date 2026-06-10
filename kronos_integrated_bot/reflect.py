@@ -11,9 +11,9 @@ cleanup) with guardrails the original lacked:
   3. Auto-revert — before proposing anything new, the previous hypothesis is
      evaluated against its recorded baseline; a clear degradation reverts the
      changed parameter to its old value.
-  4. Infra-failure filtering — trades that died on order/API errors (mode
-     contains FAILED, or "ORDER FAILED" in reasoning) are excluded from
-     win-rate / PnL metrics so strategy decisions aren't polluted.
+  4. Only genuinely closed trades (pnl + exit_price present) count toward
+     metrics. LIVE-FAILED rows are included: API order rejections (DH-905)
+     are executed manually by the trader, so their PnL is a real outcome.
   5. Full hypotheses history (with measured outcomes) is fed to the LLM so it
      stops re-proposing directions that already failed.
   6. Explicit DeepSeek error handling (402/429 alert + skip) and strict JSON
@@ -95,13 +95,15 @@ PARAM_BOUNDS: dict[str, tuple[float, float, float]] = {
     "max_consecutive_losses":      (1,     5,     0),
 }
 
-# Markers of trades that failed for infrastructure reasons, not strategy.
-_INFRA_FAILURE_MARKERS = ("ORDER FAILED", "Invalid IP", "DH-9")
-
-
 # ── Trade loading & metrics ──────────────────────────────────────────────────
 def load_closed_trades(days_back: int = 14, since: datetime | None = None) -> list[dict]:
-    """Load closed trades from daily signal CSVs, excluding infra failures."""
+    """Load closed trades from daily signal CSVs.
+
+    Rows are counted when they have both pnl and exit_price. LIVE-FAILED mode
+    is NOT excluded: when the Dhan API rejects an order (e.g. DH-905 Invalid
+    IP) the trader places it manually, so the recorded PnL is a real market
+    outcome of the strategy's signal.
+    """
     import csv
 
     trades = []
@@ -118,10 +120,6 @@ def load_closed_trades(days_back: int = 14, since: datetime | None = None) -> li
                     exit_str = (row.get("exit_price") or "").strip()
                     if not pnl_str or not exit_str:
                         continue  # open position / entry row
-                    mode = (row.get("mode") or "").upper()
-                    reasoning = row.get("reasoning") or ""
-                    if "FAILED" in mode or any(m in reasoning for m in _INFRA_FAILURE_MARKERS):
-                        continue  # guardrail 4: infra failure, not a strategy outcome
                     try:
                         ts = datetime.strptime(row["timestamp"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=IST)
                     except (ValueError, KeyError):
