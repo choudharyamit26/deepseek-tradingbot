@@ -197,3 +197,68 @@ FILTERED_FNO_UNIVERSE = {
     "SBIN": "3045",  # PF 1.03 · WR 53% · -2.20%  — lowest DD, marginal
     "ONGC": "2475",  # PF 0.99 · WR 48% · -6.37%  — on the edge, review
 }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ── NIFTY 50 UNIVERSE (resolved from security_id_list.csv + user hints) ──────
+# ═══════════════════════════════════════════════════════════════════════════════
+
+NIFTY50_UNIVERSE = {
+    "ADANIENT": "25",
+    "ADANIPORTS": "15083",
+    "APOLLOHOSP": "157",
+    "ASIANPAINT": "236",
+    "AXISBANK": "5900",
+    "BAJAJ-AUTO": "16669",
+    "BAJAJFINSV": "16675",
+    "BAJFINANCE": "317",
+    "BEL": "383",
+    "BHARTIARTL": "10604",
+    "BPCL": "526",
+    "BRITANNIA": "547",
+    "CIPLA": "694",
+    "COALINDIA": "20374",
+    "DIVISLAB": "10940",
+    "DRREDDY": "881",
+    "EICHERMOT": "910",
+    "GRASIM": "1232",
+    "HCLTECH": "7229",
+    "HDFCBANK": "1333",
+    "HDFCLIFE": "467",
+    "HEROMOTOCO": "1348",
+    "HINDALCO": "1363",
+    "HINDUNILVR": "1394",
+    "ICICIBANK": "4963",
+    "INDUSINDBK": "5258",
+    "INFY": "1594",
+    "ITC": "1660",
+    "JSWSTEEL": "11723",
+    "KOTAKBANK": "1922",
+    "LT": "11483",
+    "M&M": "2031",
+    "MARUTI": "10999",
+    "NESTLEIND": "17963",
+    "NTPC": "11630",
+    "ONGC": "2475",
+    "POWERGRID": "14977",
+    "RELIANCE": "2885",
+    "SBILIFE": "21808",
+    "SBIN": "3045",
+    "SUNPHARMA": "3351",
+    "TATACONSUM": "3432",
+    "TATASTEEL": "3499",
+    "TCS": "11536",
+    "TECHM": "13538",
+    "TITAN": "3506",
+    "ULTRACEMCO": "11532",
+    "UPL": "11287",
+    "WIPRO": "3787",
+    "ZOMATO": "5097",
+    "ETERNAL": "5097",
+    "TATAMOTORS": "759782",
+    "TMCV": "759782",
+    "TMPV": "3456",
+    "LTIM": "17818",
+    "LTM": "17818"
+}
+

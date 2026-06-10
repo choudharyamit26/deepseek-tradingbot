@@ -47,16 +47,20 @@ class RiskManager:
         return True
 
     def calculate_position_size(self, capital, stop_loss_percent, entry_price):
+        if stop_loss_percent <= 0 or entry_price <= 0:
+            return 0
         risk_amount = capital * (self.risk_per_trade_percent / 100)
         risk_per_share = entry_price * (stop_loss_percent / 100)
-        quantity = int(risk_amount / risk_per_share)
-        max_afford = int(capital / entry_price)
-        half_cap = int(capital * 0.5 / entry_price)
-        max_quantity = min(max_afford, max(half_cap, 1))
-        return min(max(quantity, 0), max_quantity)
+        quantity = int(risk_amount / risk_per_share) if risk_per_share > 0 else 0
+        max_afford = int(capital / entry_price) if entry_price > 0 else 0
+        return min(max(quantity, 0), max_afford)
 
     def record_trade(self):
         self.daily_trade_count += 1
+
+    def record_pnl(self, pnl):
+        self.current_capital += pnl
+        self.daily_pnl += pnl
 
     def update_capital(self, new_capital):
         self.current_capital = new_capital

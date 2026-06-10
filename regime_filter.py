@@ -51,35 +51,99 @@ SECTOR_NAMES: dict[str, str] = {
 }
 
 STOCK_SECTOR_MAP = {
+    # ── IT / Tech ────────────────────────────────────────────────────────────
     "INFY": NIFTY_IT, "TCS": NIFTY_IT, "NAUKRI": NIFTY_IT,
-    "HDFCBANK": BANKNIFTY, "SBIN": BANKNIFTY, "BANKINDIA": NIFTY_PSU_BANK,
-    "PNB": NIFTY_PSU_BANK, "YESBANK": BANKNIFTY,
-    "BAJFINANCE": NIFTY_FINSRV, "KFINTECH": NIFTY_FINSRV,
-    "SAMMAANCAP": NIFTY_FINSRV, "POLICYBZR": NIFTY_FINSRV,
-    "MCX": NIFTY_FINSRV, "ABCAPITAL": NIFTY_FINSRV,
-    "MANAPPURAM": NIFTY_FINSRV, "HDFCAMC": NIFTY_FINSRV,
-    "HDFCLIFE": NIFTY_FINSRV,
+    "HCLTECH": NIFTY_IT, "WIPRO": NIFTY_IT, "TECHM": NIFTY_IT,
+    "LTIM": NIFTY_IT, "LTM": NIFTY_IT, "TATATECH": NIFTY_IT,
+    "DELHIVERY": NIFTY_IT, "COFORGE": NIFTY_IT, "MPHASIS": NIFTY_IT,
+    "PERSISTENT": NIFTY_IT, "TATAELXSI": NIFTY_IT,
+
+    # ── Banks (Bank Nifty) ───────────────────────────────────────────────────
+    "HDFCBANK": BANKNIFTY, "SBIN": BANKNIFTY, "ICICIBANK": BANKNIFTY,
+    "KOTAKBANK": BANKNIFTY, "AXISBANK": BANKNIFTY, "INDUSINDBK": BANKNIFTY,
+    "YESBANK": BANKNIFTY, "AUBANK": BANKNIFTY, "BANDHANBNK": BANKNIFTY,
+    "FEDERALBNK": BANKNIFTY, "IDFCFIRSTB": BANKNIFTY,
+
+    # ── PSU Banks ────────────────────────────────────────────────────────────
+    "BANKINDIA": NIFTY_PSU_BANK, "PNB": NIFTY_PSU_BANK,
+    "BANKBARODA": NIFTY_PSU_BANK, "CANBK": NIFTY_PSU_BANK,
+
+    # ── Financial Services ───────────────────────────────────────────────────
+    "BAJFINANCE": NIFTY_FINSRV, "BAJAJFINSV": NIFTY_FINSRV,
+    "KFINTECH": NIFTY_FINSRV, "SAMMAANCAP": NIFTY_FINSRV,
+    "POLICYBZR": NIFTY_FINSRV, "MCX": NIFTY_FINSRV,
+    "ABCAPITAL": NIFTY_FINSRV, "MANAPPURAM": NIFTY_FINSRV,
+    "HDFCAMC": NIFTY_FINSRV, "HDFCLIFE": NIFTY_FINSRV,
+    "HUDCO": NIFTY_FINSRV, "SBILIFE": NIFTY_FINSRV,
+    "CHOLAFIN": NIFTY_FINSRV, "SHRIRAMFIN": NIFTY_FINSRV,
+    "ICICIGI": NIFTY_FINSRV, "ICICIPRULI": NIFTY_FINSRV,
+    "IEX": NIFTY_FINSRV,
+
+    # ── Auto ─────────────────────────────────────────────────────────────────
     "M&M": NIFTY_AUTO, "MOTHERSON": NIFTY_AUTO, "BOSCHLTD": NIFTY_AUTO,
+    "MARUTI": NIFTY_AUTO, "TATAMOTORS": NIFTY_AUTO, "TMCV": NIFTY_AUTO,
+    "TMPV": NIFTY_AUTO, "BAJAJ-AUTO": NIFTY_AUTO, "EICHERMOT": NIFTY_AUTO,
+    "HEROMOTOCO": NIFTY_AUTO, "BHARATFORG": NIFTY_AUTO,
+
+    # ── Pharma / Healthcare ──────────────────────────────────────────────────
     "AUROPHARMA": NIFTY_PHARMA, "PPLPHARMA": NIFTY_PHARMA,
+    "SUNPHARMA": NIFTY_PHARMA, "DRREDDY": NIFTY_PHARMA,
+    "CIPLA": NIFTY_PHARMA, "DIVISLAB": NIFTY_PHARMA,
+    "LUPIN": NIFTY_PHARMA, "BIOCON": NIFTY_PHARMA,
+    "ZYDUSLIFE": NIFTY_PHARMA, "MANKIND": NIFTY_PHARMA,
+    "APOLLOHOSP": NIFTY_HEALTHCARE,
+
+    # ── FMCG ─────────────────────────────────────────────────────────────────
     "COLPAL": NIFTY_FMCG, "NESTLEIND": NIFTY_FMCG, "DABUR": NIFTY_FMCG,
+    "VMM": NIFTY_FMCG, "HINDUNILVR": NIFTY_FMCG, "ITC": NIFTY_FMCG,
+    "BRITANNIA": NIFTY_FMCG, "MARICO": NIFTY_FMCG,
+    "GODREJCP": NIFTY_FMCG, "TATACONSUM": NIFTY_FMCG,
+    "DMART": NIFTY_FMCG, "JUBLFOOD": NIFTY_FMCG,
+
+    # ── Metal ────────────────────────────────────────────────────────────────
     "HINDZINC": NIFTY_METAL, "SAIL": NIFTY_METAL,
-    "BPCL": NIFTY_OIL_GAS,
+    "TATASTEEL": NIFTY_METAL, "JSWSTEEL": NIFTY_METAL,
+    "HINDALCO": NIFTY_METAL, "VEDL": NIFTY_METAL,
+
+    # ── Oil & Gas ────────────────────────────────────────────────────────────
+    "BPCL": NIFTY_OIL_GAS, "RELIANCE": NIFTY_OIL_GAS,
+    "ONGC": NIFTY_OIL_GAS, "IOC": NIFTY_OIL_GAS,
+    "GAIL": NIFTY_OIL_GAS,
+
+    # ── Energy / Power ───────────────────────────────────────────────────────
     "BHEL": NIFTY_ENERGY, "TORNTPOWER": NIFTY_ENERGY,
-    "NBCC": NIFTY_REALTY,
-    "DIXON": NIFTY_CONSR_DURBL,
-    "RELIANCE": NIFTY_OIL_GAS,
-    "TATATECH": NIFTY_IT,
-    "KAYNES": MIDCPNIFTY,
-    "UPL": NIFTY_OIL_GAS,
-    "WAAREEENER": NIFTY_ENERGY,
-    "POLYCAB": NIFTY_ENERGY,
-    "VMM": NIFTY_FMCG,
-    "DELHIVERY": NIFTY_IT,
-    "AMBUJACEM": NIFTY_INFRA,
-    "HUDCO": NIFTY_FINSRV,
-    "RVNL": NIFTY_INFRA,
-    "PGEL": NIFTY_ENERGY,
-    "NHPC": NIFTY_ENERGY,
+    "WAAREEENER": NIFTY_ENERGY, "POLYCAB": NIFTY_ENERGY,
+    "PGEL": NIFTY_ENERGY, "NHPC": NIFTY_ENERGY,
+    "NTPC": NIFTY_ENERGY, "POWERGRID": NIFTY_ENERGY,
+    "COALINDIA": NIFTY_ENERGY, "TATAPOWER": NIFTY_ENERGY,
+    "ADANIGREEN": NIFTY_ENERGY, "ADANIPOWER": NIFTY_ENERGY,
+
+    # ── Infra / Cement / Realty ──────────────────────────────────────────────
+    "AMBUJACEM": NIFTY_INFRA, "RVNL": NIFTY_INFRA,
+    "NBCC": NIFTY_REALTY, "LT": NIFTY_INFRA,
+    "ULTRACEMCO": NIFTY_INFRA, "GRASIM": NIFTY_INFRA,
+    "PIDILITIND": NIFTY_INFRA, "SIEMENS": NIFTY_INFRA,
+    "CUMMINSIND": NIFTY_INFRA,
+
+    # ── Consumer Durables ────────────────────────────────────────────────────
+    "DIXON": NIFTY_CONSR_DURBL, "TITAN": NIFTY_CONSR_DURBL,
+    "HAVELLS": NIFTY_CONSR_DURBL, "ASIANPAINT": NIFTY_CONSR_DURBL,
+    "ASTRAL": NIFTY_CONSR_DURBL,
+
+    # ── Telecom / Conglomerate ───────────────────────────────────────────────
+    "BHARTIARTL": NIFTY_IT,  # Nifty IT constituent
+    "ADANIENT": NIFTY_INFRA, "ADANIPORTS": NIFTY_INFRA,
+
+    # ── Miscellaneous / Midcap ───────────────────────────────────────────────
+    "KAYNES": MIDCPNIFTY, "UPL": NIFTY_OIL_GAS,
+    "INDIGO": MIDCPNIFTY, "HAL": MIDCPNIFTY,
+    "BEL": MIDCPNIFTY, "TRENT": NIFTY_FMCG,
+    "ZOMATO": MIDCPNIFTY, "ETERNAL": MIDCPNIFTY,
+
+    # ── Liquid ETFs (map to their underlying index) ──────────────────────────
+    "NIFTYBEES": NIFTY_50, "BANKBEES": BANKNIFTY,
+    "ITBEES": NIFTY_IT, "GOLDBEES": NIFTY_50,
+    "SILVERBEES": NIFTY_50, "JUNIORBEES": NIFTY_50,
 }
 
 
@@ -113,13 +177,39 @@ class RegimeFilter:
             df.set_index("timestamp", inplace=True)
         return df
 
-    def _calc_regime(self, df: pd.DataFrame) -> dict:
+    def _fetch_live_index_prices(self, security_ids: list[str]) -> dict[str, float]:
+        """Fetch live index LTPs via IDX_I segment. Returns {security_id: ltp}."""
+        int_ids = []
+        for sid in security_ids:
+            try:
+                int_ids.append(int(sid))
+            except (ValueError, TypeError):
+                continue
+        if not int_ids:
+            return {}
+        try:
+            resp = self.dhan.dhan.quote_data(securities={"IDX_I": int_ids})
+            if isinstance(resp, dict) and resp.get("status") == "success":
+                idx_data = resp.get("data", {}).get("data", {}).get("IDX_I", {})
+                result = {}
+                for sid in security_ids:
+                    if sid in idx_data:
+                        ltp = idx_data[sid].get("last_price", 0)
+                        if ltp > 0:
+                            result[sid] = ltp
+                return result
+        except Exception as e:
+            logger.warning("Failed to fetch live index prices: %s", e)
+        return {}
+
+    def _calc_regime(self, df: pd.DataFrame, live_price: float = 0) -> dict:
         if df.empty or len(df) < 5:
             return {"trend": "neutral", "volatility": "normal", "strength": 0,
                     "current": 0, "sma": 0, "sma_window": self.REGIME_SMA_WINDOW,
                     "volatility_pct": 0}
         close = df["close"]
-        current = close.iloc[-1]
+        # Use live price if available, otherwise fall back to last daily close
+        current = live_price if live_price > 0 else close.iloc[-1]
         sma = close.rolling(window=self.REGIME_SMA_WINDOW, min_periods=5).mean().iloc[-1]
         atr14 = (df["high"] - df["low"]).rolling(window=14, min_periods=7).mean().iloc[-1]
         atr_pct = (atr14 / current * 100) if current > 0 else 0
@@ -131,15 +221,25 @@ class RegimeFilter:
                 "current": round(current, 2), "sma": round(sma, 2), "sma_window": self.REGIME_SMA_WINDOW}
 
     def get_regime(self, symbol: str) -> dict:
-        nifty_df = self._fetch_daily(NIFTY_50)
-        nifty = self._calc_regime(nifty_df)
+        # Determine which indices we need
         sector_id = STOCK_SECTOR_MAP.get(symbol)
+        ids_to_fetch = [NIFTY_50]
+        if sector_id:
+            ids_to_fetch.append(sector_id)
+
+        # Fetch live prices for all needed indices in one API call
+        live_prices = self._fetch_live_index_prices(ids_to_fetch)
+
+        nifty_df = self._fetch_daily(NIFTY_50)
+        nifty = self._calc_regime(nifty_df, live_price=live_prices.get(NIFTY_50, 0))
+
         sector = {}
         sector_name = ""
         if sector_id:
             sector_df = self._fetch_daily(sector_id)
-            sector = self._calc_regime(sector_df)
+            sector = self._calc_regime(sector_df, live_price=live_prices.get(sector_id, 0))
             sector_name = SECTOR_NAMES.get(sector_id, f"IDX-{sector_id}")
+
         return {
             "nifty": nifty,
             "sector": sector or None,
@@ -157,3 +257,4 @@ class RegimeFilter:
             lines.append(f"{reg['sector_name']}: trend={s['trend']}, volatility={s['volatility']}, "
                          f"strength={s['strength']}%, current={s['current']}, SMA{s['sma_window']}={s['sma']}")
         return "\n".join(lines)
+

@@ -1,5 +1,6 @@
 import os
 import time
+import random
 from datetime import datetime, timedelta
 import pandas as pd
 from dotenv import load_dotenv
@@ -8,14 +9,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+load_dotenv(override=True)
 
 try:
-    from constant import FNO_UNIVERSE, ETF_LIQUID, FILTERED_FNO_UNIVERSE
+    from constant import FNO_UNIVERSE, ETF_LIQUID, FILTERED_FNO_UNIVERSE, NIFTY50_UNIVERSE
 except ImportError:
     FNO_UNIVERSE = {}
     ETF_LIQUID = {}
     FILTERED_FNO_UNIVERSE = {}
+    NIFTY50_UNIVERSE = {}
 
 VWAP_RECLAIM_STOCKS: dict[str, str] = {
     # ── Existing 41 stocks ──────────────────────────────────────────────────
@@ -46,6 +48,21 @@ VWAP_RECLAIM_STOCKS: dict[str, str] = {
     # ── Liquid ETFs ─────────────────────────────────────────────────────────
     "NIFTYBEES": "10576", "BANKBEES": "11439", "ITBEES": "19084",
     "GOLDBEES": "14428", "SILVERBEES": "8080", "JUNIORBEES": "10939",
+    # ── Expanded universe (2026-06-01) ─────────────────────────────────────────
+    "ADANIGREEN": "3563", "ADANIPOWER": "17388",
+    "ASTRAL": "14418", "AUBANK": "21238", "BANDHANBNK": "2263",
+    "BANKBARODA": "4668", "BHARATFORG": "422", "BIOCON": "11373",
+    "CANBK": "10794", "CHOLAFIN": "685", "COFORGE": "11543",
+    "CUMMINSIND": "1901", "DMART": "19913", "FEDERALBNK": "1023",
+    "GAIL": "4717", "GODREJCP": "10099", "HAL": "2303",
+    "HAVELLS": "9819", "ICICIGI": "21770", "ICICIPRULI": "18652",
+    "IDFCFIRSTB": "11184", "IEX": "220", "INDIGO": "11195",
+    "IOC": "1624", "JUBLFOOD": "18096", "LUPIN": "10440",
+    "MARICO": "4067", "MPHASIS": "4503", "PERSISTENT": "18365",
+    "PIDILITIND": "2664", "SHRIRAMFIN": "4306", "SIEMENS": "3150",
+    "TATAELXSI": "3411", "TATAPOWER": "3426", "TRENT": "1964",
+    "ZYDUSLIFE": "7929",
+    "MANKIND": "543904",
 }
 
 TICK_SIZE_MAP: dict[str, float] = {
@@ -74,6 +91,13 @@ TICK_SIZE_MAP: dict[str, float] = {
     "NTPC": 0.05, "ONGC": 0.05, "COALINDIA": 0.05,
     "JSWSTEEL": 0.05, "HINDALCO": 0.05, "VEDL": 0.05,
     "BAJAJFINSV": 0.05,
+    # ── Nifty 50 Additional Constituents ────────────────────────────────────
+    "ADANIENT": 0.05, "APOLLOHOSP": 0.05, "BAJAJ-AUTO": 0.05, "BEL": 0.05,
+    "BHARTIARTL": 0.05, "BRITANNIA": 0.05, "CIPLA": 0.05, "DIVISLAB": 0.05,
+    "GRASIM": 0.05, "HEROMOTOCO": 0.05, "HINDUNILVR": 0.05, "INDUSINDBK": 0.05,
+    "ITC": 0.05, "LT": 0.05, "SBILIFE": 0.05, "TATACONSUM": 0.05,
+    "ULTRACEMCO": 0.05, "ZOMATO": 0.05, "ETERNAL": 0.05, "TATAMOTORS": 0.05,
+    "TMCV": 0.05, "TMPV": 0.05, "LTM": 0.05,
     # ── Liquid ETFs ─────────────────────────────────────────────────────────
     "NIFTYBEES": 0.05, "BANKBEES": 0.05, "ITBEES": 0.05,
     "GOLDBEES": 0.05, "SILVERBEES": 0.05, "JUNIORBEES": 0.05,
@@ -96,13 +120,24 @@ class DhanStockTradingBot:
         self.client_id = os.getenv("DHAN_CLIENT_ID")
         self.access_token = os.getenv("DHAN_ACCESS_TOKEN")
         self.dhan = dhanhq(DhanContext(self.client_id, self.access_token))
-        self.security_ids = {**FNO_UNIVERSE, **ETF_LIQUID, **FILTERED_FNO_UNIVERSE, **VWAP_RECLAIM_STOCKS}
+        self.security_ids = {**FNO_UNIVERSE, **ETF_LIQUID, **FILTERED_FNO_UNIVERSE, **VWAP_RECLAIM_STOCKS, **NIFTY50_UNIVERSE}
+        self.historical_cache = {}  # key -> (timestamp, df)
+        self.historical_cache_ttl = 120  # seconds
+        self.live_quotes_cache = {}  # key -> (timestamp, qdata)
+        self.live_quotes_cache_ttl = 10  # seconds
+
+    def clear_historical_cache(self):
+        self.historical_cache.clear()
+
+    def clear_live_quotes_cache(self):
+        self.live_quotes_cache.clear()
 
     def _fetch_intraday(self, security_id, date_str, interval_int):
         return self._fetch_intraday_range(security_id, date_str, date_str, interval_int)
 
     def _fetch_intraday_range(self, security_id, from_date, to_date, interval_int, retries=2):
         for attempt in range(retries + 1):
+            time.sleep(0.3)
             resp = self.dhan.intraday_minute_data(
                 security_id=security_id,
                 exchange_segment=self.dhan.NSE,
@@ -113,10 +148,61 @@ class DhanStockTradingBot:
             )
             if isinstance(resp, dict) and resp.get("status") == "success":
                 break
+
+            # Classify error type from remarks or top-level response
+            is_rate_limit = False
+            is_auth_error = False
+            remarks = ""
+            if isinstance(resp, dict):
+                remarks = resp.get("remarks", "")
+                if isinstance(remarks, dict):
+                    error_type = remarks.get("error_type", "")
+                    error_code = remarks.get("error_code", "")
+                    if error_type == "Rate_Limit" or error_code == "DH-904":
+                        is_rate_limit = True
+                    if error_type == "Invalid_Authentication" or error_code == "DH-901":
+                        is_auth_error = True
+                elif "Rate_Limit" in str(remarks) or "DH-904" in str(remarks):
+                    is_rate_limit = True
+                elif "Invalid_Authentication" in str(remarks) or "DH-901" in str(remarks):
+                    is_auth_error = True
+
+                if resp.get("error_type") == "Rate_Limit" or resp.get("error_code") == "DH-904":
+                    is_rate_limit = True
+                if resp.get("error_type") == "Invalid_Authentication" or resp.get("error_code") == "DH-901":
+                    is_auth_error = True
+
+            if attempt == retries:
+                logger.warning("API error for %s (int=%d, final attempt, rate_limit=%s, auth_error=%s): %s",
+                               security_id, interval_int, is_rate_limit, is_auth_error,
+                               resp.get("remarks", resp) if isinstance(resp, dict) else resp)
+            else:
+                logger.debug("API error for %s (int=%d, attempt=%d, rate_limit=%s, auth_error=%s): %s",
+                               security_id, interval_int, attempt, is_rate_limit, is_auth_error,
+                               resp.get("remarks", resp) if isinstance(resp, dict) else resp)
+
+            # Auth errors: allow one retry (transient server hiccup) then abort
+            if is_auth_error:
+                if attempt == 0:
+                    logger.debug("Auth error for %s — retrying once after 3s (may be transient)...", security_id)
+                    time.sleep(3.0)
+                    continue
+                else:
+                    logger.error("Auth error persists for %s — check DHAN_CLIENT_ID / DHAN_ACCESS_TOKEN. Skipping.", security_id)
+                    return None
+
             if attempt < retries:
-                time.sleep(1)
+                if is_rate_limit:
+                    logger.debug("Rate limit hit. Backing off for %ds...", 3 * (attempt + 1))
+                    time.sleep(3.0 * (attempt + 1))
+                else:
+                    time.sleep(1.5)
         else:
             return None
+        
+        # Hard throttle: force a 0.2s delay on successful API calls to prevent concurrency bursts
+        time.sleep(0.2)
+        
         data = resp.get("data", {})
         if not data or "open" not in data or not data["open"]:
             return None
@@ -140,32 +226,55 @@ class DhanStockTradingBot:
         return (t - timedelta(days=offset)).strftime("%Y-%m-%d")
 
     def get_historical_data(self, security_id, interval="3minute", min_bars=5):
+        cache_key = (str(security_id), interval, min_bars)
+        now = time.time()
+        if cache_key in self.historical_cache:
+            ts, df = self.historical_cache[cache_key]
+            if now - ts < self.historical_cache_ttl:
+                return df
+
+        df = self._get_historical_data_uncached(security_id, interval, min_bars)
+        self.historical_cache[cache_key] = (now, df)
+        return df
+
+    def _get_historical_data_uncached(self, security_id, interval="3minute", min_bars=5):
+        time.sleep(random.uniform(0.1, 0.3))
         interval_int = _INTERVAL_MAP.get(interval, 3)
         resample_rule = _RESAMPLE_MAP.get(interval_int, "3min")
         today_str = time.strftime("%Y-%m-%d")
 
         today_df = self._fetch_intraday(security_id, today_str, interval_int)
+
+        # If today alone satisfies min_bars, return immediately
         if today_df is not None and len(today_df) >= min_bars:
             return today_df
 
         dfs = [today_df] if today_df is not None and len(today_df) > 0 else []
 
-        today_1m = self._fetch_intraday(security_id, today_str, 1)
-        if today_1m is not None and len(today_1m) > 0:
-            resampled = today_1m.resample(resample_rule).agg({
-                "open": "first", "high": "max", "low": "min",
-                "close": "last", "volume": "sum",
-            }).dropna()
-            dfs.append(resampled)
+        # Try resampling from 1-min data if native interval didn't give enough
+        if interval_int != 1:
+            today_1m = self._fetch_intraday(security_id, today_str, 1)
+            if today_1m is not None and len(today_1m) > 0:
+                resampled = today_1m.resample(resample_rule).agg({
+                    "open": "first", "high": "max", "low": "min",
+                    "close": "last", "volume": "sum",
+                }).dropna()
+                dfs.append(resampled)
 
+        # Always fetch previous trading day when today's data is below min_bars
         prev = self._prev_trading_day()
-        prev_1m = self._fetch_intraday(security_id, prev, 1)
-        if prev_1m is not None and len(prev_1m) > 0:
-            resampled = prev_1m.resample(resample_rule).agg({
-                "open": "first", "high": "max", "low": "min",
-                "close": "last", "volume": "sum",
-            }).dropna()
-            dfs.append(resampled)
+        prev_df = self._fetch_intraday(security_id, prev, interval_int)
+        if prev_df is not None and len(prev_df) > 0:
+            dfs.append(prev_df)
+        elif interval_int != 1:
+            # Fallback: fetch prev day 1-min and resample
+            prev_1m = self._fetch_intraday(security_id, prev, 1)
+            if prev_1m is not None and len(prev_1m) > 0:
+                resampled = prev_1m.resample(resample_rule).agg({
+                    "open": "first", "high": "max", "low": "min",
+                    "close": "last", "volume": "sum",
+                }).dropna()
+                dfs.append(resampled)
 
         if not dfs:
             return pd.DataFrame()
@@ -187,16 +296,94 @@ class DhanStockTradingBot:
             price=0,
         )
 
+    def reduce_position(self, security_id, transaction_type, quantity, product_type="INTRA"):
+        """Place a market order to reduce an existing position by `quantity` shares."""
+        return self.place_equity_order(security_id, transaction_type, quantity, 
+                                       order_type="MARKET", product_type=product_type)
+
+    def fetch_live_data_multi(self, security_ids: list):
+        """Fetch live quotes for multiple security IDs in chunks.
+        security_ids can be strings or integers.
+        Returns dict: str(security_id) -> {last_price, high_price, low_price, volume}
+        """
+        int_ids = []
+        for sid in security_ids:
+            try:
+                int_ids.append(int(sid))
+            except (ValueError, TypeError):
+                continue
+
+        if not int_ids:
+            return {}
+
+        results = {}
+        chunk_size = 50
+        for i in range(0, len(int_ids), chunk_size):
+            chunk = int_ids[i:i + chunk_size]
+            if i > 0:
+                time.sleep(0.3)
+            try:
+                resp = self.dhan.quote_data(securities={self.dhan.NSE: chunk})
+                if isinstance(resp, dict) and resp.get("status") == "success":
+                    data_dict = resp.get("data", {}).get("data", {})
+                    for sid_int in chunk:
+                        sid_str = str(sid_int)
+                        found_data = {}
+                        for segment, seg_data in data_dict.items():
+                            if sid_str in seg_data:
+                                found_data = seg_data[sid_str]
+                                break
+                        if found_data:
+                            ohlc = found_data.get("ohlc", {})
+                            results[sid_str] = {
+                                "last_price": found_data.get("last_price") or 0.0,
+                                "high_price": ohlc.get("high") or 0.0,
+                                "low_price": ohlc.get("low") or 0.0,
+                                "volume": found_data.get("volume") or 0,
+                            }
+            except Exception as e:
+                logger.error("Error in fetch_live_data_multi for chunk %s: %s", chunk, e)
+
+        return results
+
+    def cache_live_quotes(self, security_ids: list):
+        """Fetch and cache live quotes for the given security IDs."""
+        quotes = self.fetch_live_data_multi(security_ids)
+        now = time.time()
+        for sid, qdata in quotes.items():
+            self.live_quotes_cache[str(sid)] = (now, qdata)
+
     def fetch_live_data(self, security_id):
-        resp = self.dhan.quote_data(securities={self.dhan.NSE: [security_id]})
-        if isinstance(resp, dict):
-            data = resp.get(str(security_id), {})
-            return {
-                "last_price": data.get("LTP"),
-                "high_price": data.get("high"),
-                "low_price": data.get("low"),
-                "volume": data.get("volume"),
-            }
+        sid_str = str(security_id)
+        now = time.time()
+        if sid_str in self.live_quotes_cache:
+            ts, qdata = self.live_quotes_cache[sid_str]
+            if now - ts < self.live_quotes_cache_ttl:
+                return qdata
+
+        # Fallback to single quote API call
+        try:
+            int_id = int(security_id)
+            resp = self.dhan.quote_data(securities={self.dhan.NSE: [int_id]})
+            if isinstance(resp, dict) and resp.get("status") == "success":
+                data_dict = resp.get("data", {}).get("data", {})
+                found_data = {}
+                for segment, seg_data in data_dict.items():
+                    if sid_str in seg_data:
+                        found_data = seg_data[sid_str]
+                        break
+                if found_data:
+                    ohlc = found_data.get("ohlc", {})
+                    qdata = {
+                        "last_price": found_data.get("last_price") or 0.0,
+                        "high_price": ohlc.get("high") or 0.0,
+                        "low_price": ohlc.get("low") or 0.0,
+                        "volume": found_data.get("volume") or 0,
+                    }
+                    self.live_quotes_cache[sid_str] = (now, qdata)
+                    return qdata
+        except Exception as e:
+            logger.error("Error in fallback fetch_live_data for %s: %s", security_id, e)
         return {}
 
     def get_available_balance(self):
@@ -215,11 +402,67 @@ class DhanStockTradingBot:
     def get_positions(self):
         return self.dhan.get_positions()
 
+    def fetch_positions(self):
+        """Get current open positions from Dhan API.
+        Returns dict: symbol -> {entry_price, quantity, transaction_type, unrealized_pnl, security_id}
+        """
+        resp = None
+        for attempt in range(5):
+            resp = self.dhan.get_positions()
+            if isinstance(resp, dict) and resp.get("status") == "success":
+                break
+            remarks = resp.get("remarks", resp) if isinstance(resp, dict) else resp
+            
+            # Dhan often misreports rate limits as DH-901 or DH-906.
+            # Only log as warning on the final attempt to reduce console spam.
+            if attempt == 4:
+                logger.warning("fetch_positions API error (final attempt): %s", remarks)
+            else:
+                logger.debug("fetch_positions API error (attempt %d/5): %s", attempt + 1, remarks)
+                # Exponential backoff: 4s, 8s, 12s, 16s
+                time.sleep(4 * (attempt + 1))
+        else:
+            return {}
+
+        data = resp.get("data", [])
+        if not data:
+            return {}
+
+        # Build reverse map: security_id -> symbol
+        sid_to_symbol = {sid: sym for sym, sid in self.security_ids.items()}
+
+        positions = {}
+        for pos in data:
+            security_id = str(pos.get("securityId", ""))
+            net_qty = int(pos.get("netQty", 0))  # >0 = LONG, <0 = SHORT
+            if net_qty == 0:
+                continue
+
+            symbol = sid_to_symbol.get(security_id)
+            if not symbol:
+                continue
+
+            is_buy = net_qty > 0
+            entry_price = float(pos.get("netAvg", 0))
+            quantity = abs(net_qty)
+            unrealized_pnl = float(pos.get("unrealizedProfit", 0))
+
+            positions[symbol] = {
+                "symbol": symbol,
+                "entry_price": entry_price,
+                "quantity": quantity,
+                "transaction_type": self.dhan.BUY if is_buy else self.dhan.SELL,
+                "unrealized_pnl": unrealized_pnl,
+                "security_id": security_id,
+            }
+
+        return positions
+
     def get_tick_size(self, symbol: str) -> float:
         return TICK_SIZE_MAP.get(symbol, 5.0)
 
     def place_super_order(self, security_id, transaction_type, quantity,
-                          entry_price, sl_percent, target_percent, symbol=None):
+                          entry_price, sl_percent, target_percent, symbol=None, atr_value=None):
         tick = self.get_tick_size(symbol) if symbol else 0.05
         is_buy = transaction_type == self.dhan.BUY
         sl_raw = entry_price * (1 - sl_percent / 100) if is_buy else entry_price * (1 + sl_percent / 100)
@@ -227,14 +470,24 @@ class DhanStockTradingBot:
         sl_price = round_to_tick(sl_raw, tick)
         target_price = round_to_tick(target_raw, tick)
 
-        return self.dhan.place_super_order(
-            security_id=security_id,
-            exchange_segment=self.dhan.NSE,
-            transaction_type=transaction_type,
-            quantity=quantity,
-            order_type=self.dhan.MARKET,
-            product_type=self.dhan.BO,
-            price=entry_price,
-            stopLossPrice=sl_price,
-            targetPrice=target_price,
-        )
+        # Calculate trailing jump equal to ATR rounded to nearest tick size
+        if atr_value is not None and atr_value > 0:
+            trailing_jump = round_to_tick(atr_value, tick)
+        else:
+            trailing_jump = 0.0
+
+        # Bypass the SDK's place_super_order method to avoid strict price validation
+        # for MARKET orders (which requires price > 0, leading to 'Invalid Price for orderType')
+        payload = {
+            "transactionType": transaction_type.upper(),
+            "exchangeSegment": self.dhan.NSE.upper(),
+            "productType": self.dhan.INTRA.upper(),  # Must be INTRADAY for Super Orders (not BO)
+            "orderType": self.dhan.MARKET.upper(),
+            "securityId": str(security_id),
+            "quantity": int(quantity),
+            "price": None,  # Must be null/None for MARKET orders
+            "targetPrice": float(target_price),
+            "stopLossPrice": float(sl_price),
+            "trailingJump": float(trailing_jump)
+        }
+        return self.dhan.dhan_http.post('/super/orders', payload)

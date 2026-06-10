@@ -1,0 +1,41 @@
+description: Intraday NSE strategy with Kronos time-series prediction overlay
+goal:
+  max_drawdown_pct: -8.0
+  min_sharpe: 1.2
+  reflection_every_n_trades: 5
+  target_return_pct: 5.0
+params:
+  cooldown_seconds: 1800
+  kronos_bonus_align: 1.1
+  kronos_confidence_weight: 0.35
+  kronos_enabled: true
+  kronos_exit_threshold: -0.008
+  kronos_min_predicted_move: 0.003
+  kronos_penalty_conflict: 0.5
+  kronos_pred_len: 10
+  kronos_sample_count: 5
+  kronos_temperature: 0.5
+  max_concurrent_positions: 3
+  max_daily_signals: 10
+  max_daily_loss_pct: 2.0
+  max_signals_per_stock_per_day: 1
+  min_adx_trending: 20
+  min_confidence: 82
+  min_prefilter_atr_pct: 0.3
+  min_prefilter_volume_ratio: 0.3
+  min_rr_ratio: 2.2
+  min_volume_ratio_trending: 0.3
+  rsi_ob_limit: 70
+  rsi_os_limit: 30
+  same_direction_cooldown: 1800
+  trailing_sl_activation_pct: 3.0
+  trailing_sl_distance_atr: 2.0
+  max_trade_duration_minutes: 180
+  market_open_skip_minutes: 0
+  market_close_exit_minutes: 15
+  max_consecutive_losses: 3
+  partial_profit_pct: 0.0
+  position_confidence_scalar: 1.0
+  max_daily_trades: 5
+  risk_per_trade_pct: 2.0
+version: kronos-v14

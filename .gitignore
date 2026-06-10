@@ -12,6 +12,16 @@ venv/
 
 # Logs (generated daily, not source code)
 trading_logs/
+*.log
+
+# Bot runtime state and cached market data (generated, not source code)
+kronos_integrated_bot/state/
+kronos_integrated_bot/data/
+
+# Model weights / HF cache
+model/checkpoints/
+*.safetensors
+*.bin
 
 # IDE
 .vscode/
