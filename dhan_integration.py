@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 import random
 from datetime import datetime, timedelta
@@ -129,6 +130,7 @@ class DhanStockTradingBot:
             "3minute": 120,
             "15minute": 600,
             "60minute": 1800,
+            "1day": 3600,
         }
         self.live_quotes_cache = {}  # key -> (timestamp, qdata)
         self.live_quotes_cache_ttl = 10  # seconds
@@ -143,21 +145,29 @@ class DhanStockTradingBot:
         self._consec_failures = 0
         self._breaker_open_until = 0.0
         self.alert_cb = None  # optional, e.g. send_telegram
+        # Calls run in asyncio.to_thread workers, so cross-thread state
+        # (breaker counters, candle-store file writes) needs real locks.
+        self._breaker_lock = threading.Lock()
+        self._persist_lock = threading.Lock()
 
     def _breaker_is_open(self) -> bool:
         return time.time() < self._breaker_open_until
 
     def _record_api_success(self):
-        self._consec_failures = 0
+        with self._breaker_lock:
+            self._consec_failures = 0
 
     def _record_api_failure(self, context: str):
-        self._consec_failures += 1
-        if self._consec_failures >= self.breaker_threshold:
-            self._breaker_open_until = time.time() + self.breaker_cooldown
+        with self._breaker_lock:
+            self._consec_failures += 1
+            tripped = self._consec_failures >= self.breaker_threshold
+            if tripped:
+                self._breaker_open_until = time.time() + self.breaker_cooldown
+                self._consec_failures = 0
+        if tripped:
             logger.error("Dhan circuit breaker OPEN after %d consecutive failures (%s). "
-                         "Pausing API calls for %ds.", self._consec_failures, context,
+                         "Pausing API calls for %ds.", self.breaker_threshold, context,
                          self.breaker_cooldown)
-            self._consec_failures = 0
             if self.alert_cb:
                 try:
                     self.alert_cb(f"DHAN API CIRCUIT BREAKER OPEN ({context}). "
@@ -279,17 +289,24 @@ class DhanStockTradingBot:
         return (t - timedelta(days=offset)).strftime("%Y-%m-%d")
 
     def get_historical_data(self, security_id, interval="3minute", min_bars=5):
-        cache_key = (str(security_id), interval, min_bars)
+        # Key on (sid, interval) only: the bot (min_bars=20) and guardian
+        # (min_bars=5) previously kept separate entries for identical data,
+        # doubling API fetches for every symbol with an open position. A
+        # cached frame serves any caller it has enough rows for; an empty
+        # frame is a fresh negative result (failed fetch) and is returned
+        # as-is rather than hammering the API.
+        cache_key = (str(security_id), interval)
         now = time.time()
         ttl = self.historical_cache_ttl_by_interval.get(interval, self.historical_cache_ttl)
         if cache_key in self.historical_cache:
             ts, df = self.historical_cache[cache_key]
-            if now - ts < ttl:
+            if now - ts < ttl and (df is None or len(df) == 0 or len(df) >= min_bars):
                 return df
 
         df = self._get_historical_data_uncached(security_id, interval, min_bars)
         self.historical_cache[cache_key] = (now, df)
-        self._persist_candles(security_id, interval, df)
+        if interval != "1day":  # daily bars aren't useful in the replay store
+            self._persist_candles(security_id, interval, df)
         return df
 
     def _persist_candles(self, security_id, interval, df):
@@ -300,20 +317,27 @@ class DhanStockTradingBot:
         if not hasattr(df.index, "date"):
             return
         try:
-            for d, group in df.groupby(df.index.date):
-                day_dir = os.path.join(str(self.data_store_dir), str(d))
-                os.makedirs(day_dir, exist_ok=True)
-                path = os.path.join(day_dir, f"{security_id}_{interval}.csv")
-                if os.path.isfile(path):
-                    old = pd.read_csv(path, index_col=0, parse_dates=True)
-                    group = pd.concat([old, group])
-                    group = group[~group.index.duplicated(keep="last")].sort_index()
-                group.to_csv(path)
+            # Lock: bot and guardian threads can fetch the same symbol
+            # concurrently; unsynchronized read-modify-write corrupts the CSV.
+            with self._persist_lock:
+                for d, group in df.groupby(df.index.date):
+                    day_dir = os.path.join(str(self.data_store_dir), str(d))
+                    os.makedirs(day_dir, exist_ok=True)
+                    path = os.path.join(day_dir, f"{security_id}_{interval}.csv")
+                    if os.path.isfile(path):
+                        old = pd.read_csv(path, index_col=0, parse_dates=True)
+                        group = pd.concat([old, group])
+                        group = group[~group.index.duplicated(keep="last")].sort_index()
+                    group.to_csv(path)
         except Exception:
             logger.exception("Failed to persist candles for %s/%s", security_id, interval)
 
     def _get_historical_data_uncached(self, security_id, interval="3minute", min_bars=5):
         time.sleep(random.uniform(0.1, 0.3))
+        if interval == "1day":
+            # "1day" used to silently fall through _INTERVAL_MAP to 3-minute
+            # bars, so the ATR-floor profile was computed on intraday data.
+            return self._fetch_daily_history(security_id)
         interval_int = _INTERVAL_MAP.get(interval, 3)
         resample_rule = _RESAMPLE_MAP.get(interval_int, "3min")
         today_str = time.strftime("%Y-%m-%d")
@@ -358,6 +382,41 @@ class DhanStockTradingBot:
         combined = combined[~combined.index.duplicated(keep="last")]
         combined.sort_index(inplace=True)
         return combined
+
+    def _fetch_daily_history(self, security_id, calendar_days=120):
+        """Fetch daily OHLCV bars (~80 trading days for 120 calendar days)."""
+        if self._breaker_is_open():
+            return pd.DataFrame()
+        end = datetime.now()
+        start = end - timedelta(days=calendar_days)
+        try:
+            resp = self.dhan.historical_daily_data(
+                security_id=str(security_id),
+                exchange_segment=self.dhan.NSE,
+                instrument_type="EQUITY",
+                from_date=start.strftime("%Y-%m-%d"),
+                to_date=end.strftime("%Y-%m-%d"),
+            )
+        except Exception as e:
+            logger.warning("historical_daily_data raised for %s: %s", security_id, e)
+            resp = None
+        if not isinstance(resp, dict) or resp.get("status") != "success":
+            self._record_api_failure(f"daily history {security_id}")
+            return pd.DataFrame()
+        self._record_api_success()
+        data = resp.get("data", {})
+        if not data or not data.get("open"):
+            return pd.DataFrame()
+        df = pd.DataFrame({
+            "open": data["open"], "high": data.get("high", []),
+            "low": data.get("low", []), "close": data.get("close", []),
+            "volume": data.get("volume", []),
+        })
+        if "timestamp" in data and data["timestamp"]:
+            df["timestamp"] = pd.to_datetime(data["timestamp"], unit="s", utc=True)
+            df["timestamp"] = df["timestamp"].dt.tz_convert("Asia/Kolkata")
+            df.set_index("timestamp", inplace=True)
+        return df
 
     def place_equity_order(self, security_id, transaction_type, quantity,
                            order_type="MARKET", product_type="INTRA"):
