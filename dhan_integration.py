@@ -125,6 +125,10 @@ class DhanStockTradingBot:
         self.historical_cache_ttl = 120  # seconds
         self.live_quotes_cache = {}  # key -> (timestamp, qdata)
         self.live_quotes_cache_ttl = 10  # seconds
+        # Optional candle persistence: when set to a directory, every fetched
+        # OHLCV frame is also written to <dir>/<date>/<sid>_<interval>.csv so
+        # replay/backtests don't need to re-hit the API.
+        self.data_store_dir = None
         # Circuit breaker: after N consecutive API failures, stop hammering
         # the API for a cooldown window instead of retrying every call.
         self.breaker_threshold = 8
@@ -271,7 +275,28 @@ class DhanStockTradingBot:
 
         df = self._get_historical_data_uncached(security_id, interval, min_bars)
         self.historical_cache[cache_key] = (now, df)
+        self._persist_candles(security_id, interval, df)
         return df
+
+    def _persist_candles(self, security_id, interval, df):
+        """Append fetched candles to the on-disk store, one file per
+        (date, security, interval), deduplicated by timestamp."""
+        if self.data_store_dir is None or df is None or len(df) == 0:
+            return
+        if not hasattr(df.index, "date"):
+            return
+        try:
+            for d, group in df.groupby(df.index.date):
+                day_dir = os.path.join(str(self.data_store_dir), str(d))
+                os.makedirs(day_dir, exist_ok=True)
+                path = os.path.join(day_dir, f"{security_id}_{interval}.csv")
+                if os.path.isfile(path):
+                    old = pd.read_csv(path, index_col=0, parse_dates=True)
+                    group = pd.concat([old, group])
+                    group = group[~group.index.duplicated(keep="last")].sort_index()
+                group.to_csv(path)
+        except Exception:
+            logger.exception("Failed to persist candles for %s/%s", security_id, interval)
 
     def _get_historical_data_uncached(self, security_id, interval="3minute", min_bars=5):
         time.sleep(random.uniform(0.1, 0.3))

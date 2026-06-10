@@ -75,6 +75,8 @@ RISK_PER_TRADE_PCT = 2.0           # % of capital risked per trade
 STRATEGY_FILE = Path(__file__).parent / "kronos_strategy.yaml"
 STATE_DIR = Path(__file__).parent / "state"
 STATE_DIR.mkdir(parents=True, exist_ok=True)
+DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Watchlist ────────────────────────────────────────────────────────────────
 WATCHLIST = [

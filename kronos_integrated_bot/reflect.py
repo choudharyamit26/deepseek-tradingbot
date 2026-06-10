@@ -537,6 +537,43 @@ def apply_proposal(strategy: dict, proposal: dict, metrics: dict, dry_run: bool)
     return strategy
 
 
+# ── Replay validation ────────────────────────────────────────────────────────
+def replay_validate(strategy: dict, proposal: dict, max_days: int = 5) -> dict | None:
+    """Simulate recent stored sessions under current vs proposed params.
+
+    Returns None when no stored data is available (validation skipped),
+    else {"ok": bool, "detail": str}. A proposal is rejected only on a strict
+    degradation: lower total PnL AND lower win rate than the baseline.
+    """
+    if not cfg.DATA_DIR.is_dir():
+        return None
+    dates = sorted(d.name for d in cfg.DATA_DIR.iterdir() if d.is_dir())[-max_days:]
+    if not dates:
+        return None
+
+    try:
+        from kronos_integrated_bot.replay import replay_compare
+    except ImportError as e:
+        logger.warning("Replay unavailable (%s) — skipping validation.", e)
+        return None
+
+    baseline_params = dict(strategy.get("params", {}))
+    candidate_params = dict(baseline_params)
+    candidate_params[proposal["parameter"]] = proposal["new_value"]
+
+    base_m, cand_m = replay_compare(dates, baseline_params, candidate_params)
+    if base_m["closed_trades"] == 0 and cand_m["closed_trades"] == 0:
+        return None  # not enough simulated activity to judge
+
+    degraded = (cand_m["total_pnl"] < base_m["total_pnl"]
+                and cand_m["win_rate"] < base_m["win_rate"])
+    detail = (f"replayed {dates}: baseline pnl={base_m['total_pnl']} wr={base_m['win_rate']}% "
+              f"({base_m['closed_trades']} trades) vs candidate pnl={cand_m['total_pnl']} "
+              f"wr={cand_m['win_rate']}% ({cand_m['closed_trades']} trades)")
+    logger.info("Replay validation: %s", detail)
+    return {"ok": not degraded, "detail": detail}
+
+
 # ── Orchestration ────────────────────────────────────────────────────────────
 def run_reflection(dry_run: bool = False) -> dict:
     """Run one reflection cycle. Returns a summary dict for callers/tests."""
@@ -581,6 +618,27 @@ def run_reflection(dry_run: bool = False) -> dict:
     proposal = propose_change(strategy, metrics, trades, hypotheses)
     if proposal is None:
         return {"action": "skipped", "reason": "no valid proposal"}
+
+    # Step 4: replay validation — if stored candle data exists, simulate the
+    # last few sessions under old vs new params and reject clear degradations.
+    verdict = replay_validate(strategy, proposal)
+    if verdict is not None and not verdict["ok"]:
+        logger.info("Proposal rejected by replay validation: %s", verdict["detail"])
+        if not dry_run:
+            append_hypothesis({
+                "timestamp": datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S"),
+                "action": "rejected_by_replay",
+                "old_version": strategy.get("version"),
+                "new_version": strategy.get("version"),
+                "parameter_changed": proposal["parameter"],
+                "old_value": strategy.get("params", {}).get(proposal["parameter"]),
+                "new_value": proposal["new_value"],
+                "hypothesis": proposal["hypothesis"],
+                "reasoning": f"Replay validation failed: {verdict['detail']}",
+                "metrics": metrics,
+            })
+        return {"action": "rejected_by_replay", "parameter": proposal["parameter"],
+                "detail": verdict["detail"]}
 
     apply_proposal(strategy, proposal, metrics, dry_run)
     return {"action": "change" if not dry_run else "dry_run_change",

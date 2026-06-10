@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import talib
 
+from indicators import calculate_technical_indicators
 from reversal_detector import detect_reversals
 
 logger = logging.getLogger(__name__)
@@ -36,48 +37,7 @@ class PositionExitGuardian:
         self.send_telegram(msg)
         
     def _calculate_technical_indicators(self, df):
-        # Same logic as IntradayStockBot but simplified for reversal
-        if len(df) < 5:
-            return {}
-        df["rsi"] = talib.RSI(df["close"], timeperiod=14)
-        df["macd"], df["macd_signal"], _ = talib.MACD(df["close"])
-        df["sma_20"] = talib.SMA(df["close"], timeperiod=20)
-        df["ema_9"] = talib.EMA(df["close"], timeperiod=9)
-        df["atr"] = talib.ATR(df["high"], df["low"], df["close"], timeperiod=14)
-        df["adx"] = talib.ADX(df["high"], df["low"], df["close"], timeperiod=14)
-        df["mfi"] = talib.MFI(df["high"], df["low"], df["close"], df["volume"], timeperiod=14)
-        
-        if hasattr(df.index, 'date'):
-            vwap_parts = []
-            for _date, group in df.groupby(df.index.date):
-                cum_vol = group["volume"].cumsum().clip(lower=1e-9)
-                cum_vp = (group["close"] * group["volume"]).cumsum()
-                vwap_parts.append(cum_vp / cum_vol)
-            df["vwap"] = pd.concat(vwap_parts)
-        else:
-            df["vwap"] = (df["close"] * df["volume"]).cumsum() / df["volume"].cumsum().clip(lower=1e-9)
-
-        vol_lookback = min(10, len(df))
-        vol_ma = df["volume"].rolling(window=vol_lookback).mean().clip(lower=1e-9)
-        df["volume_ratio"] = df["volume"] / vol_ma
-        
-        latest = df.iloc[-1]
-        close_val = latest["close"]
-        vwap_val = latest["vwap"] if not pd.isna(latest["vwap"]) else close_val
-        
-        return {
-            "close": close_val,
-            "rsi": latest["rsi"] if not pd.isna(latest["rsi"]) else 50,
-            "macd": latest["macd"] if not pd.isna(latest["macd"]) else 0,
-            "macd_signal": latest["macd_signal"] if not pd.isna(latest["macd_signal"]) else 0,
-            "sma_20": latest["sma_20"] if not pd.isna(latest["sma_20"]) else close_val,
-            "ema_9": latest["ema_9"] if not pd.isna(latest["ema_9"]) else close_val,
-            "atr": latest["atr"] if not pd.isna(latest["atr"]) else 1,
-            "vwap": vwap_val,
-            "volume_ratio": latest["volume_ratio"] if not pd.isna(latest["volume_ratio"]) else 1,
-            "adx": latest["adx"] if not pd.isna(latest["adx"]) else 20,
-            "mfi": latest["mfi"] if not pd.isna(latest["mfi"]) else 50,
-        }
+        return calculate_technical_indicators(df, min_bars=5)
 
     async def check_position(self, symbol, trade, current_price, pnl_pct):
         security_id = self.dhan.security_ids.get(symbol)

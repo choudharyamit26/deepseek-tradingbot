@@ -151,6 +151,7 @@ async def main():
 
     # Init Dhan
     dhan_bot = DhanStockTradingBot()
+    dhan_bot.data_store_dir = cfg.DATA_DIR  # persist candles for replay/backtests
     if cfg.TELEGRAM_ENABLED:
         dhan_bot.alert_cb = send_telegram
 

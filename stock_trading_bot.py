@@ -6,6 +6,7 @@ import numpy as np
 import talib
 from datetime import datetime, time as dtime
 from zoneinfo import ZoneInfo
+from indicators import calculate_technical_indicators
 from signal_logger import SignalLogger
 from regime_filter import RegimeFilter
 from reversal_detector import detect_reversals
@@ -144,65 +145,7 @@ class IntradayStockBot:
 
     # ── IMPROVEMENT #9 & #10: Fixed VWAP + Added ADX/MFI ──────────────────────
     def calculate_technical_indicators(self, df):
-        if len(df) < self.MIN_BARS:
-            return {}
-
-        df["rsi"] = talib.RSI(df["close"], timeperiod=14)
-        df["macd"], df["macd_signal"], _ = talib.MACD(df["close"])
-        df["sma_20"] = talib.SMA(df["close"], timeperiod=20)
-        df["ema_9"] = talib.EMA(df["close"], timeperiod=9)
-        upper, _, lower = talib.BBANDS(df["close"], timeperiod=20, nbdevup=2, nbdevdn=2)
-        df["bb_percent_b"] = (df["close"] - lower) / (upper - lower)
-        df["atr"] = talib.ATR(df["high"], df["low"], df["close"], timeperiod=14)
-
-        # IMPROVEMENT #10: ADX (trend strength) and MFI (money flow)
-        df["adx"] = talib.ADX(df["high"], df["low"], df["close"], timeperiod=14)
-        df["mfi"] = talib.MFI(df["high"], df["low"], df["close"], df["volume"], timeperiod=14)
-
-        # IMPROVEMENT #9: VWAP with daily reset
-        if hasattr(df.index, 'date'):
-            vwap_parts = []
-            for _date, group in df.groupby(df.index.date):
-                cum_vol = group["volume"].cumsum().clip(lower=1e-9)
-                cum_vp = (group["close"] * group["volume"]).cumsum()
-                vwap_parts.append(cum_vp / cum_vol)
-            df["vwap"] = pd.concat(vwap_parts)
-        else:
-            df["vwap"] = (df["close"] * df["volume"]).cumsum() / df["volume"].cumsum().clip(lower=1e-9)
-
-        # Fix #4: Shortened from 20→10 to avoid skewed afternoon ratios
-        # (morning high-volume bars inflated the avg, making PM ratios ~0.00x)
-        vol_lookback = min(10, len(df))
-        vol_ma = df["volume"].rolling(window=vol_lookback).mean().clip(lower=1e-9)
-        df["volume_ratio"] = df["volume"] / vol_ma
-        df["resistance"] = df["high"].rolling(window=20).max()
-        df["support"] = df["low"].rolling(window=20).min()
-
-        latest = df.iloc[-1]
-        close_val = round(latest["close"], 2)
-        vwap_val = round(latest["vwap"], 2) if not pd.isna(latest["vwap"]) else close_val
-        # VWAP distance as a percentage — key context for the LLM
-        vwap_distance_pct = round(((close_val - vwap_val) / vwap_val) * 100, 3) if vwap_val > 0 else 0
-
-        return {
-            "close": close_val,
-            "high": round(latest["high"], 2),
-            "low": round(latest["low"], 2),
-            "rsi": round(latest["rsi"], 2) if not pd.isna(latest["rsi"]) else 50,
-            "macd": round(latest["macd"], 2) if not pd.isna(latest["macd"]) else 0,
-            "macd_signal": round(latest["macd_signal"], 2) if not pd.isna(latest["macd_signal"]) else 0,
-            "sma_20": round(latest["sma_20"], 2) if not pd.isna(latest["sma_20"]) else close_val,
-            "ema_9": round(latest["ema_9"], 2) if not pd.isna(latest["ema_9"]) else close_val,
-            "bb_percent_b": round(latest["bb_percent_b"], 3) if not pd.isna(latest["bb_percent_b"]) else 0.5,
-            "atr": round(latest["atr"], 2) if not pd.isna(latest["atr"]) else 1,
-            "vwap": vwap_val,
-            "vwap_distance_pct": vwap_distance_pct,
-            "volume_ratio": round(latest["volume_ratio"], 2) if not pd.isna(latest["volume_ratio"]) else 1,
-            "support": round(latest["support"], 2) if not pd.isna(latest["support"]) else latest["low"],
-            "resistance": round(latest["resistance"], 2) if not pd.isna(latest["resistance"]) else latest["high"],
-            "adx": round(latest["adx"], 2) if not pd.isna(latest["adx"]) else 20,
-            "mfi": round(latest["mfi"], 2) if not pd.isna(latest["mfi"]) else 50,
-        }
+        return calculate_technical_indicators(df, min_bars=self.MIN_BARS)
 
     def _build_mtf_summary(self, i3m, i15m, i1h) -> str:
         lines = []
