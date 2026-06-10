@@ -14,6 +14,7 @@ v2 — Optimized to avoid false exits from single big candles:
 
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass, field
 from typing import List
@@ -21,6 +22,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 import talib
+
+logger = logging.getLogger(__name__)
 
 
 # ── Data classes ──────────────────────────────────────────────────────────────
@@ -456,23 +459,25 @@ def detect_reversals(df: pd.DataFrame, is_buy: bool, indicators: dict) -> Revers
     signals: List[ReversalSignal] = []
 
     detectors = [
-        lambda: _detect_rsi_divergence(df, is_buy),
-        lambda: _detect_macd_crossover(df, is_buy),
-        lambda: _detect_bollinger_squeeze(df, is_buy, indicators),
-        lambda: _detect_volume_climax(df, is_buy),
-        lambda: _detect_vwap_breach(df, is_buy, indicators),
-        lambda: _detect_three_candle_reversal(df, is_buy),
-        lambda: _detect_ema_sma_cross(df, is_buy, indicators),
-        lambda: _detect_mfi_extreme(df, is_buy),
+        ("rsi_divergence", lambda: _detect_rsi_divergence(df, is_buy)),
+        ("macd_crossover", lambda: _detect_macd_crossover(df, is_buy)),
+        ("bollinger_squeeze", lambda: _detect_bollinger_squeeze(df, is_buy, indicators)),
+        ("volume_climax", lambda: _detect_volume_climax(df, is_buy)),
+        ("vwap_breach", lambda: _detect_vwap_breach(df, is_buy, indicators)),
+        ("three_candle_reversal", lambda: _detect_three_candle_reversal(df, is_buy)),
+        ("ema_sma_cross", lambda: _detect_ema_sma_cross(df, is_buy, indicators)),
+        ("mfi_extreme", lambda: _detect_mfi_extreme(df, is_buy)),
     ]
 
-    for detector in detectors:
+    for name, detector in detectors:
         try:
             result = detector()
             if result is not None:
                 signals.append(result)
         except Exception:
-            pass  # Never crash the dashboard for a detector failure
+            # Never crash the caller for a detector failure, but make the
+            # failure visible — a silently dead detector skews the score.
+            logger.exception("Reversal detector %s failed", name)
 
     # Sort by severity descending
     signals.sort(key=lambda s: s.severity, reverse=True)

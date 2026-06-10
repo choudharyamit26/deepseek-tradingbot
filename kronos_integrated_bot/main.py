@@ -151,6 +151,8 @@ async def main():
 
     # Init Dhan
     dhan_bot = DhanStockTradingBot()
+    if cfg.TELEGRAM_ENABLED:
+        dhan_bot.alert_cb = send_telegram
 
     # Init Kronos
     kronos_integration = KronosIntegration({
@@ -170,7 +172,8 @@ async def main():
     kronos_integration.load()
 
     # Init AI
-    ai_analyzer = DeepSeekStockAnalyzer(api_key=cfg.DEEPSEEK_API_KEY)
+    ai_analyzer = DeepSeekStockAnalyzer(api_key=cfg.DEEPSEEK_API_KEY,
+                                        alert_cb=send_telegram if cfg.TELEGRAM_ENABLED else None)
 
     # Init Risk Manager
     risk_mgr = RiskManager(

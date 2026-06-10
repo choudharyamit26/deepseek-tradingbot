@@ -125,6 +125,34 @@ class DhanStockTradingBot:
         self.historical_cache_ttl = 120  # seconds
         self.live_quotes_cache = {}  # key -> (timestamp, qdata)
         self.live_quotes_cache_ttl = 10  # seconds
+        # Circuit breaker: after N consecutive API failures, stop hammering
+        # the API for a cooldown window instead of retrying every call.
+        self.breaker_threshold = 8
+        self.breaker_cooldown = 120  # seconds
+        self._consec_failures = 0
+        self._breaker_open_until = 0.0
+        self.alert_cb = None  # optional, e.g. send_telegram
+
+    def _breaker_is_open(self) -> bool:
+        return time.time() < self._breaker_open_until
+
+    def _record_api_success(self):
+        self._consec_failures = 0
+
+    def _record_api_failure(self, context: str):
+        self._consec_failures += 1
+        if self._consec_failures >= self.breaker_threshold:
+            self._breaker_open_until = time.time() + self.breaker_cooldown
+            logger.error("Dhan circuit breaker OPEN after %d consecutive failures (%s). "
+                         "Pausing API calls for %ds.", self._consec_failures, context,
+                         self.breaker_cooldown)
+            self._consec_failures = 0
+            if self.alert_cb:
+                try:
+                    self.alert_cb(f"DHAN API CIRCUIT BREAKER OPEN ({context}). "
+                                  f"Pausing calls for {self.breaker_cooldown}s.")
+                except Exception:
+                    logger.exception("Alert callback failed")
 
     def clear_historical_cache(self):
         self.historical_cache.clear()
@@ -136,17 +164,24 @@ class DhanStockTradingBot:
         return self._fetch_intraday_range(security_id, date_str, date_str, interval_int)
 
     def _fetch_intraday_range(self, security_id, from_date, to_date, interval_int, retries=2):
+        if self._breaker_is_open():
+            return None
         for attempt in range(retries + 1):
             time.sleep(0.3)
-            resp = self.dhan.intraday_minute_data(
-                security_id=security_id,
-                exchange_segment=self.dhan.NSE,
-                instrument_type="EQUITY",
-                from_date=from_date,
-                to_date=to_date,
-                interval=interval_int,
-            )
+            try:
+                resp = self.dhan.intraday_minute_data(
+                    security_id=security_id,
+                    exchange_segment=self.dhan.NSE,
+                    instrument_type="EQUITY",
+                    from_date=from_date,
+                    to_date=to_date,
+                    interval=interval_int,
+                )
+            except Exception as e:
+                logger.warning("intraday_minute_data raised for %s: %s", security_id, e)
+                resp = None
             if isinstance(resp, dict) and resp.get("status") == "success":
+                self._record_api_success()
                 break
 
             # Classify error type from remarks or top-level response
@@ -198,6 +233,7 @@ class DhanStockTradingBot:
                 else:
                     time.sleep(1.5)
         else:
+            self._record_api_failure(f"intraday data {security_id}")
             return None
         
         # Hard throttle: force a 0.2s delay on successful API calls to prevent concurrency bursts
@@ -406,13 +442,20 @@ class DhanStockTradingBot:
         """Get current open positions from Dhan API.
         Returns dict: symbol -> {entry_price, quantity, transaction_type, unrealized_pnl, security_id}
         """
+        if self._breaker_is_open():
+            return {}
         resp = None
         for attempt in range(5):
-            resp = self.dhan.get_positions()
+            try:
+                resp = self.dhan.get_positions()
+            except Exception as e:
+                logger.warning("get_positions raised: %s", e)
+                resp = None
             if isinstance(resp, dict) and resp.get("status") == "success":
+                self._record_api_success()
                 break
             remarks = resp.get("remarks", resp) if isinstance(resp, dict) else resp
-            
+
             # Dhan often misreports rate limits as DH-901 or DH-906.
             # Only log as warning on the final attempt to reduce console spam.
             if attempt == 4:
@@ -422,6 +465,7 @@ class DhanStockTradingBot:
                 # Exponential backoff: 4s, 8s, 12s, 16s
                 time.sleep(4 * (attempt + 1))
         else:
+            self._record_api_failure("fetch_positions")
             return {}
 
         data = resp.get("data", [])
@@ -433,19 +477,23 @@ class DhanStockTradingBot:
 
         positions = {}
         for pos in data:
-            security_id = str(pos.get("securityId", ""))
-            net_qty = int(pos.get("netQty", 0))  # >0 = LONG, <0 = SHORT
-            if net_qty == 0:
-                continue
+            try:
+                security_id = str(pos.get("securityId", ""))
+                net_qty = int(pos.get("netQty", 0))  # >0 = LONG, <0 = SHORT
+                if net_qty == 0:
+                    continue
 
-            symbol = sid_to_symbol.get(security_id)
-            if not symbol:
-                continue
+                symbol = sid_to_symbol.get(security_id)
+                if not symbol:
+                    continue
 
-            is_buy = net_qty > 0
-            entry_price = float(pos.get("netAvg", 0))
-            quantity = abs(net_qty)
-            unrealized_pnl = float(pos.get("unrealizedProfit", 0))
+                is_buy = net_qty > 0
+                entry_price = float(pos.get("netAvg", 0))
+                quantity = abs(net_qty)
+                unrealized_pnl = float(pos.get("unrealizedProfit", 0))
+            except (TypeError, ValueError, AttributeError) as e:
+                logger.warning("Malformed position entry skipped: %s (%s)", pos, e)
+                continue
 
             positions[symbol] = {
                 "symbol": symbol,

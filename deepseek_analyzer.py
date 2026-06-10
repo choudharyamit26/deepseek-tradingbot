@@ -10,10 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 class DeepSeekStockAnalyzer:
-    def __init__(self, api_key):
+    # Sane bounds for LLM-suggested SL/TP percentages; values outside are
+    # dropped so the caller falls back to its ATR-based defaults.
+    SL_TP_MIN_PCT = 0.2
+    SL_TP_MAX_PCT = 5.0
+
+    def __init__(self, api_key, alert_cb=None):
         self.api_key = api_key
         self.base_url = "https://api.deepseek.com"
         self.model = "deepseek-v4-pro"
+        self.alert_cb = alert_cb  # e.g. send_telegram; called on billing/quota errors
+        self._billing_alerted = False
 
     def prepare_market_context(self, symbol, market_data, technical_indicators,
                                recent_bars=None, previous_signal=None):
@@ -242,6 +249,16 @@ class DeepSeekStockAnalyzer:
                     json=payload,
                     timeout=aiohttp.ClientTimeout(total=45)
                 ) as response:
+                    if response.status in (402, 429):
+                        reason = "quota/payment exhausted (402)" if response.status == 402 else "rate limited (429)"
+                        logger.error("DeepSeek %s — signals disabled until resolved", reason)
+                        if self.alert_cb and not self._billing_alerted:
+                            self._billing_alerted = True
+                            try:
+                                self.alert_cb(f"DEEPSEEK API ERROR: {reason}. Bot is returning HOLD for all stocks.")
+                            except Exception:
+                                logger.exception("Alert callback failed")
+                        return {"signal": "HOLD", "confidence": 0, "reasoning": f"DeepSeek {reason}"}
                     response.raise_for_status()
                     resp_json = await response.json()
                     message = resp_json['choices'][0]['message']
@@ -263,12 +280,7 @@ class DeepSeekStockAnalyzer:
             # Log the raw AI response for transparency
             logger.info("%s raw AI response: %s", symbol, result)
 
-            # Sanitize: ensure confidence is int, signal is valid
-            result["confidence"] = int(result.get("confidence", 0))
-            if result.get("signal") not in ("BUY", "SELL", "HOLD", "EXIT"):
-                result["signal"] = "HOLD"
-
-            return result
+            return self._validate_signal_fields(result, symbol)
         except asyncio.TimeoutError:
             return {"signal": "HOLD", "confidence": 0, "reasoning": "API Timeout"}
         except aiohttp.ClientError as e:
@@ -280,8 +292,40 @@ class DeepSeekStockAnalyzer:
         except Exception as e:
             return {"signal": "HOLD", "confidence": 0, "reasoning": f"API Error: {e}"}
 
-    @staticmethod
-    def _repair_truncated_json(raw: str, symbol: str) -> dict:
+    @classmethod
+    def _validate_signal_fields(cls, result: dict, symbol: str) -> dict:
+        """Sanitize and range-check LLM output before it reaches order math."""
+        try:
+            conf = int(float(result.get("confidence", 0)))
+        except (TypeError, ValueError):
+            conf = 0
+        result["confidence"] = max(0, min(100, conf))
+
+        if result.get("signal") not in ("BUY", "SELL", "HOLD", "EXIT"):
+            result["signal"] = "HOLD"
+
+        # SL/TP must be sane percentages; otherwise drop so the caller's
+        # ATR-based defaults take over instead of poisoning SL/target prices.
+        for key in ("stop_loss_percent", "target_percent"):
+            if key not in result:
+                continue
+            try:
+                val = float(result[key])
+            except (TypeError, ValueError):
+                logger.warning("%s invalid %s=%r from AI — dropped", symbol, key, result[key])
+                del result[key]
+                continue
+            if not (cls.SL_TP_MIN_PCT <= val <= cls.SL_TP_MAX_PCT):
+                logger.warning("%s out-of-range %s=%.2f from AI — dropped (bounds %.1f-%.1f)",
+                               symbol, key, val, cls.SL_TP_MIN_PCT, cls.SL_TP_MAX_PCT)
+                del result[key]
+            else:
+                result[key] = val
+
+        return result
+
+    @classmethod
+    def _repair_truncated_json(cls, raw: str, symbol: str) -> dict:
         """Extract signal & confidence from truncated JSON via regex."""
         result = {"signal": "HOLD", "confidence": 0, "reasoning": "Repaired from truncated response"}
         if not raw:
@@ -318,4 +362,4 @@ class DeepSeekStockAnalyzer:
 
         logger.info("%s repaired truncated JSON -> %s (conf=%d)",
                     symbol, result["signal"], result["confidence"])
-        return result
+        return cls._validate_signal_fields(result, symbol)
