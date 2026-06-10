@@ -23,7 +23,6 @@ _ENTRY_END_T = dtime(cfg.LAST_ENTRY_HOUR, cfg.LAST_ENTRY_MIN)
 _MARKET_OPEN_T = dtime(9, 15)
 _MARKET_CLOSE_T = dtime(15, 30)
 
-MIN_ADX_TRENDING = 18
 RSI_EXTREME_OB = 78
 RSI_EXTREME_OS = 22
 
@@ -525,7 +524,7 @@ class EnhancedIntradayBot(IntradayStockBot):
         adx_15m = indicators_15m.get("adx", 20)
         adx_1h = indicators_1h.get("adx", 20)
         adx_3m = indicators_3m.get("adx", 20)
-        if adx_15m < MIN_ADX_TRENDING and adx_1h < MIN_ADX_TRENDING and adx_3m < MIN_ADX_TRENDING:
+        if adx_15m < cfg.MIN_ADX_TRENDING and adx_1h < cfg.MIN_ADX_TRENDING and adx_3m < cfg.MIN_ADX_TRENDING:
             logger.info("%s -- all TFs ranging (3m=%.0f, 15m=%.0f, 1h=%.0f), skipping AI",
                         symbol, adx_3m, adx_15m, adx_1h)
             return

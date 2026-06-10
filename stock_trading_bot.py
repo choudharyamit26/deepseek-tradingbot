@@ -24,8 +24,11 @@ MAX_CONCURRENT_POSITIONS = 3
 SCAN_INTERVAL = 180
 
 # ── Quality gates ──────────────────────────────────────────────────────────────
+# NOTE: when running via kronos_integrated_bot, apply_strategy_to_config()
+# overwrites these module globals from kronos_strategy.yaml at startup.
 MIN_PREFILTER_VOLUME_RATIO = 0.15    # Floor for truly dead volume bars
 MIN_PREFILTER_ATR_PCT = 0.30         # Raised to 0.30 based on reflection agent to filter out low-volatility choppy stocks
+MIN_VOLUME_RATIO_TRENDING = 0.40     # Volume floor applied even in trending mode
 NEUTRAL_RSI_LOW, NEUTRAL_RSI_HIGH = 38, 62  # Dead zone — bypassed when trending
 MIN_RR_RATIO = 1.8                   # Minimum reward:risk ratio
 MIN_ADX_TRENDING = 18                # ADX below this = choppy/ranging market
@@ -218,7 +221,7 @@ class IntradayStockBot:
             if atr_pct < 0.05:
                 return False, f"ATR too low even for trend ({atr_pct:.2f}%)"
             # Volume floor even for trends — reject dead-volume bars
-            if volume_ratio < 0.40:
+            if volume_ratio < MIN_VOLUME_RATIO_TRENDING:
                 return False, f"Volume too low for trending ({volume_ratio:.2f}x avg)"
             # RSI dead zone is BYPASSED — a smooth trend naturally sits at RSI 50
             return True, "OK (trending)"

@@ -164,6 +164,19 @@ The reflection agent had been cycling through only 3 parameters (confidence, ATR
 - **Primary Entry Point**: The enhanced bot (`run_enhanced.py`) was moved and is now launched via `python -m kronos_integrated_bot.main`.
 - **Kronos Architecture**: The new entry point loads `kronos_strategy.yaml` (v14) and runs `EnhancedIntradayBot` along with the Kronos time-series overlay, confidence scoring matrix, and the `KronosExitGuardian`. This includes all new intraday parameters (trailing SL activation, time-based exits, consecutive loss breaker).
 - **Legacy Cleanup**: Removed unused legacy components (including `streamlit_app.py`, old `main.py`, `run_enhanced.py`, and the legacy `kronos_trading/` directory) to consolidate around the new integrated architecture. `trading_logs/` was retained.
+- **WARNING**: This cleanup accidentally deleted `reflect.py` / `run_weekly_reflection.py` — the reflection agent itself. Rebuilt 2026-06-10 (see section Y).
+
+### Y. Codebase Review Hardening (2026-06-10)
+
+Full review + rebuild session. All changes committed; tests in `tests/` (pytest).
+
+- **Reflection agent rebuilt** as `kronos_integrated_bot/reflect.py` + CLI `python -m kronos_integrated_bot.run_reflection [--dry-run]`. New guardrails over the lost version: `PARAM_BOUNDS` (min/max/max-step per param; risk params locked), minimum-evidence gate (`goal.min_trades_per_change`, default 30 closed trades since last change), auto-revert when a change degrades win rate/expectancy (`goal.min_eval_trades`, default 20), infra-failure trades (DH-905 etc.) excluded from metrics, full hypotheses history with outcomes fed to the LLM, replay validation before applying.
+- **CRITICAL BUG FIXED — inert strategy params**: `apply_strategy_to_config()` never applied `min_rr_ratio`, `min_adx_trending`, `min_prefilter_volume_ratio`, `min_prefilter_atr_pct`, `max_concurrent_positions`; and the inherited `_passes_prefilter` reads `stock_trading_bot` module globals, not cfg. Net effect: reflection changes v03 (min_rr_ratio 1.8→2.2), v04 (volume 0.15→0.3), v08→v09 (ADX) and v13 (trending volume 0.4→0.3) never reached the live gates. `apply_strategy_to_config` now sets cfg AND patches the base module globals. **Treat pre-2026-06-10 reflection outcome attributions as suspect.**
+- **Replay infra**: `python -m kronos_integrated_bot.replay --dates D [--compare other.yaml]` simulates filter/exit pipeline (not LLM/Kronos) over stored candles. Candle store: `DhanStockTradingBot.data_store_dir` (set to `kronos_integrated_bot/data/` in main.py) persists every fetched OHLCV frame per (date, sid, interval).
+- **Shared indicators**: `indicators.py` is the single indicator stack; bot + guardian delegate to it.
+- **Reliability**: DeepSeek output range-validated (confidence clamp, SL/TP 0.2–5% or dropped), 402/429 alerts via Telegram; Dhan circuit breaker (8 consecutive failures → 120s pause + alert); reversal detector failures now logged instead of swallowed.
+- **Streamlit dashboard rewritten**: live reversal watch on open positions + signals + reflection history tabs.
+- **Secrets**: `.env` was committed in the initial git commit (no remote exists). Rotate Dhan/DeepSeek/Telegram/HF tokens before pushing this repo anywhere.
 
 ## 3. Reversal Detection Logic (v3)
 The `reversal_detector.py` uses a weighted scoring system (0-100).

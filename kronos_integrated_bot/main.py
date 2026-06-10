@@ -108,6 +108,15 @@ from .reflect import load_strategy, save_strategy  # noqa: E402
 
 
 def apply_strategy_to_config(strategy: dict):
+    """Push YAML strategy params into cfg AND the base-class module globals.
+
+    The inherited prefilter/MTF gates in stock_trading_bot read module-level
+    constants, not cfg — without the module patch below, several tuned
+    parameters (min_rr_ratio, min_adx_trending, prefilter floors) were
+    silently inert while the reflection log believed they had changed.
+    """
+    import stock_trading_bot as base
+
     params = strategy.get("params", {})
     cfg.KRONOS_ENABLED = params.get("kronos_enabled", True)
     cfg.KRONOS_PRED_LEN = params.get("kronos_pred_len", 10)
@@ -126,6 +135,20 @@ def apply_strategy_to_config(strategy: dict):
     cfg.MAX_SIGNALS_PER_STOCK_PER_DAY = params.get("max_signals_per_stock_per_day", 1)
     cfg.SAME_DIRECTION_COOLDOWN = params.get("same_direction_cooldown", 3600)
     cfg.MIN_VOLUME_RATIO_TRENDING = params.get("min_volume_ratio_trending", 0.40)
+    cfg.MIN_RR_RATIO = params.get("min_rr_ratio", 1.8)
+    cfg.MIN_ADX_TRENDING = params.get("min_adx_trending", 18)
+    cfg.MIN_PREFILTER_VOLUME_RATIO = params.get("min_prefilter_volume_ratio", 0.15)
+    cfg.MIN_PREFILTER_ATR_PCT = params.get("min_prefilter_atr_pct", 0.30)
+    cfg.MAX_CONCURRENT_POSITIONS = params.get("max_concurrent_positions", 3)
+
+    # Patch the base-class module globals used by the inherited gates.
+    base.MIN_ADX_TRENDING = cfg.MIN_ADX_TRENDING
+    base.MIN_PREFILTER_VOLUME_RATIO = cfg.MIN_PREFILTER_VOLUME_RATIO
+    base.MIN_PREFILTER_ATR_PCT = cfg.MIN_PREFILTER_ATR_PCT
+    base.MIN_VOLUME_RATIO_TRENDING = cfg.MIN_VOLUME_RATIO_TRENDING
+    base.MIN_RR_RATIO = cfg.MIN_RR_RATIO
+    base.RSI_OB_LIMIT = cfg.RSI_OB_LIMIT
+    base.RSI_OS_LIMIT = cfg.RSI_OS_LIMIT
 
     # Intraday-specific params
     cfg.TRAILING_SL_ACTIVATION_PCT = params.get("trailing_sl_activation_pct", 3.0)
