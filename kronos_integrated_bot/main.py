@@ -204,6 +204,7 @@ async def main():
         min_adx=cfg.MIN_ADX_TRENDING,
         rsi_ob=cfg.RSI_OB_LIMIT,
         rsi_os=cfg.RSI_OS_LIMIT,
+        min_rr_ratio=cfg.MIN_RR_RATIO,
     )
 
     # Init Risk Manager

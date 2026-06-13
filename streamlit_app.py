@@ -7,17 +7,16 @@ Run: streamlit run streamlit_app.py
 import glob
 import json
 import os
+import time
 
 import pandas as pd
 import streamlit as st
-from streamlit_autorefresh import st_autorefresh
 
 from indicators import calculate_technical_indicators
 from reversal_detector import detect_reversals
 from signal_logger import LOG_DIR
 
 st.set_page_config(page_title="Trading Bot Dashboard", layout="wide")
-st_autorefresh(key="auto", interval=60 * 1000, limit=200)
 
 st.title("📈 Intraday Trading Bot Dashboard")
 
@@ -93,7 +92,8 @@ with tab_positions:
                     "Recommendation": "n/a",
                 }
                 try:
-                    df = dhan.get_historical_data(pos["security_id"], "3minute", min_bars=20)
+                    df = dhan.get_historical_data(pos["security_id"], "3minute", min_bars=20,
+                                                  exchange_segment=pos.get("exchange_segment"))
                     if df is not None and len(df) >= 20:
                         ind = calculate_technical_indicators(df)
                         report = detect_reversals(df.copy(), is_buy=is_buy, indicators=ind)
@@ -117,7 +117,7 @@ with tab_positions:
 
             st.dataframe(
                 df_pos.style.map(_color, subset=["Recommendation"]),
-                use_container_width=True,
+                width='stretch',
             )
 
             for symbol, report in details.items():
@@ -135,7 +135,7 @@ with tab_signals:
         show_cols = [c for c in ["timestamp", "symbol", "signal_type", "direction",
                                  "entry_price", "exit_price", "confidence", "pnl",
                                  "mode", "market_regime"] if c in df_sig.columns]
-        st.dataframe(df_sig[show_cols].iloc[::-1], use_container_width=True)
+        st.dataframe(df_sig[show_cols].iloc[::-1], width='stretch')
 
         closed = df_sig[pd.to_numeric(df_sig.get("pnl"), errors="coerce").notna()
                         & (df_sig.get("exit_price", "").astype(str).str.strip() != "")]
@@ -164,7 +164,7 @@ with tab_reflection:
             "Win rate at decision": (h.get("metrics") or {}).get("win_rate"),
             "Closed trades": (h.get("metrics") or {}).get("closed_trades"),
         } for h in hyps])
-        st.dataframe(df_h.iloc[::-1], use_container_width=True)
+        st.dataframe(df_h.iloc[::-1], width='stretch')
 
         for h in reversed(hyps[-10:]):
             label = h.get("parameter_changed") or h.get("action", "record")
@@ -174,3 +174,8 @@ with tab_reflection:
                     st.write(f"**Reasoning:** {h.get('reasoning')}")
                 if h.get("metrics"):
                     st.json(h["metrics"])
+
+# Auto-refresh every 20 seconds
+st.caption("Auto-refreshing every 20 s…")
+time.sleep(20)
+st.rerun()

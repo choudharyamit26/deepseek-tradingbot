@@ -15,7 +15,7 @@ class DeepSeekStockAnalyzer:
     SL_TP_MAX_PCT = 5.0
 
     def __init__(self, api_key, alert_cb=None, min_confidence=60, min_adx=18,
-                 rsi_ob=70, rsi_os=30):
+                 rsi_ob=70, rsi_os=30, min_rr_ratio=1.8):
         self.api_key = api_key
         self.base_url = "https://api.deepseek.com"
         self.model = "deepseek-v4-pro"
@@ -28,6 +28,7 @@ class DeepSeekStockAnalyzer:
         self.min_adx = min_adx
         self.rsi_ob = rsi_ob
         self.rsi_os = rsi_os
+        self.min_rr = min_rr_ratio
 
     def prepare_market_context(self, symbol, market_data, technical_indicators,
                                recent_bars=None, previous_signal=None):
@@ -95,11 +96,30 @@ class DeepSeekStockAnalyzer:
         rules_extra = ""
         if regime_context:
             rules_extra = (
-                "- Account for market & sector regime: avoid BUY in bearish sectors, prefer SELL in overbought markets,"
-                " scale down confidence when sector volatility is high.\n"
-                "- If Nifty trend is bearish, be very cautious with BUY signals.\n"
-                "- If Nifty trend is bullish, be very cautious with SELL signals."
+                "- Account for market & sector regime: avoid BUY in bearish sectors, prefer SELL in overbought markets.\n"
+                "- 'Nifty trend' is the DAILY (10-day SMA) macro trend. 'intraday_chg' is today's session move vs yesterday close.\n"
+                "- The system applies a Nifty regime penalty that scales linearly with intraday_chg: 0% move = -6, +0.5% = -3, +1.0% or more = 0 (fully waived).\n"
+                "- Do NOT apply Nifty or sector penalties yourself — the system adds them after your output and self-subtracting double-counts them.\n"
+                "- On a strong intraday rally (intraday_chg >= +1%), treat bearish Nifty daily trend as neutral — do not over-penalise BUY signals.\n"
+                "- On a strong intraday drop (intraday_chg <= -1%), treat bullish Nifty daily trend as neutral for SELL signals."
             )
+
+        min_rr = self.min_rr
+
+        # Compute ATR% for this specific stock so the prompt shows realistic
+        # SL/TP examples instead of hardcoded 1.2% that the AI anchors on.
+        atr_raw = (indicators or {}).get("atr", 0)
+        ltp_for_atr = (market_data or {}).get("ltp", 0) or 1000
+        if atr_raw and ltp_for_atr and float(ltp_for_atr) > 0:
+            atr_pct = round(float(atr_raw) / float(ltp_for_atr) * 100, 3)
+            example_sl = max(round(atr_pct * 1.5, 2), 0.25)  # 1.5x ATR, floor 0.25%
+        else:
+            atr_pct = 0.0
+            example_sl = 0.8
+        example_tp = round(example_sl * min_rr * 1.1, 2)
+        min_tp_floor = round(example_sl * min_rr, 2)
+        atr_sl_hint = (f"ATR = {atr_pct:.3f}% → 1.5×ATR = {example_sl:.2f}%"
+                       if atr_pct > 0 else "use ATR from Technical Indicators")
 
         # System prompt with Chain-of-Thought reasoning protocol
         system_prompt = f"""You are an expert intraday equity trader for the Indian stock market (NSE).
@@ -112,8 +132,8 @@ class DeepSeekStockAnalyzer:
             "signal": "BUY" | "SELL" | "HOLD",
             "confidence": 0-100,
             "reasoning": "Step-by-step reasoning showing your evaluation and penalty deductions",
-            "stop_loss_percent": 1.5,
-            "target_percent": 3.0,
+            "stop_loss_percent": {example_sl},
+            "target_percent": {example_tp},
             "setup_type": "VWAP_RECLAIM" | "BREAKOUT" | "REVERSAL" | "MOMENTUM" | "NONE",
             "penalty_breakdown": "e.g. -10 MTF, -10 Kronos = -20 total"
         }}
@@ -130,7 +150,11 @@ class DeepSeekStockAnalyzer:
         3. CANDLES: Check last 5 candles — is price moving with or against your signal?
         4. MTF: Check multi-timeframe alignment. 15-min/1-hour disagree? Apply penalty.
         5. KRONOS: Does the Kronos forecast support or conflict? Apply penalty if conflict.
-        6. R:R: Can you set SL at ~1.5x ATR% and target >= 2x SL?
+        6. R:R: Set stop_loss_percent = 1.5 × ATR% for this stock ({atr_sl_hint}).
+           Target must be >= {min_rr:g}x SL (min_tp_floor = {min_tp_floor}%).
+           The system HARD-REJECTS any trade with target below {min_rr:g}x the stop loss.
+           Do NOT copy the example values blindly — calculate from the actual ATR shown
+           in Technical Indicators. Each stock has different volatility.
         7. CONFIDENCE: Apply the PENALTY MATRIX below. Start at 95 and SUBTRACT.
 
         ═══════════════════════════════════════════════════════════
@@ -158,9 +182,10 @@ class DeepSeekStockAnalyzer:
         - ADX borderline ({self.min_adx}-{self.min_adx + 4})                       -> -5 points
         - Volume ratio 0.8-1.0 (slightly below avg)   -> -3 points
         - Kronos range < 0.2% (low conviction)         -> -3 points
-        - Sector regime opposes signal direction        -> -4 points
-        - Nifty regime opposes signal direction         -> -6 points
         - R:R ratio barely meets minimum               -> -3 points
+
+        NOTE: Nifty/sector regime penalties (-6/-4) are applied automatically
+        by the system AFTER your output. Do NOT subtract them here.
 
         BONUSES (max +8 total):
         - Volume ratio > 2.0 (exceptional volume)      -> +3 points

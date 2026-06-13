@@ -246,7 +246,10 @@ class EnhancedIntradayBot(IntradayStockBot):
         price_above_vwap = close > vwap if vwap > 0 else True
 
         # Nifty/sector regime
-        nifty_trend = regime_data.get("nifty", {}).get("trend", "neutral") if regime_data else "neutral"
+        nifty_data_m = regime_data.get("nifty", {}) if regime_data else {}
+        nifty_trend = nifty_data_m.get("trend", "neutral")
+        nifty_intraday = nifty_data_m.get("intraday_chg_pct", 0)
+        nifty_session = nifty_data_m.get("session_trend", "neutral")
         sector_data = regime_data.get("sector") if regime_data else None
         sector_trend = sector_data.get("trend", "neutral") if sector_data else "neutral"
 
@@ -318,7 +321,21 @@ class EnhancedIntradayBot(IntradayStockBot):
             bonus_total += 2
             bonuses.append(f"Kronos strongly aligned: +2")
 
-        score += min(bonus_total, 8)  # cap bonuses at +8
+        # Nifty intraday momentum bonus: if session trend aligns with 3m direction
+        if trend_3m == "BULLISH" and nifty_intraday >= 1.0:
+            bonus_total += 3
+            bonuses.append(f"Nifty intraday {nifty_intraday:+.2f}% aligns with BUY: +3")
+        elif trend_3m == "BEARISH" and nifty_intraday <= -1.0:
+            bonus_total += 3
+            bonuses.append(f"Nifty intraday {nifty_intraday:+.2f}% aligns with SELL: +3")
+        elif trend_3m == "BULLISH" and nifty_intraday >= 0.5:
+            bonus_total += 1
+            bonuses.append(f"Nifty intraday {nifty_intraday:+.2f}% supports BUY: +1")
+        elif trend_3m == "BEARISH" and nifty_intraday <= -0.5:
+            bonus_total += 1
+            bonuses.append(f"Nifty intraday {nifty_intraday:+.2f}% supports SELL: +1")
+
+        score += min(bonus_total, 10)  # cap bonuses at +10 (was +8, raised for intraday bonus)
 
         # ── Build breakdown string ───────────────────────────────────────────
         parts = [f"START=100"]
@@ -547,18 +564,44 @@ class EnhancedIntradayBot(IntradayStockBot):
         confidence = signal.get("confidence", 0)
         reasoning = signal.get("reasoning", "")
 
-        nifty_trend = regime_data.get("nifty", {}).get("trend", "neutral") if regime_data else "neutral"
+        nifty_data = regime_data.get("nifty", {}) if regime_data else {}
+        nifty_trend = nifty_data.get("trend", "neutral")
+        nifty_intraday_chg = nifty_data.get("intraday_chg_pct", 0)
+        nifty_session_trend = nifty_data.get("session_trend", "neutral")
         sector_data = regime_data.get("sector") if regime_data else None
         sector_trend = sector_data.get("trend", "neutral") if sector_data else "neutral"
 
-        # Programmatically cap trade confidence at the pre-computed ceiling
+        # Programmatically cap trade confidence at the pre-computed ceiling.
+        # The daily-SMA-based regime penalty (-6) is scaled linearly by how much
+        # the Nifty has moved intraday (vs yesterday's close):
+        #   intraday_chg = 0%    → full -6 penalty
+        #   intraday_chg = +0.5% → -3 penalty
+        #   intraday_chg = +1.0% → 0 penalty (fully waived)
+        #   intraday_chg > +1.0% → 0 penalty (capped, doesn't become a bonus)
+        # INTRADAY_SCALE_PCT is the move at which the penalty fully disappears.
+        # Symmetric logic applies for bullish daily trend vs SELL signals.
+        INTRADAY_SCALE_PCT = 1.0
         if sig_type in ("BUY", "SELL"):
             if nifty_trend == "bearish" and sig_type == "BUY":
-                confidence -= 6
-                reasoning += " | Nifty bearish vs BUY penalty (-6)"
+                scale = min(max(nifty_intraday_chg, 0.0), INTRADAY_SCALE_PCT) / INTRADAY_SCALE_PCT
+                nifty_pen = -round(6 * (1 - scale))
+                if nifty_pen < 0:
+                    confidence += nifty_pen
+                    reasoning += (f" | Nifty bearish (daily) penalty scaled by intraday {nifty_intraday_chg:+.2f}%"
+                                  f" ({nifty_pen:+d})")
+                else:
+                    reasoning += (f" | Nifty bearish (daily) but intraday {nifty_intraday_chg:+.2f}%"
+                                  f" >= {INTRADAY_SCALE_PCT:.1f}% — BUY penalty fully waived")
             elif nifty_trend == "bullish" and sig_type == "SELL":
-                confidence -= 6
-                reasoning += " | Nifty bullish vs SELL penalty (-6)"
+                scale = min(max(-nifty_intraday_chg, 0.0), INTRADAY_SCALE_PCT) / INTRADAY_SCALE_PCT
+                nifty_pen = -round(6 * (1 - scale))
+                if nifty_pen < 0:
+                    confidence += nifty_pen
+                    reasoning += (f" | Nifty bullish (daily) penalty scaled by intraday {nifty_intraday_chg:+.2f}%"
+                                  f" ({nifty_pen:+d})")
+                else:
+                    reasoning += (f" | Nifty bullish (daily) but intraday {nifty_intraday_chg:+.2f}%"
+                                  f" <= -{INTRADAY_SCALE_PCT:.1f}% — SELL penalty fully waived")
 
             if sector_trend == "bearish" and sig_type == "BUY":
                 confidence -= 4
@@ -601,6 +644,9 @@ class EnhancedIntradayBot(IntradayStockBot):
             return
 
         if sig_type not in ("BUY", "SELL") or confidence < cfg.MIN_CONFIDENCE:
+            if sig_type in ("BUY", "SELL"):
+                logger.info("%s %s dropped: confidence %d < %d after regime adjustment",
+                            symbol, sig_type, confidence, cfg.MIN_CONFIDENCE)
             return
 
         # ── Same-direction deduplication ─────────────────────────────────────
@@ -655,7 +701,10 @@ class EnhancedIntradayBot(IntradayStockBot):
         atr_value = indicators_3m.get("atr", 1) if isinstance(indicators_3m.get("atr"), (int, float)) else 1
         atr_pct = (atr_value / ltp * 100) if ltp > 0 else 1.0
         sl_percent = signal.get("stop_loss_percent", round(atr_pct * 1.5, 2))
-        target_percent = signal.get("target_percent", round(atr_pct * 3.0, 2))
+        # Fallback target must clear the R:R gate below; a plain 2x SL default
+        # is auto-rejected whenever MIN_RR_RATIO is tuned above 2.0.
+        fallback_target = round(max(atr_pct * 3.0, sl_percent * cfg.MIN_RR_RATIO), 2)
+        target_percent = signal.get("target_percent", fallback_target)
 
         # ── R:R check must happen BEFORE Kronos tightening ─────────────────
         if sl_percent > 0 and target_percent < sl_percent * cfg.MIN_RR_RATIO:

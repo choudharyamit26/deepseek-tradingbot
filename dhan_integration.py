@@ -187,10 +187,12 @@ class DhanStockTradingBot:
     def clear_live_quotes_cache(self):
         self.live_quotes_cache.clear()
 
-    def _fetch_intraday(self, security_id, date_str, interval_int):
-        return self._fetch_intraday_range(security_id, date_str, date_str, interval_int)
+    def _fetch_intraday(self, security_id, date_str, interval_int, exchange_segment=None):
+        return self._fetch_intraday_range(security_id, date_str, date_str, interval_int, exchange_segment=exchange_segment)
 
-    def _fetch_intraday_range(self, security_id, from_date, to_date, interval_int, retries=2):
+    def _fetch_intraday_range(self, security_id, from_date, to_date, interval_int, retries=2, exchange_segment=None):
+        if exchange_segment is None:
+            exchange_segment = self.dhan.NSE
         if self._breaker_is_open():
             return None
         for attempt in range(retries + 1):
@@ -198,7 +200,7 @@ class DhanStockTradingBot:
             try:
                 resp = self.dhan.intraday_minute_data(
                     security_id=security_id,
-                    exchange_segment=self.dhan.NSE,
+                    exchange_segment=exchange_segment,
                     instrument_type="EQUITY",
                     from_date=from_date,
                     to_date=to_date,
@@ -288,7 +290,7 @@ class DhanStockTradingBot:
         offset = 3 if t.weekday() == 0 else 1
         return (t - timedelta(days=offset)).strftime("%Y-%m-%d")
 
-    def get_historical_data(self, security_id, interval="3minute", min_bars=5):
+    def get_historical_data(self, security_id, interval="3minute", min_bars=5, exchange_segment=None):
         # Key on (sid, interval) only: the bot (min_bars=20) and guardian
         # (min_bars=5) previously kept separate entries for identical data,
         # doubling API fetches for every symbol with an open position. A
@@ -303,7 +305,7 @@ class DhanStockTradingBot:
             if now - ts < ttl and (df is None or len(df) == 0 or len(df) >= min_bars):
                 return df
 
-        df = self._get_historical_data_uncached(security_id, interval, min_bars)
+        df = self._get_historical_data_uncached(security_id, interval, min_bars, exchange_segment=exchange_segment)
         self.historical_cache[cache_key] = (now, df)
         if interval != "1day":  # daily bars aren't useful in the replay store
             self._persist_candles(security_id, interval, df)
@@ -332,17 +334,17 @@ class DhanStockTradingBot:
         except Exception:
             logger.exception("Failed to persist candles for %s/%s", security_id, interval)
 
-    def _get_historical_data_uncached(self, security_id, interval="3minute", min_bars=5):
+    def _get_historical_data_uncached(self, security_id, interval="3minute", min_bars=5, exchange_segment=None):
         time.sleep(random.uniform(0.1, 0.3))
         if interval == "1day":
             # "1day" used to silently fall through _INTERVAL_MAP to 3-minute
             # bars, so the ATR-floor profile was computed on intraday data.
-            return self._fetch_daily_history(security_id)
+            return self._fetch_daily_history(security_id, exchange_segment=exchange_segment)
         interval_int = _INTERVAL_MAP.get(interval, 3)
         resample_rule = _RESAMPLE_MAP.get(interval_int, "3min")
         today_str = time.strftime("%Y-%m-%d")
 
-        today_df = self._fetch_intraday(security_id, today_str, interval_int)
+        today_df = self._fetch_intraday(security_id, today_str, interval_int, exchange_segment=exchange_segment)
 
         # If today alone satisfies min_bars, return immediately
         if today_df is not None and len(today_df) >= min_bars:
@@ -352,7 +354,7 @@ class DhanStockTradingBot:
 
         # Try resampling from 1-min data if native interval didn't give enough
         if interval_int != 1:
-            today_1m = self._fetch_intraday(security_id, today_str, 1)
+            today_1m = self._fetch_intraday(security_id, today_str, 1, exchange_segment=exchange_segment)
             if today_1m is not None and len(today_1m) > 0:
                 resampled = today_1m.resample(resample_rule).agg({
                     "open": "first", "high": "max", "low": "min",
@@ -362,12 +364,12 @@ class DhanStockTradingBot:
 
         # Always fetch previous trading day when today's data is below min_bars
         prev = self._prev_trading_day()
-        prev_df = self._fetch_intraday(security_id, prev, interval_int)
+        prev_df = self._fetch_intraday(security_id, prev, interval_int, exchange_segment=exchange_segment)
         if prev_df is not None and len(prev_df) > 0:
             dfs.append(prev_df)
         elif interval_int != 1:
             # Fallback: fetch prev day 1-min and resample
-            prev_1m = self._fetch_intraday(security_id, prev, 1)
+            prev_1m = self._fetch_intraday(security_id, prev, 1, exchange_segment=exchange_segment)
             if prev_1m is not None and len(prev_1m) > 0:
                 resampled = prev_1m.resample(resample_rule).agg({
                     "open": "first", "high": "max", "low": "min",
@@ -383,8 +385,10 @@ class DhanStockTradingBot:
         combined.sort_index(inplace=True)
         return combined
 
-    def _fetch_daily_history(self, security_id, calendar_days=120):
+    def _fetch_daily_history(self, security_id, calendar_days=120, exchange_segment=None):
         """Fetch daily OHLCV bars (~80 trading days for 120 calendar days)."""
+        if exchange_segment is None:
+            exchange_segment = self.dhan.NSE
         if self._breaker_is_open():
             return pd.DataFrame()
         end = datetime.now()
@@ -392,7 +396,7 @@ class DhanStockTradingBot:
         try:
             resp = self.dhan.historical_daily_data(
                 security_id=str(security_id),
-                exchange_segment=self.dhan.NSE,
+                exchange_segment=exchange_segment,
                 instrument_type="EQUITY",
                 from_date=start.strftime("%Y-%m-%d"),
                 to_date=end.strftime("%Y-%m-%d"),
@@ -583,10 +587,21 @@ class DhanStockTradingBot:
 
                 symbol = sid_to_symbol.get(security_id)
                 if not symbol:
-                    continue
+                    # Fallback: BSE-listed or off-watchlist positions report tradingSymbol
+                    trading_symbol = str(pos.get("tradingSymbol") or "").strip()
+                    if not trading_symbol:
+                        logger.debug("Skipping position with unknown security_id %s", security_id)
+                        continue
+                    symbol = trading_symbol
 
+                exchange_segment = str(pos.get("exchangeSegment") or self.dhan.NSE)
                 is_buy = net_qty > 0
-                entry_price = float(pos.get("netAvg", 0))
+                # netAvg is the correct average cost; fall back to buyAvg/sellAvg
+                # if netAvg is missing or zero (can happen for externally-placed orders).
+                net_avg = float(pos.get("netAvg", 0))
+                if net_avg == 0:
+                    net_avg = float(pos.get("buyAvg", 0) if is_buy else pos.get("sellAvg", 0))
+                entry_price = net_avg
                 quantity = abs(net_qty)
                 unrealized_pnl = float(pos.get("unrealizedProfit", 0))
             except (TypeError, ValueError, AttributeError) as e:
@@ -600,6 +615,7 @@ class DhanStockTradingBot:
                 "transaction_type": self.dhan.BUY if is_buy else self.dhan.SELL,
                 "unrealized_pnl": unrealized_pnl,
                 "security_id": security_id,
+                "exchange_segment": exchange_segment,
             }
 
         return positions

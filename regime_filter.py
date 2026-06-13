@@ -242,7 +242,7 @@ class RegimeFilter:
         if df.empty or len(df) < 5:
             return {"trend": "neutral", "volatility": "normal", "strength": 0,
                     "current": 0, "sma": 0, "sma_window": self.REGIME_SMA_WINDOW,
-                    "volatility_pct": 0}
+                    "volatility_pct": 0, "intraday_chg_pct": 0, "session_trend": "neutral"}
         close = df["close"]
         # Use live price if available, otherwise fall back to last daily close
         current = live_price if live_price > 0 else close.iloc[-1]
@@ -253,8 +253,13 @@ class RegimeFilter:
         vol = "high" if atr_pct > 2.0 else ("low" if atr_pct < 0.5 else "normal")
         strength = round(((current / sma) - 1) * 100, 2)
         vol_pct = round(atr_pct, 2)
+        # Intraday movement: live price vs yesterday's (last completed) daily close
+        prev_close = close.iloc[-1]
+        intraday_chg_pct = round((current - prev_close) / prev_close * 100, 2) if live_price > 0 and prev_close > 0 else 0
+        session_trend = "bullish" if intraday_chg_pct >= 0.5 else ("bearish" if intraday_chg_pct <= -0.5 else "neutral")
         return {"trend": trend, "volatility": vol, "strength": strength, "volatility_pct": vol_pct,
-                "current": round(current, 2), "sma": round(sma, 2), "sma_window": self.REGIME_SMA_WINDOW}
+                "current": round(current, 2), "sma": round(sma, 2), "sma_window": self.REGIME_SMA_WINDOW,
+                "intraday_chg_pct": intraday_chg_pct, "session_trend": session_trend}
 
     def get_regime(self, symbol: str) -> dict:
         # Determine which indices we need
@@ -286,8 +291,9 @@ class RegimeFilter:
         reg = regime_data if regime_data else self.get_regime(symbol)
         lines = []
         n = reg["nifty"]
+        intraday_str = f", intraday_chg={n['intraday_chg_pct']:+.2f}% (session={n['session_trend']})" if n.get("intraday_chg_pct") else ""
         lines.append(f"Nifty 50: trend={n['trend']}, volatility={n['volatility']}, "
-                     f"strength={n['strength']}%, current={n['current']}, SMA{n['sma_window']}={n['sma']}")
+                     f"strength={n['strength']}%, current={n['current']}, SMA{n['sma_window']}={n['sma']}{intraday_str}")
         if reg["sector"]:
             s = reg["sector"]
             lines.append(f"{reg['sector_name']}: trend={s['trend']}, volatility={s['volatility']}, "

@@ -99,10 +99,10 @@ PARAM_BOUNDS: dict[str, tuple[float, float, float]] = {
 def load_closed_trades(days_back: int = 14, since: datetime | None = None) -> list[dict]:
     """Load closed trades from daily signal CSVs.
 
-    Rows are counted when they have both pnl and exit_price. LIVE-FAILED mode
-    is NOT excluded: when the Dhan API rejects an order (e.g. DH-905 Invalid
-    IP) the trader places it manually, so the recorded PnL is a real market
-    outcome of the strategy's signal.
+    A row is counted when pnl is present and non-empty. exit_price is NOT
+    required: LIVE-FAILED signals (DH-905 order rejections placed manually by
+    the trader) carry a real pnl outcome but no system-tracked exit_price.
+    Rows without a pnl entry are open/pending positions and are skipped.
     """
     import csv
 
@@ -117,9 +117,8 @@ def load_closed_trades(days_back: int = 14, since: datetime | None = None) -> li
             with open(path, "r", encoding="utf-8") as f:
                 for row in csv.DictReader(f):
                     pnl_str = (row.get("pnl") or "").strip()
-                    exit_str = (row.get("exit_price") or "").strip()
-                    if not pnl_str or not exit_str:
-                        continue  # open position / entry row
+                    if not pnl_str:
+                        continue  # open/pending position — no outcome yet
                     try:
                         ts = datetime.strptime(row["timestamp"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=IST)
                     except (ValueError, KeyError):
@@ -127,14 +126,38 @@ def load_closed_trades(days_back: int = 14, since: datetime | None = None) -> li
                     if since is not None and ts is not None and ts <= since:
                         continue
                     try:
+                        exit_str = (row.get("exit_price") or "").strip()
+                        entry = float(row.get("entry_price") or 0)
+                        exit_p = float(exit_str) if exit_str else None
+                        qty_str = (row.get("quantity") or "").strip()
+                        qty = int(float(qty_str)) if qty_str else 1
+                        direction = row.get("direction", "")
+                        stored_pnl = float(pnl_str)
+
+                        # Detect the guardian entry_price=0 bug:
+                        #   _calc_pnl with entry=0 produces pnl = (0-exit)*qty = -exit*qty
+                        # Check: if stored_pnl ≈ -(exit_price * qty), it's corrupted.
+                        # In that case, recompute from the CSV entry_price (which is the
+                        # actual signal/fill price for TRAILING-SL rows). For all other
+                        # cases trust the stored pnl — FAILED-SHORT manual pnl, actual
+                        # fills that differ from signal price, large-qty positions, etc.
+                        pnl = stored_pnl
+                        if (exit_p is not None and qty > 0 and entry > 0
+                                and abs(stored_pnl + exit_p * qty) < 0.50):
+                            # Corrupted: pnl was recorded as -(exit * qty)
+                            if direction == "BUY":
+                                pnl = round((exit_p - entry) * qty, 2)
+                            else:
+                                pnl = round((entry - exit_p) * qty, 2)
+
                         trades.append({
                             "timestamp": row.get("timestamp", ""),
                             "symbol": row["symbol"],
-                            "direction": row.get("direction", ""),
+                            "direction": direction,
                             "confidence": int(float(row.get("confidence") or 0)),
-                            "pnl": float(pnl_str),
-                            "entry": float(row.get("entry_price") or 0),
-                            "exit": float(exit_str),
+                            "pnl": pnl,
+                            "entry": entry,
+                            "exit": exit_p,
                             "market_regime": row.get("market_regime", ""),
                             "signal_type": row.get("signal_type", ""),
                             "date": d,
@@ -589,11 +612,15 @@ def run_reflection(dry_run: bool = False) -> dict:
         return {"action": "revert", "parameter": revert["record"].get("parameter_changed")}
 
     # Step 2: evidence gate.
+    # Load ALL available trades (no since-filter) so the full signals history
+    # is used for analysis. The auto-revert check in Step 1 already evaluates
+    # whether the last parameter change specifically helped or hurt.
     since = last_change_time(hypotheses)
-    trades = load_closed_trades(days_back=30, since=since)
+    trades = load_closed_trades(days_back=60, since=None)
     metrics = compute_metrics(trades)
-    logger.info("Closed trades since last change (%s): %d (gate: %d)",
-                since.strftime("%Y-%m-%d %H:%M") if since else "ever", metrics["closed_trades"], min_trades)
+    logger.info("Total closed trades available: %d (gate: %d, last change: %s)",
+                metrics["closed_trades"], min_trades,
+                since.strftime("%Y-%m-%d %H:%M") if since else "never")
 
     if metrics["closed_trades"] < min_trades:
         record = {

@@ -47,7 +47,8 @@ class KronosExitGuardian(PositionExitGuardian):
                                     symbol, new_sl, pnl_pct, trail_dist)
                 else:
                     new_sl = current_price + trail_dist * atr
-                    if old_sl := trade.get("sl_price", 0) == 0 or new_sl < old_sl:
+                    old_sl = trade.get("sl_price", 0)
+                    if old_sl == 0 or new_sl < old_sl:
                         self.bot_instance.active_trades[symbol]["trailing_sl"] = new_sl
                         self.bot_instance.active_trades[symbol]["sl_price"] = new_sl
                         logger.info("%s trailing SL ACTIVATED at %.2f (pnl=%.2f%%, dist=%.1f*ATR)",
@@ -75,7 +76,7 @@ class KronosExitGuardian(PositionExitGuardian):
             now = self._now_ist()
             close_cutoff = now.replace(hour=15, minute=30 - close_exit_min, second=0)
             if now.time() >= close_cutoff.time():
-                logger.info("%s market close exit: time=%.2f cutoff=%02d:%02d",
+                logger.info("%s market close exit: time=%s cutoff=%02d:%02d",
                             symbol, now.time(), close_cutoff.hour, close_cutoff.minute)
                 await self._intraday_exit(symbol, trade, current_price, f"CLOSE-EXIT {close_exit_min}min-before")
                 return
