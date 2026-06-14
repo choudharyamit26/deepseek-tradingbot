@@ -214,6 +214,8 @@ async def main():
         max_daily_loss_percent=cfg.MAX_DAILY_LOSS_PCT,
         risk_per_trade_percent=cfg.RISK_PER_TRADE_PCT,
         min_confidence=cfg.MIN_CONFIDENCE,
+        cash_buffer_pct=cfg.CASH_BUFFER_PCT,
+        max_position_capital_pct=cfg.MAX_POSITION_CAPITAL_PCT,
     )
 
     # Init Enhanced Bot

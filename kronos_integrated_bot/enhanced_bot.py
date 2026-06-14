@@ -113,7 +113,9 @@ class EnhancedIntradayBot(IntradayStockBot):
                     df = await asyncio.to_thread(
                         self.dhan.get_historical_data, security_id, "3minute", KRONOS_MIN_3M
                     )
-                return symbol, df if len(df) >= KRONOS_MIN_3M else None
+                if df is None or len(df) < KRONOS_MIN_3M:
+                    return symbol, None
+                return symbol, df
             except Exception as exc:
                 logger.debug("Batch fetch failed for %s: %s", symbol, exc)
                 return symbol, None
@@ -1026,24 +1028,27 @@ class EnhancedIntradayBot(IntradayStockBot):
         signal_type = trade.get("signal_type", "")
         confidence = trade.get("confidence", 0)
 
-        # Estimate exit price and PnL before parent closes the trade
-        pnl_est = 0.0
-        pnl_pct_est = 0.0
+        # Estimate exit price and PnL before parent closes the trade.
+        # Only store to RAG if we actually get a price — pnl=0 would record
+        # every exit as LOSS (since 0 is not > 0 in the WIN check).
+        pnl_est = None
+        pnl_pct_est = None
         try:
             security_id = self.dhan.security_ids.get(symbol)
             if security_id:
                 async with self._dhan_sem:
                     live = await asyncio.to_thread(self.dhan.fetch_live_data, security_id)
-                exit_price = live.get("last_price") or trade["entry_price"]
-                pnl_est, pnl_pct_est = self._calc_pnl(trade, exit_price)
+                exit_price = live.get("last_price")
+                if exit_price:
+                    pnl_est, pnl_pct_est = self._calc_pnl(trade, exit_price)
         except Exception as exc:
             logger.debug("%s RAG exit price estimate failed: %s", symbol, exc)
 
         # Call parent to do the actual exit (fetches live price again, sends telegram, etc.)
         await super()._exit_position(symbol, reason)
 
-        # Store to RAG with best-effort PnL estimate
-        if entry_indicators and signal_type in ("BUY", "SELL"):
+        # Store to RAG only when we have a valid PnL estimate
+        if entry_indicators and signal_type in ("BUY", "SELL") and pnl_est is not None:
             try:
                 self.rag.store_setup(
                     symbol=symbol,
