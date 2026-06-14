@@ -734,6 +734,19 @@ class IntradayStockBot:
                         symbol, reversal_report.score, pnl_pct, exit_reason)
             await self._exit_position(symbol, exit_reason)
 
+    async def _pre_scan_batch(self):
+        """Hook called once per scan cycle before per-stock analysis.
+        Override in subclasses to run batch operations (e.g. Kronos batch predict)."""
+
+    async def _sleep_until_next_candle(self, candle_minutes: int = 3, buffer_seconds: int = 5):
+        """Sleep until the start of the next N-minute candle boundary + buffer.
+        Replaces fixed asyncio.sleep(scan_interval) so every scan fires on a fresh candle close."""
+        now = self._now_ist()
+        seconds_into_candle = (now.minute % candle_minutes) * 60 + now.second + now.microsecond / 1e6
+        seconds_to_next = candle_minutes * 60 - seconds_into_candle + buffer_seconds
+        logger.debug("Candle-close trigger: sleeping %.1fs until next %d-min boundary", seconds_to_next, candle_minutes)
+        await asyncio.sleep(max(seconds_to_next, 5))
+
     async def run(self, scan_interval=180, single_run=False):
         logger.info("Starting Intraday Stock Trading Bot")
         logger.info("Entry window: %d:%02d AM - %d:%02d PM IST | Max %d signals/stock/day | Scan every %ds",
@@ -748,11 +761,10 @@ class IntradayStockBot:
                     await asyncio.sleep(scan_interval)
                     continue
 
-                # ── IMPROVEMENT #11: Align scans with 3-min candle boundaries ──
+                # Align scans with 3-min candle boundaries: wait for candle close + buffer
                 now = self._now_ist()
                 seconds_into_candle = (now.minute % 3) * 60 + now.second
                 if seconds_into_candle < 5 and not single_run:
-                    # We're right at a candle boundary — wait a few seconds for data
                     await asyncio.sleep(5 - seconds_into_candle)
 
                 # Clear fast-moving caches at scan start; 15m/1h bars are kept
@@ -767,6 +779,9 @@ class IntradayStockBot:
                     async with self._dhan_sem:
                         await asyncio.to_thread(self.dhan.cache_live_quotes, watchlist_sids)
 
+                # Feature 1: allow subclasses to run batch operations before per-stock scans
+                await self._pre_scan_batch()
+
                 logger.info("Scanning %d stocks...", len(self.watchlist))
                 tasks = [self.analyze_stock(s) for s in self.watchlist]
                 await asyncio.gather(*tasks)
@@ -780,14 +795,15 @@ class IntradayStockBot:
                         await asyncio.to_thread(self.dhan.cache_live_quotes, active_sids)
 
                 await self._monitor_positions()
-                
+
                 if single_run:
                     logger.info("Single run completed.")
                     break
-                    
-                await asyncio.sleep(scan_interval)
+
+                # Feature 4: fire on next 3-min candle close instead of fixed poll
+                await self._sleep_until_next_candle()
             except Exception as e:
                 logger.exception("Unexpected error in main loop: %s", e)
                 if single_run:
                     break
-                await asyncio.sleep(scan_interval)
+                await self._sleep_until_next_candle()

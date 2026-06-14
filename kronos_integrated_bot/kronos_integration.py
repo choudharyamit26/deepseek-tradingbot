@@ -75,9 +75,14 @@ class KronosIntegration:
 
         x_ts = pd.Series(x_df.index, index=x_df.index)
         last_ts = x_ts.iloc[-1]
+        if len(x_df) >= 2:
+            diffs = x_df.index.to_series().diff().dropna()
+            gap_minutes = max(1, int(round(diffs.median().total_seconds() / 60)))
+        else:
+            gap_minutes = 5
         y_ts = pd.date_range(
-            start=last_ts + pd.Timedelta(minutes=5),
-            periods=pred_len, freq="5min", tz=last_ts.tz,
+            start=last_ts + pd.Timedelta(minutes=gap_minutes),
+            periods=pred_len, freq=f"{gap_minutes}min", tz=last_ts.tz,
         )
         y_ts = pd.Series(y_ts)
 
@@ -165,13 +170,21 @@ class KronosIntegration:
 
         range_pct = (pred_high - pred_low) / last_price * 100 if last_price > 0 else 0
 
+        # Detect candle interval so DeepSeek knows the time horizon
+        if len(pred_df) >= 2:
+            gap_min = int(round((pred_df.index[1] - pred_df.index[0]).total_seconds() / 60))
+        else:
+            gap_min = 15
+        horizon_min = len(pred_df) * gap_min
+
         lines = [
-            "KRONOS TIME-SERIES FORECAST (next {} candles):".format(len(pred_df)),
+            "KRONOS TIME-SERIES FORECAST (next {} x {}-min candles = {} min ahead):".format(
+                len(pred_df), gap_min, horizon_min),
             "  Predicted path: open={:.2f} -> close[{:d}]={:.2f} ({:+.2f}%)".format(
                 pred_open, len(pred_df)-1, pred_close, pred_return),
             "  Predicted range: {:.2f} - {:.2f} ({:.2f}% of price)".format(
                 pred_low, pred_high, range_pct),
-            "  Immediate candle (t+1): {:+.2f}%".format(pred_first_return),
+            "  Immediate next {}-min candle: {:+.2f}%".format(gap_min, pred_first_return),
         ]
 
         if range_pct > 0.5:
@@ -181,8 +194,8 @@ class KronosIntegration:
 
         if abs(pred_return) > 0.3:
             direction_str = "UP" if pred_return > 0 else "DOWN"
-            lines.append("  Kronos predicts a significant {} move ({:.2f}%)".format(
-                direction_str, abs(pred_return)))
+            lines.append("  Kronos predicts a significant {} move over next {:.0f} min ({:.2f}%)".format(
+                direction_str, horizon_min, abs(pred_return)))
 
         return "\n".join(lines)
 
@@ -194,6 +207,90 @@ class KronosIntegration:
             return pred_df["low"].min() - 0.5 * atr_value
         else:
             return pred_df["high"].max() + 0.5 * atr_value
+
+    def predict_batch_for_stocks(
+        self,
+        stock_data: dict,
+        min_bars: int = 30,
+    ) -> dict:
+        """
+        Run a single Kronos batch prediction for multiple stocks simultaneously.
+
+        stock_data: {symbol: df (3m OHLCV, DatetimeIndex)}
+        Returns:    {symbol: pred_df} — only for stocks with sufficient bars.
+
+        All series are truncated to the same length (min_bars or the minimum
+        available across qualifying stocks) so KronosPredictor.predict_batch()
+        can stack them into one tensor.
+        """
+        if not self.ready:
+            return {}
+
+        pred_len = self.cfg["pred_len"]
+        lookback = min(self.cfg["lookback"], self.cfg["max_context"])
+
+        # Step 1: keep only stocks that have enough bars
+        valid: dict[str, pd.DataFrame] = {}
+        for symbol, df in stock_data.items():
+            if df is None or len(df) < min_bars:
+                continue
+            x_df = df.tail(lookback).copy()
+            required = {"open", "high", "low", "close"}
+            if not required.issubset(x_df.columns):
+                continue
+            if "volume" not in x_df.columns:
+                x_df["volume"] = 0.0
+            if "amount" not in x_df.columns:
+                x_df["amount"] = x_df["close"] * x_df["volume"]
+            x_df = x_df[["open", "high", "low", "close", "volume", "amount"]]
+            valid[symbol] = x_df
+
+        if not valid:
+            logger.debug("predict_batch_for_stocks: no qualifying stocks (min_bars=%d)", min_bars)
+            return {}
+
+        # Step 2: align to the same length required by predict_batch()
+        min_len = min(len(df) for df in valid.values())
+        symbols = list(valid.keys())
+
+        df_list, x_ts_list, y_ts_list = [], [], []
+        for symbol in symbols:
+            df = valid[symbol].tail(min_len)
+            x_ts = pd.Series(df.index, index=df.index)
+            last_ts = df.index[-1]
+            diffs = df.index.to_series().diff().dropna()
+            gap_min = max(1, int(round(diffs.median().total_seconds() / 60))) if len(diffs) else 3
+            y_ts = pd.Series(pd.date_range(
+                start=last_ts + pd.Timedelta(minutes=gap_min),
+                periods=pred_len, freq=f"{gap_min}min", tz=last_ts.tz,
+            ))
+            df_list.append(df)
+            x_ts_list.append(x_ts)
+            y_ts_list.append(y_ts)
+
+        logger.info("Kronos batch predict: %d stocks x %d bars -> %d preds each",
+                    len(symbols), min_len, pred_len)
+        try:
+            pred_dfs = self._predictor.predict_batch(
+                df_list, x_ts_list, y_ts_list, pred_len,
+                T=self.cfg["temperature"],
+                top_p=self.cfg["top_p"],
+                sample_count=self.cfg["sample_count"],
+                verbose=False,
+            )
+        except Exception as exc:
+            import traceback
+            logger.error("Kronos predict_batch failed: %s\n%s", exc, traceback.format_exc())
+            return {}
+
+        now = time.time()
+        results = {}
+        for symbol, pred_df in zip(symbols, pred_dfs):
+            self._prediction_cache[symbol] = (now, pred_df)
+            results[symbol] = pred_df
+
+        logger.info("Kronos batch predict done: %d/%d stocks succeeded", len(results), len(symbols))
+        return results
 
     def get_exit_signal(self, pred_df: pd.DataFrame,
                         entry_price: float, side: str) -> dict:

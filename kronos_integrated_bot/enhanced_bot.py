@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from stock_trading_bot import IntradayStockBot
 from reversal_detector import detect_reversals
+from analog_rag import AnalogRAG
 
 from . import config as cfg
 from .kronos_integration import KronosIntegration
@@ -75,6 +76,87 @@ class EnhancedIntradayBot(IntradayStockBot):
         self._consecutive_losses: int = 0
         self._last_exit_was_loss: bool = False
         self._partial_profit_booked: dict[str, bool] = {}
+        # Feature 1: batch Kronos state (populated in _pre_scan_batch)
+        self._batch_kronos_lock = asyncio.Lock()
+        self._batch_kronos_hist: dict[str, object] = {}  # symbol -> 3m df
+        # Feature 3: analog RAG
+        self.rag = AnalogRAG()
+        logger.info("AnalogRAG ready: %d stored setups", self.rag.count())
+        # Feature 2: circuit breaker proximity tracking
+        self._circuit_blocked: set[str] = set()
+
+    # ── Feature 1: Batch Kronos prediction ────────────────────────────────────
+
+    async def _pre_scan_batch(self):
+        """
+        Fetch 3m history for all watchlist stocks and run a single
+        KronosPredictor.predict_batch() call instead of 191 separate ones.
+        Results are stored in self.kronos._prediction_cache so that
+        per-stock _analyze() calls hit the cache for free.
+        """
+        if not self.cfg["enabled"] or not self.kronos.ready:
+            return
+
+        now_ist = self._now_ist()
+        if now_ist.weekday() >= 5 or not (_ENTRY_START_T <= now_ist.time() <= _ENTRY_END_T):
+            return
+
+        logger.info("Kronos batch: fetching 3m history for %d stocks...", len(self.watchlist))
+        KRONOS_MIN_3M = 30
+
+        async def _fetch_one(symbol):
+            security_id = self.dhan.security_ids.get(symbol)
+            if not security_id:
+                return symbol, None
+            try:
+                async with self._dhan_sem:
+                    df = await asyncio.to_thread(
+                        self.dhan.get_historical_data, security_id, "3minute", KRONOS_MIN_3M
+                    )
+                return symbol, df if len(df) >= KRONOS_MIN_3M else None
+            except Exception as exc:
+                logger.debug("Batch fetch failed for %s: %s", symbol, exc)
+                return symbol, None
+
+        results = await asyncio.gather(*[_fetch_one(s) for s in self.watchlist])
+        stock_data = {sym: df for sym, df in results if df is not None}
+        self._batch_kronos_hist = stock_data
+
+        if not stock_data:
+            logger.info("Kronos batch: no stocks with enough 3m bars yet")
+            return
+
+        logger.info("Kronos batch: running predict_batch() on %d stocks...", len(stock_data))
+        await asyncio.to_thread(
+            self.kronos.predict_batch_for_stocks, stock_data, KRONOS_MIN_3M
+        )
+        logger.info("Kronos batch: complete, %d predictions cached", len(stock_data))
+
+    # ── Feature 2: Circuit breaker proximity check ─────────────────────────
+
+    def _near_circuit_limit(self, symbol: str, historical: object, ltp: float) -> bool:
+        """
+        Return True if the stock has moved >= 8% intraday from today's open,
+        meaning it may be approaching a 10% circuit limit and will be illiquid.
+        Uses today's first 3m bar as a proxy for the opening price.
+        """
+        if historical is None or len(historical) < 1:
+            return False
+        try:
+            today_open = float(historical["open"].iloc[0])
+            if today_open <= 0:
+                return False
+            intraday_move_pct = abs(ltp - today_open) / today_open * 100
+            CIRCUIT_PROXIMITY_THRESHOLD = 8.0  # warn if within 2% of 10% circuit
+            if intraday_move_pct >= CIRCUIT_PROXIMITY_THRESHOLD:
+                logger.info(
+                    "%s near circuit limit: intraday move=%.2f%% from open=%.2f (ltp=%.2f)",
+                    symbol, intraday_move_pct, today_open, ltp,
+                )
+                return True
+        except Exception:
+            pass
+        return False
 
     async def _build_track_record(self) -> str:
         """Build a summary of recent closed trades for AI feedback.
@@ -451,6 +533,14 @@ class EnhancedIntradayBot(IntradayStockBot):
             "avg_volume_3m": historical["volume"].tail(5).mean(),
         }
 
+        # ── Feature 2: Circuit breaker proximity check ──────────────────────
+        if self._near_circuit_limit(symbol, historical, ltp):
+            self.filter_stats["atr_blocked"] += 1  # reuse counter for blocked stocks
+            self._circuit_blocked.add(symbol)
+            logger.info("%s -- near circuit limit, skipping (illiquid/gap-prone)", symbol)
+            return
+        self._circuit_blocked.discard(symbol)
+
         # ── Volume exhaustion check ─────────────────────────────────────────
         if self._check_volume_exhaustion(historical):
             self.filter_stats["volume_blocked"] += 1
@@ -467,26 +557,31 @@ class EnhancedIntradayBot(IntradayStockBot):
         kronos_conf_pred = None
         if self.cfg["enabled"] and self.kronos.ready:
             try:
-                kronos_input_15m = historical.resample("15min").agg({
-                    "open": "first", "high": "max", "low": "min",
-                    "close": "last", "volume": "sum",
-                }).dropna()
+                # Primary: 3-min bars (same timeframe as bot decisions).
+                # Kronos will predict next 10 x 3-min = 30 min ahead — directly
+                # relevant to entry/exit timing.
+                # Fallback: multi-day 15m only for early-morning sessions (<30 3m bars).
+                KRONOS_MIN_3M  = 30   # 30 x 3-min = 90 min context; available after ~10:45
+                KRONOS_MIN_15M = 30   # 30 x 15-min = 7.5h context; always available via multi-day fetch
 
-                # Use 15m if ≥5 bars, fall back to 3m if ≥10 bars
-                enough_15m = len(kronos_input_15m) >= 5
-                enough_3m = len(historical) >= 10
-
-                if enough_15m:
-                    kronos_input = kronos_input_15m
-                    logger.debug("%s Kronos using %d 15-min bars", symbol, len(kronos_input_15m))
-                elif enough_3m:
+                if len(historical) >= KRONOS_MIN_3M:
                     kronos_input = historical
-                    logger.debug("%s Kronos fallback: using %d 3-min (only %d 15-min)",
-                                 symbol, len(historical), len(kronos_input_15m))
+                    logger.debug("%s Kronos using %d 3-min bars (primary)", symbol, len(historical))
                 else:
-                    kronos_input = None
-                    logger.info("%s Kronos skipped: insufficient data (3m=%d, 15m=%d)",
-                                symbol, len(historical), len(kronos_input_15m))
+                    # Early-morning: not enough 3m bars yet — fall back to 15m multi-day
+                    async with self._dhan_sem:
+                        kronos_15m = await asyncio.to_thread(
+                            self.dhan.get_kronos_history, security_id, "15minute", 7
+                        )
+                    if len(kronos_15m) >= KRONOS_MIN_15M:
+                        kronos_input = kronos_15m
+                        logger.debug("%s Kronos fallback: %d 15-min bars (3m=%d, need %d)",
+                                     symbol, len(kronos_15m), len(historical), KRONOS_MIN_3M)
+                    else:
+                        kronos_input = None
+                        logger.info("%s Kronos skipped: 3m=%d (need %d), 15m=%d (need %d)",
+                                    symbol, len(historical), KRONOS_MIN_3M,
+                                    len(kronos_15m), KRONOS_MIN_15M)
 
                 if kronos_input is not None:
                     pred_df = await asyncio.to_thread(self.kronos.predict, kronos_input, symbol=symbol)
@@ -547,6 +642,25 @@ class EnhancedIntradayBot(IntradayStockBot):
             logger.info("%s -- all TFs ranging (3m=%.0f, 15m=%.0f, 1h=%.0f), skipping AI",
                         symbol, adx_3m, adx_15m, adx_1h)
             return
+
+        # ── Feature 3: RAG/analog context ───────────────────────────────────
+        nifty_trend_for_rag = (regime_data.get("nifty", {}) or {}).get("trend", "") if regime_data else ""
+        regime_str_for_rag = (regime_data.get("nifty", {}) or {}).get("trend", "") if regime_data else ""
+        try:
+            atr_value_raw = indicators_3m.get("atr", 1)
+            atr_pct_for_rag = (float(atr_value_raw) / ltp * 100) if ltp > 0 and atr_value_raw else 0.5
+            indicators_for_rag = dict(indicators_3m)
+            indicators_for_rag["atr_pct"] = atr_pct_for_rag
+            analog_context = self.rag.query_similar(
+                indicators_for_rag, pre_kronos_conf,
+                nifty_trend_for_rag, regime_str_for_rag,
+                signal_type=direction_3m, n=5,
+            )
+            if analog_context:
+                full_context += "\n\n" + analog_context
+                logger.debug("%s RAG analog context injected", symbol)
+        except Exception as exc:
+            logger.debug("%s RAG query failed: %s", symbol, exc)
 
         async with self._ai_sem:
             signal = await self.ai.get_trading_signal(
@@ -698,6 +812,15 @@ class EnhancedIntradayBot(IntradayStockBot):
         if symbol in self.active_trades:
             return
 
+        # ── Feature 5: Cash buffer enforcement (20% must remain undeployed) ──
+        deployed_capital = sum(
+            t.get("entry_price", 0) * t.get("quantity", 0)
+            for t in self.active_trades.values()
+        )
+        if not self.risk.check_cash_buffer(deployed_capital):
+            logger.info("%s blocked: cash buffer enforced (deployed=%.2f)", symbol, deployed_capital)
+            return
+
         atr_value = indicators_3m.get("atr", 1) if isinstance(indicators_3m.get("atr"), (int, float)) else 1
         atr_pct = (atr_value / ltp * 100) if ltp > 0 else 1.0
         sl_percent = signal.get("stop_loss_percent", round(atr_pct * 1.5, 2))
@@ -801,6 +924,17 @@ class EnhancedIntradayBot(IntradayStockBot):
             "atr_value": atr_value,
             "trail_activation_pct": self.cfg.get("trailing_sl_activation_pct", 3.0),
             "partial_profit_pct": self.cfg.get("partial_profit_pct", 0.0),
+            # Feature 3: RAG snapshot for post-exit storage
+            "_entry_indicators": {
+                "rsi": indicators_3m.get("rsi", 50),
+                "adx": indicators_3m.get("adx", 20),
+                "volume_ratio": indicators_3m.get("volume_ratio", 1.0),
+                "mfi": indicators_3m.get("mfi", 50),
+                "atr_pct": atr_pct,
+            },
+            "_entry_kronos_conf": kronos_conf,
+            "_entry_nifty": nifty_regime,
+            "_entry_regime": regime_str_for_rag,
         }
 
         fail_remarks = ""
@@ -874,4 +1008,55 @@ class EnhancedIntradayBot(IntradayStockBot):
             mtf_1h=mtf_1h,
             slot_reserved=not order_failed,  # only count slot if order succeeded
         )
+
+    # ── Feature 3: RAG — store trade outcome on exit ─────────────────────────
+
+    async def _exit_position(self, symbol, reason="EXIT"):
+        """Override to capture trade outcome into the analog RAG database."""
+        trade = self.active_trades.get(symbol)
+        if not trade:
+            await super()._exit_position(symbol, reason)
+            return
+
+        # Snapshot indicators stored at entry (before parent deletes the trade)
+        entry_indicators = trade.get("_entry_indicators", {})
+        entry_kronos_conf = trade.get("_entry_kronos_conf")
+        entry_nifty = trade.get("_entry_nifty", "")
+        entry_regime = trade.get("_entry_regime", "")
+        signal_type = trade.get("signal_type", "")
+        confidence = trade.get("confidence", 0)
+
+        # Estimate exit price and PnL before parent closes the trade
+        pnl_est = 0.0
+        pnl_pct_est = 0.0
+        try:
+            security_id = self.dhan.security_ids.get(symbol)
+            if security_id:
+                async with self._dhan_sem:
+                    live = await asyncio.to_thread(self.dhan.fetch_live_data, security_id)
+                exit_price = live.get("last_price") or trade["entry_price"]
+                pnl_est, pnl_pct_est = self._calc_pnl(trade, exit_price)
+        except Exception as exc:
+            logger.debug("%s RAG exit price estimate failed: %s", symbol, exc)
+
+        # Call parent to do the actual exit (fetches live price again, sends telegram, etc.)
+        await super()._exit_position(symbol, reason)
+
+        # Store to RAG with best-effort PnL estimate
+        if entry_indicators and signal_type in ("BUY", "SELL"):
+            try:
+                self.rag.store_setup(
+                    symbol=symbol,
+                    indicators=entry_indicators,
+                    kronos_conf=entry_kronos_conf,
+                    nifty_trend=entry_nifty,
+                    market_regime=entry_regime,
+                    signal_type=signal_type,
+                    confidence=int(confidence),
+                    pnl=pnl_est,
+                    pnl_pct=pnl_pct_est,
+                )
+                logger.debug("RAG stored: %s %s P&L=%.2f (%.2f%%)", symbol, signal_type, pnl_est, pnl_pct_est)
+            except Exception as exc:
+                logger.warning("RAG store_setup failed for %s: %s", symbol, exc)
 

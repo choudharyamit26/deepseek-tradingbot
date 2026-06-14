@@ -13,6 +13,8 @@ class RiskManager:
         max_daily_loss_percent=2,
         risk_per_trade_percent=2,
         min_confidence=65,
+        max_position_capital_pct=20.0,
+        cash_buffer_pct=20.0,
     ):
         if dhan_api is not None and initial_capital is None:
             initial_capital = dhan_api.get_available_balance()
@@ -24,10 +26,11 @@ class RiskManager:
         self.dhan_api = dhan_api
         self.max_daily_trades = max_daily_trades
         self.max_daily_loss_percent = max_daily_loss_percent
-        self.risk_per_trade_percent = (
-            risk_per_trade_percent  # % of capital risked per trade
-        )
+        self.risk_per_trade_percent = risk_per_trade_percent
         self.min_confidence = min_confidence
+        # Feature 5: explicit cash buffer controls
+        self.max_position_capital_pct = max_position_capital_pct  # max % of capital in one position
+        self.cash_buffer_pct = cash_buffer_pct                    # % always kept in cash (undeployed)
         self.daily_trade_count = 0
         self.daily_pnl = 0
 
@@ -42,7 +45,23 @@ class RiskManager:
             (self.initial_capital - self.current_capital) / self.initial_capital * 100
         )
         if loss_percent > self.max_daily_loss_percent:
-            logger.warning(f"Daily loss limit exceeded: {loss_percent:.2f}%")
+            logger.warning("Daily loss limit exceeded: %.2f%%", loss_percent)
+            return False
+        return True
+
+    def check_cash_buffer(self, deployed_capital: float) -> bool:
+        """
+        Returns True if capital is available to open another position.
+        Blocks new positions when deployed >= (100 - cash_buffer_pct)% of current capital.
+        Default: max 80% deployed, always keep 20% in cash.
+        """
+        max_deployable = self.current_capital * (1.0 - self.cash_buffer_pct / 100.0)
+        if deployed_capital >= max_deployable:
+            logger.warning(
+                "Cash buffer enforced: deployed=%.2f >= limit=%.2f (%.0f%% of %.2f, buffer=%.0f%%)",
+                deployed_capital, max_deployable,
+                100 - self.cash_buffer_pct, self.current_capital, self.cash_buffer_pct,
+            )
             return False
         return True
 
@@ -52,8 +71,13 @@ class RiskManager:
         risk_amount = capital * (self.risk_per_trade_percent / 100)
         risk_per_share = entry_price * (stop_loss_percent / 100)
         quantity = int(risk_amount / risk_per_share) if risk_per_share > 0 else 0
+
+        # Hard cap: no single position > max_position_capital_pct% of capital
+        max_position_value = capital * (self.max_position_capital_pct / 100.0)
+        max_by_cap = int(max_position_value / entry_price) if entry_price > 0 else quantity
+
         max_afford = int(capital / entry_price) if entry_price > 0 else 0
-        return min(max(quantity, 0), max_afford)
+        return min(max(quantity, 0), max_afford, max_by_cap)
 
     def record_trade(self):
         self.daily_trade_count += 1

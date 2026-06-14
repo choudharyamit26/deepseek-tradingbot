@@ -259,6 +259,64 @@ Before vs after for key stocks (ATR from typical 3m bars):
 
 **Fix in `kronos_strategy.yaml`**: `trailing_sl_activation_pct: 3.0 → 1.0` and `trailing_sl_distance_atr: 2.0 → 1.5`. Trailing SL now activates after a 1% move in-favour (was 3%), making it operational for realistic intraday targets.
 
+### AA. Five Efficiency & Risk Features + Prompt Overhaul (2026-06-14)
+
+#### AA.1 — Kronos predict_batch() (`kronos_integration.py`, `dhan_integration.py`, `enhanced_bot.py`)
+**Problem**: The previous scan loop called `predict()` individually for every stock in the watchlist — up to 191 sequential Kronos inference calls per 3-minute cycle.
+
+**Fix**: Added `predict_batch_for_stocks(stock_data, min_bars=30)` to `KronosIntegration`. All series must be the same length for `KronosPredictor.predict_batch()` — solved by truncating all qualifying series to `min_len = min(len(df) for df in valid.values())`. Results are stored in `_prediction_cache`, so the existing per-stock `predict()` call in `_analyze()` hits the cache instantly (zero additional inference).
+
+Hook pattern: `IntradayStockBot` (base) gains a no-op `_pre_scan_batch()` called once per cycle before per-stock tasks. `EnhancedIntradayBot` overrides it to fetch 3-min OHLCV for all watchlist stocks and call `predict_batch_for_stocks()`. `DhanStockTradingBot` gains `get_kronos_history(sid, interval, n_days, ...)` which tries a multi-day range call first, falls back to day-by-day fetches, and caches for 5 minutes.
+
+#### AA.2 — Circuit Breaker Proximity Check (`enhanced_bot.py`)
+**Problem**: Stocks within ~10% of daily circuit limits are illiquid and gap-prone — high slippage risk.
+
+**Fix**: `_near_circuit_limit(symbol, historical, ltp)` computes abs move from today's open. If `abs_move_from_open >= 8%`, the stock is added to `_circuit_blocked` set and skipped for the rest of the day. Check is applied after LTP fetch at the top of `_analyze()`, before any indicator computation.
+
+#### AA.3 — Analog RAG System (`analog_rag.py`, `enhanced_bot.py`)
+**Problem**: The bot had no memory of past setups — each decision was made from scratch with no comparison to similar historical outcomes.
+
+**Fix**: Added `analog_rag.py` — a SQLite-backed similarity lookup system.
+- Feature vector: `[rsi, adx, volume_ratio, mfi, atr_pct]` — stddev-normalized for distance computation.
+- `query_similar(indicators, n=5)` runs Euclidean distance search, returns top-N past setups formatted as prompt context with win rate, WARNING/EDGE labels.
+- `store_setup()` called at entry; `_exit_position()` override in `EnhancedIntradayBot` fetches live exit price, estimates PnL, then stores the outcome after calling super().
+- Entry indicator snapshot stored in `trade_data` dict (`_entry_indicators`, `_entry_kronos_conf`, `_entry_nifty`, `_entry_regime`).
+- Analog context injected into `full_context` before the DeepSeek call; system prompt Step 6 instructs the AI on how to weight it (win rate < 35% → -10, ≥ 65% → +5).
+- DB path: `kronos_integrated_bot/analog_history.db` (auto-created).
+
+#### AA.4 — Candle-Close Trigger (`stock_trading_bot.py`)
+**Problem**: The 180-second fixed sleep timer meant the bot sometimes analyzed mid-candle data instead of waiting for completed bars.
+
+**Fix**: Replaced `await asyncio.sleep(scan_interval)` with `await self._sleep_until_next_candle(candle_minutes=3, buffer_seconds=5)`. Formula: `seconds_to_next = 180 - ((minute % 3) * 60 + second + microseconds) + 5`. Always waits at least 5 seconds. Result: every scan cycle starts ~5 seconds after a 3-minute candle closes.
+
+#### AA.5 — Cash Buffer Enforcement (`risk_manager.py`, `enhanced_bot.py`)
+**Problem**: The bot only enforced `max_concurrent_positions` (count), not a minimum capital reserve — could deploy 100% of capital.
+
+**Fix**: `RiskManager` gains `max_position_capital_pct=20.0` (max 20% of capital per single trade) and `cash_buffer_pct=20.0` (keep 20% undeployed). `check_cash_buffer(deployed_capital)` computes `max_deployable = capital × 0.80` and returns `False` if already at limit. `calculate_position_size()` now adds `max_by_cap = int(capital × 0.20 / entry_price)` cap — quantity is `min(risk_based_qty, afford_qty, cap_qty)`. Buffer check inserted before order placement in `_analyze()`.
+
+#### AA.6 — DeepSeek Prompt Overhaul (`deepseek_analyzer.py`)
+Eight issues identified via pipeline audit, all resolved:
+
+| # | Severity | Issue | Fix |
+|---|---|---|---|
+| 1 | MEDIUM | Confidence started at 95, code at 100 | Changed to "Start at 100" |
+| 2 | LOW | Bonus cap was +8, code allows +10 | Updated to "max +10 total" |
+| 3 | HIGH | No analog RAG instructions | Added Step 6 ANALOG EVIDENCE to protocol |
+| 4 | MEDIUM | No Kronos horizon/range guidance | Added pred_range_pct SL/TP tuning |
+| 5 | MEDIUM | Kronos conflict undefined | Added explicit definition (neg return = conflict for BUY) |
+| 6 | LOW | JSON single-quote instruction wrong | Changed to "NEVER use unescaped double quotes" |
+| 7 | LOW | No setup_type=NONE for HOLD | Added explicit HOLD rule |
+| 8 | NEW | AI second-guessed math result | Added binding commitment rule |
+
+**Binding commitment rule** (fixes KOTAKBANK inconsistency where AI computed 82 then output HOLD):
+> "If score ≥ threshold, you MUST output BUY/SELL. NO further overrides after the math passes. The numeric score is BINDING."
+
+**HOLD confidence**: Explicit instruction to report computed score (not zero) when signal=HOLD. Verified: RELIANCE HOLD now shows `conf=72` (was `conf=0`).
+
+#### AA.7 — E2E Tests (`test_features_e2e.py`, `test_pipeline_e2e.py`)
+- `test_features_e2e.py`: 28 checks across all 5 features — **28/28 PASS**.
+- `test_pipeline_e2e.py`: Full CSV data → indicators → Kronos → DeepSeek pipeline. Shows complete context, Kronos forecast, full user prompt, AI response, and penalty breakdown. Usage: `python test_pipeline_e2e.py [SYMBOL]`. Verified against RELIANCE and KOTAKBANK; audit section updated to show 8 RESOLVED / 1 OPEN (model name verification).
+
 ---
 
 ## 5. Future Development Ideas

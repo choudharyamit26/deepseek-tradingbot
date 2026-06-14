@@ -290,6 +290,61 @@ class DhanStockTradingBot:
         offset = 3 if t.weekday() == 0 else 1
         return (t - timedelta(days=offset)).strftime("%Y-%m-%d")
 
+    def _prev_n_trading_days(self, n: int) -> list:
+        """Return date strings for the last n trading days (Mon-Fri), most-recent first."""
+        days = []
+        t = datetime.now()
+        offset = 1
+        while len(days) < n:
+            d = t - timedelta(days=offset)
+            if d.weekday() < 5:
+                days.append(d.strftime("%Y-%m-%d"))
+            offset += 1
+        return days
+
+    def get_kronos_history(self, security_id, interval="15minute", n_days=7, exchange_segment=None):
+        """Fetch N trading days of intraday OHLCV for the Kronos context window.
+
+        Tries a single multi-day range call first; falls back to day-by-day
+        fetches if the range call fails. Cached for 5 minutes independently
+        of the normal trading-data cache.
+        """
+        cache_key = (str(security_id), f"kronos_{interval}_{n_days}")
+        now = time.time()
+        if cache_key in self.historical_cache:
+            ts, df = self.historical_cache[cache_key]
+            if now - ts < 300 and df is not None and len(df) > 0:
+                return df
+
+        interval_int = _INTERVAL_MAP.get(interval, 15)
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        prev_days = self._prev_n_trading_days(n_days - 1)
+        from_date = prev_days[-1] if prev_days else today_str
+
+        dfs = []
+        range_df = self._fetch_intraday_range(
+            security_id, from_date, today_str, interval_int,
+            exchange_segment=exchange_segment,
+        )
+        if range_df is not None and len(range_df) > 0:
+            dfs.append(range_df)
+        else:
+            for day_str in [today_str] + prev_days:
+                day_df = self._fetch_intraday(security_id, day_str, interval_int,
+                                              exchange_segment=exchange_segment)
+                if day_df is not None and len(day_df) > 0:
+                    dfs.append(day_df)
+
+        if not dfs:
+            result = pd.DataFrame()
+        else:
+            result = pd.concat(dfs)
+            result = result[~result.index.duplicated(keep="last")]
+            result.sort_index(inplace=True)
+
+        self.historical_cache[cache_key] = (now, result)
+        return result
+
     def get_historical_data(self, security_id, interval="3minute", min_bars=5, exchange_segment=None):
         # Key on (sid, interval) only: the bot (min_bars=20) and guardian
         # (min_bars=5) previously kept separate entries for identical data,
