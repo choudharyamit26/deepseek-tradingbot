@@ -317,6 +317,94 @@ Eight issues identified via pipeline audit, all resolved:
 - `test_features_e2e.py`: 28 checks across all 5 features — **28/28 PASS**.
 - `test_pipeline_e2e.py`: Full CSV data → indicators → Kronos → DeepSeek pipeline. Shows complete context, Kronos forecast, full user prompt, AI response, and penalty breakdown. Usage: `python test_pipeline_e2e.py [SYMBOL]`. Verified against RELIANCE and KOTAKBANK; audit section updated to show 8 RESOLVED / 1 OPEN (model name verification).
 
+### AB. Live-Readiness Fixes, RAG Backfill & Pipeline Simulation (2026-06-14)
+
+#### AB.1 — Live-Readiness Bug Fixes (`enhanced_bot.py`, `risk_manager.py`, `config.py`, `main.py`)
+
+Three bugs found in a pre-live audit and fixed before the next trading session:
+
+**Bug 1 — `_fetch_one()` null crash** (`enhanced_bot.py`):
+`df if len(df) >= KRONOS_MIN_3M else None` crashed when `get_historical_data()` returned `None` (e.g., on DH-905 IP ban). Fixed: added explicit `if df is None` guard before calling `len()`.
+
+**Bug 2 — RAG false-LOSS on exit price fetch failure** (`enhanced_bot.py`):
+`pnl_est = 0.0` was the default; `outcome = "WIN" if pnl > 0 else "LOSS"` means `0.0 → LOSS`. If Dhan's live price call failed at exit, every closed trade was recorded as a LOSS, poisoning future RAG queries. Fixed: changed default to `pnl_est = None`, added `if exit_price:` guard before computing PnL, and changed RAG store condition to `and pnl_est is not None`.
+
+**Bug 3 — Position sizing halved by `max_position_capital_pct=20%`** (`risk_manager.py`):
+The new feature defaulted to 20%, reducing RELIANCE quantity from 79 → 15 shares on a ₹1L account — a 5× reduction the user didn't ask for. Fixed: changed default to `100%` (no cap), which makes `min(risk_qty, max_afford, max_by_cap)` equivalent to the original `min(risk_qty, max_afford)` since `max_by_cap = int(capital/price) = max_afford`.
+
+**Wiring fix** (`config.py`, `main.py`):
+`CASH_BUFFER_PCT` and `MAX_POSITION_CAPITAL_PCT` were added to `config.py` but never passed to `RiskManager()` in `main.py`. Fixed: both values now passed explicitly at construction.
+
+#### AB.2 — RAG DB Backfill (`backfill_rag.py`, `analog_history.db`)
+
+**Problem**: `analog_history.db` was empty on the first live run. The RAG system returns `""` with < 3 entries, so DeepSeek gets no analog context. All PnL is entered manually in CSVs — there was no path from CSV → SQLite.
+
+**Fix**: Created `backfill_rag.py` — a standalone script that seeds the RAG DB from historical signal CSVs.
+
+**Indicator extraction strategy (3-tier)**:
+
+1. Load saved 3m candle CSV + compute via `calculate_technical_indicators()` (most accurate)
+2. Parse RSI/ADX/volume_ratio/MFI from AI reasoning text via regex (used for all 89 rows)
+3. ATR% always estimated from stop_loss column: `atr_pct = |entry − sl| / entry × 100 / 1.5` (SL = 1.5 × ATR by convention)
+
+**Result**: 89 trades inserted from 8 signal CSVs (2026-06-02 to 2026-06-11).
+
+| Metric | Value |
+|---|---|
+| Total rows | 89 |
+| WIN / LOSS | 43 / 46 |
+| Win rate | 48% |
+| BUY / SELL | 9 / 80 |
+| Skipped (dup) | 0 |
+| Skipped (bad) | 0 |
+
+**Usage**: Run `python backfill_rag.py` any time after manually entering PnL in a CSV. Deduplication on `(symbol, timestamp)` prevents double-inserts. `--dry-run` flag available.
+
+**Schema init fix**: The script now instantiates `AnalogRAG(db_path=DB_PATH)` at the top of `backfill()` which runs `CREATE TABLE IF NOT EXISTS setups` — prevents `OperationalError: no such table` on a fresh DB.
+
+#### AB.3 — JSON Control Character Fix (`deepseek_analyzer.py`)
+
+**Problem**: DeepSeek occasionally emits unescaped literal newlines/tabs inside the `"reasoning"` JSON string field. This caused `json.loads()` to raise `JSONDecodeError`, silently falling back to the regex repair path (`_repair_truncated_json`) which loses most of the reasoning text.
+
+Example error: `WARNING: NTPC JSON parse error: Invalid control character at: line 4 column 5930`
+
+**Fix**: Added `_sanitize_json_content(content: str) → str` static method. Walks the raw response character-by-character, tracks whether the cursor is inside a JSON string literal (accounting for `\"` escapes), and replaces any bare control character (`ord(ch) < 0x20`) with its JSON escape sequence:
+
+- `\n` → `\\n`
+- `\r` → `\\r`
+- `\t` → `\\t`
+- anything else → `\\uXXXX`
+
+Called on `content` before `json.loads()`. The fallback repair path is now only reached for genuinely truncated or structurally broken responses.
+
+#### AB.4 — Pipeline Simulation Script (`simulate_signal.py`)
+
+Created `simulate_signal.py` — a replay tool that runs the full signal pipeline against saved candle CSVs without needing a live market or Dhan API connection for data. Calls the real DeepSeek API for the AI step.
+
+**Stages printed**:
+
+1. Candle data loaded (3m / 15m / 60m bar counts and last close)
+2. Technical indicators at each timeframe
+3. Pre-filter gate result (PASS/FAIL with reason)
+4. Analog RAG query output (5 similar past setups with win rate)
+5. DeepSeek AI signal (full reasoning, confidence, SL%, TP%)
+6. Post-signal gates (MTF alignment, RSI veto, sector conflict)
+7. Risk sizing (quantity, position value, R:R ratio)
+8. Final decision (ENTER / SKIP with reason)
+
+**First simulation result — NTPC, 2026-06-12, 11:30**:
+
+| Stage | Result |
+| --- | --- |
+| Pre-filter | PASS — price below VWAP+SMA20, ADX=21 > 18 (trending mode) |
+| RAG analogs | 5 SELL setups found, win rate 40%, avg PnL −₹3.26 |
+| AI signal | HOLD, confidence 72 |
+| Final | SKIP |
+
+AI penalty breakdown: Start 100 − 12 (volume 0.46 < 0.5) − 7 (15m NEUTRAL) − 5 (1h NEUTRAL) = **76 < 80 → HOLD**. Correct behaviour — NTPC had weak volume at candle-close despite a mid-bar spike that triggered the live bot's signal at 11:30:59 (volume_ratio=4.12 in live reasoning).
+
+**Usage**: Edit `SYMBOL`, `SECURITY_ID`, `DATE`, `SIGNAL_TIME` at the top of the file and run `python simulate_signal.py`.
+
 ---
 
 ## 5. Future Development Ideas
