@@ -327,7 +327,7 @@ class DeepSeekStockAnalyzer:
                 logger.warning("%s V4 Pro returned empty content", symbol)
                 return {"signal": "HOLD", "confidence": 0, "reasoning": "Empty AI response"}
 
-            result = json.loads(content)
+            result = json.loads(self._sanitize_json_content(content))
 
             # Log the raw AI response for transparency
             logger.info("%s raw AI response: %s", symbol, result)
@@ -375,6 +375,36 @@ class DeepSeekStockAnalyzer:
                 result[key] = val
 
         return result
+
+    @staticmethod
+    def _sanitize_json_content(content: str) -> str:
+        """Escape literal control characters that appear inside JSON string values.
+
+        The model occasionally emits unescaped newlines / tabs / carriage returns
+        inside the "reasoning" field, making json.loads() raise JSONDecodeError.
+        This walks the content character-by-character, tracks whether we are
+        inside a string literal, and replaces bare control chars with their
+        JSON escape sequences so the parser never sees them raw.
+        """
+        _ESCAPE = {'\n': '\\n', '\r': '\\r', '\t': '\\t'}
+        result = []
+        in_string = False
+        escape_next = False
+        for ch in content:
+            if escape_next:
+                result.append(ch)
+                escape_next = False
+            elif ch == '\\' and in_string:
+                result.append(ch)
+                escape_next = True
+            elif ch == '"':
+                in_string = not in_string
+                result.append(ch)
+            elif in_string and ord(ch) < 0x20:
+                result.append(_ESCAPE.get(ch, f'\\u{ord(ch):04x}'))
+            else:
+                result.append(ch)
+        return ''.join(result)
 
     @classmethod
     def _repair_truncated_json(cls, raw: str, symbol: str) -> dict:
