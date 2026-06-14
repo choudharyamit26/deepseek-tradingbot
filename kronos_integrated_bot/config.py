@@ -71,7 +71,7 @@ POSITION_CONFIDENCE_SCALAR = 1.0   # Position size multiplier when confidence>=8
 MAX_DAILY_TRADES = 5               # Max trades per day
 RISK_PER_TRADE_PCT = 2.0           # % of capital risked per trade
 CASH_BUFFER_PCT = 20.0             # % of capital always kept undeployed
-MAX_POSITION_CAPITAL_PCT = 20.0    # max % of capital in a single position
+MAX_POSITION_CAPITAL_PCT = 100.0   # max % of capital in a single position (100 = no cap)
 
 # ── Strategy params for self-improvement ─────────────────────────────────────
 STRATEGY_FILE = Path(__file__).parent / "kronos_strategy.yaml"

@@ -13,7 +13,7 @@ class RiskManager:
         max_daily_loss_percent=2,
         risk_per_trade_percent=2,
         min_confidence=65,
-        max_position_capital_pct=20.0,
+        max_position_capital_pct=100.0,  # 100% = no per-trade cap (original behaviour)
         cash_buffer_pct=20.0,
     ):
         if dhan_api is not None and initial_capital is None:
