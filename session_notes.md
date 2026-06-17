@@ -466,6 +466,41 @@ Also fixed a latent bug: the old `_trend_15m` helper returned `BEARISH` on an ex
 
 ---
 
+### Section AD — 2026-06-17 (Reflection Agent Hardening + Evidence-Based Param Tuning)
+
+Ran the reflection agent (`kronos_integrated_bot/reflect.py`) to self-improve profitability and found it was stuck in a degenerate loop. Fixed the agent, then applied two replay-validated parameter changes.
+
+#### AD.1 — Diagnosis: three defects in the reflection loop
+
+1. **`min_confidence` flip-flop** — the DeepSeek LLM oscillated `min_confidence` 82↔85 every cycle, "discovering" the opposite rationale each time, never accumulating evidence.
+2. **Replay validation blind to the tuned parameter** — `replay.py` simulates only the filter/exit layer (no DeepSeek/Kronos confidence model), so `min_confidence` and every `kronos_*` change produces **identical** baseline vs candidate replay metrics. The replay gate could never veto the flip-flop; it passed vacuously.
+3. **Backfill-polluted Kronos signal** — all 102 DB rows have `kronos_aligned=0`/`kronos_direction=''` (hardcoded in `backfill_rag.py:271` for the 89 seeded rows), yet the prompt reported "KRONOS ALIGNMENT: 100% conflicted" as real signal, misleading the optimizer.
+
+#### AD.2 — Agent fixes (`reflect.py`, tests in `tests/test_reflect.py`)
+
+- **`is_oscillation()` guard** (step 3b, runs *before* the slow replay): rejects a proposal that moves a parameter back toward the value its most recent change moved it from. Records a `rejected_oscillation` hypothesis. Confirmed live — the LLM re-proposed `82→85` and the guard rejected it in 4 seconds.
+- **`indicator_analysis()`** now omits the KRONOS ALIGNMENT line when the column has no variance (so backfill artifacts don't reach the LLM).
+- **`replay_validate()`** returns "inconclusive" (not a gate) when baseline == candidate metrics, instead of a false pass.
+- **Prompt overhaul** (`build_proposal_prompts()`, split out for unit testing): flags `RECENTLY ADJUSTED` params (last 4 decisions) and `not replay-validatable` params (`min_confidence`, `kronos_*`) inline and in an explicit AVOID list, and instructs the LLM to ground its pick in the BY DIRECTION / INDICATOR-LEVEL evidence rather than fixating on one knob.
+
+#### AD.3 — Evidence-based parameter changes (replay-validated)
+
+The agent rejected the flip-flop but the fixated LLM produced no alternative, so two evidence-based changes were applied through the agent's machinery (archived + version-bumped + hypothesis-recorded, fully revertible). Both parameters are confirmed live-effective via `apply_strategy_to_config` (cfg + base-class module globals).
+
+Trade evidence (102 closed trades, −125 PnL, 45% WR): BUY 23% WR (−93.7, ~75% of losses) vs SELL 48%; RSI 55-70 zone 25% WR; only ADX>40 profitable; Nifty-bullish entries 20% WR.
+
+| Version | Change | Replay PnL | Sharpe | Max DD | Trades |
+| --- | --- | --- | --- | --- | --- |
+| kronos-v17 | baseline (min_adx=20, rsi_ob=70) | −27.79 | −0.35 | −148.49 | 50 |
+| **kronos-v18** | `min_adx_trending` 20 → **22** | **+79.02** | **+1.30** | −121.84 | 40 |
+| **kronos-v19** | `rsi_ob_limit` 70 → **67** | **+116.32** | **+2.23** | **−59.82** | 37 |
+
+Replay over `['2026-06-11','2026-06-12','2026-06-15','2026-06-16','2026-06-17']`. Raising the ADX trend floor cut the lowest-quality entries; lowering the overbought BUY veto cut the worst longs. Cumulative swing v17→v19: PnL −27.79 → +116.32, Sharpe −0.35 → +2.23, drawdown roughly a third of baseline.
+
+**Caveat**: replay models only the filter/exit layer, and the strategy is still structurally weak live (the BUY side and ADX 25-40 bucket remain net losers). These are validated improvements, not a profitability guarantee. Next levers: deeper BUY-side handling and letting the now-unstuck LLM explore the rest of the parameter space.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.

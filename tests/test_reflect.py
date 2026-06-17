@@ -1,7 +1,10 @@
 from kronos_integrated_bot.reflect import (
     PARAM_BOUNDS,
+    build_proposal_prompts,
     bump_version,
     compute_metrics,
+    is_oscillation,
+    recently_adjusted_params,
     validate_proposal,
 )
 
@@ -69,6 +72,58 @@ def test_compute_metrics_basic():
     assert m["win_rate"] == 50.0
     assert m["total_pnl"] == 18
     assert m["max_drawdown"] == -5  # after the first win, the -5 dip
+
+
+def test_oscillation_guard_blocks_flip_flop():
+    # Last applied change moved min_confidence 85 -> 82 (current). Proposing
+    # 82 -> 85 reverts that change: oscillation.
+    hyp = [{"parameter_changed": "min_confidence", "action": "change",
+            "old_value": 85, "new_value": 82}]
+    assert is_oscillation("min_confidence", 85, 82, hyp) is True
+
+
+def test_oscillation_guard_allows_continuation():
+    # Last change moved 85 -> 82; proposing 82 -> 80 continues the same
+    # direction (further down), not a reversal.
+    hyp = [{"parameter_changed": "min_confidence", "action": "change",
+            "old_value": 85, "new_value": 82}]
+    assert is_oscillation("min_confidence", 80, 82, hyp) is False
+
+
+def test_oscillation_guard_ignores_other_params():
+    hyp = [{"parameter_changed": "min_rr_ratio", "action": "change",
+            "old_value": 2.2, "new_value": 1.9}]
+    assert is_oscillation("min_confidence", 85, 82, hyp) is False
+
+
+def test_oscillation_guard_no_history():
+    assert is_oscillation("min_confidence", 85, 82, []) is False
+
+
+def test_recently_adjusted_params_collects_recent():
+    hyp = [
+        {"action": "change", "parameter_changed": "min_rr_ratio"},
+        {"action": "rejected_oscillation", "parameter_changed": "min_confidence"},
+        {"action": "change", "parameter_changed": "min_adx_trending"},
+    ]
+    out = recently_adjusted_params(hyp, n=4)
+    assert set(out) == {"min_rr_ratio", "min_confidence", "min_adx_trending"}
+
+
+def test_prompt_flags_recent_and_blind_params():
+    strategy = {"version": "kronos-v18", "params": {"min_confidence": 82, "min_adx_trending": 22}}
+    metrics = {"closed_trades": 100, "win_rate": 45.0, "total_pnl": -100.0,
+               "avg_pnl_per_trade": -1.0}
+    hyp = [{"action": "rejected_oscillation", "parameter_changed": "min_confidence"},
+           {"action": "change", "parameter_changed": "min_adx_trending"}]
+    system_prompt, user_prompt = build_proposal_prompts(strategy, metrics, [], hyp)
+    # Recently-adjusted params surface in the avoid list and are flagged inline.
+    assert "RECENTLY ADJUSTED" in user_prompt
+    assert "min_confidence" in user_prompt
+    # min_confidence is a replay-blind param and should be flagged as such.
+    assert "not replay-validatable" in user_prompt
+    # System prompt instructs avoiding flagged params.
+    assert "RECENTLY ADJUSTED" in system_prompt
 
 
 def test_all_bounds_are_sane():

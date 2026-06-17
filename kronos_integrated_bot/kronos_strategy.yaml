@@ -26,7 +26,7 @@ params:
   max_daily_trades: 5
   max_signals_per_stock_per_day: 1
   max_trade_duration_minutes: 180
-  min_adx_trending: 20
+  min_adx_trending: 22
   min_confidence: 82
   min_prefilter_atr_pct: 0.3
   min_prefilter_volume_ratio: 0.3
@@ -35,9 +35,9 @@ params:
   partial_profit_pct: 0.0
   position_confidence_scalar: 1.0
   risk_per_trade_pct: 2.0
-  rsi_ob_limit: 70
+  rsi_ob_limit: 67
   rsi_os_limit: 30
   same_direction_cooldown: 1800
   trailing_sl_activation_pct: 1.0
   trailing_sl_distance_atr: 1.5
-version: kronos-v17
+version: kronos-v19

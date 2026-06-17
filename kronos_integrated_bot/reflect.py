@@ -343,7 +343,14 @@ def indicator_analysis(trades: list[dict]) -> str:
     sections.append(f"RSI ZONES: {json.dumps(_bucket_stats(trades, 'rsi', rsi_zone))}")
     sections.append(f"ADX STRENGTH: {json.dumps(_bucket_stats(trades, 'adx', adx_zone))}")
     sections.append(f"VOLUME RATIO: {json.dumps(_bucket_stats(trades, 'volume_ratio', vol_zone))}")
-    sections.append(f"KRONOS ALIGNMENT: {json.dumps(_bucket_stats(trades, 'kronos_aligned', kronos_label))}")
+    # Only surface Kronos alignment when the data actually varies. Backfilled
+    # rows (backfill_rag.py) hardcode kronos_aligned=0 / kronos_direction='',
+    # so a uniform column is a data artifact, not signal — feeding it to the LLM
+    # as "100% conflicted" is misleading. Skip it unless there is real variance.
+    kronos_vals = {bool(t.get("kronos_aligned")) for t in trades}
+    kronos_dirs = {(t.get("kronos_direction") or "") for t in trades}
+    if len(kronos_vals) > 1 or kronos_dirs != {""}:
+        sections.append(f"KRONOS ALIGNMENT: {json.dumps(_bucket_stats(trades, 'kronos_aligned', kronos_label))}")
     sections.append(f"NIFTY TREND: {json.dumps(_bucket_stats(trades, 'nifty_trend', nifty_label))}")
 
     return "\n".join(sections)
@@ -407,6 +414,32 @@ def last_change_time(hypotheses: list[dict]) -> datetime | None:
             except (ValueError, KeyError):
                 return None
     return None
+
+
+def is_oscillation(param: str, new_value, current, hypotheses: list[dict]) -> bool:
+    """Guardrail: reject proposals that merely undo the most recent change.
+
+    The LLM has a habit of flip-flopping a parameter (e.g. min_confidence
+    82->85->82->85): each cycle it "discovers" the opposite rationale and
+    reverts the previous cycle's change, so the strategy oscillates without
+    ever accumulating evidence. Replay validation cannot catch this for params
+    it does not model (min_confidence, all kronos_*), so we block it here.
+
+    A proposal is an oscillation when the parameter's most recent applied change
+    moved it old->current, and the new proposal moves it back toward old.
+    """
+    for rec in reversed(hypotheses):
+        if rec.get("parameter_changed") == param and rec.get("action") in ("change", "revert"):
+            try:
+                old_f = float(rec.get("old_value"))
+                cur_f = float(current)
+                new_f = float(new_value)
+            except (TypeError, ValueError):
+                return False
+            # Previous change moved old_f -> cur_f. Moving back toward old_f
+            # (same sign as old_f - cur_f) is a reversal of that change.
+            return (new_f - cur_f) * (old_f - cur_f) > 0
+    return False
 
 
 # ── Telegram ─────────────────────────────────────────────────────────────────
@@ -529,17 +562,51 @@ def _hypotheses_with_outcomes(hypotheses: list[dict]) -> str:
     return "\n".join(lines) if lines else "(no prior changes)"
 
 
-def propose_change(strategy: dict, metrics: dict, trades: list[dict],
-                   hypotheses: list[dict]) -> dict | None:
-    """Ask DeepSeek for exactly one parameter change. Returns validated dict
-    {parameter, new_value, hypothesis, analysis} or None."""
+# Params whose effect the filter-level replay cannot model (no confidence /
+# Kronos layer in replay) — changing them is unvalidatable, so the LLM should
+# only pick them when the indicator evidence is specifically about them.
+REPLAY_BLIND_PARAMS = {"min_confidence"} | {
+    p for p in PARAM_BOUNDS if p.startswith("kronos_")
+}
+
+
+def recently_adjusted_params(hypotheses: list[dict], n: int = 4) -> list[str]:
+    """Params changed (or rejected as oscillation) in the last n decisions.
+
+    The LLM fixates on one parameter (the min_confidence flip-flop). Feeding it
+    an explicit AVOID list of recently-touched params forces it to explore the
+    rest of the parameter space instead of ping-ponging the same knob.
+    """
+    seen: list[str] = []
+    for rec in reversed(hypotheses):
+        if rec.get("action") in ("change", "revert", "rejected_oscillation", "rejected_by_replay"):
+            p = rec.get("parameter_changed")
+            if p and p not in seen:
+                seen.append(p)
+        if len(seen) >= n:
+            break
+    return seen
+
+
+def build_proposal_prompts(strategy: dict, metrics: dict, trades: list[dict],
+                           hypotheses: list[dict]) -> tuple[str, str]:
+    """Build (system_prompt, user_prompt) for the LLM. Split out from the API
+    call so the prompt content is unit-testable without a network round-trip."""
     params = strategy.get("params", {})
+    avoid = recently_adjusted_params(hypotheses)
     tunable_lines = []
     for p, (lo, hi, step) in PARAM_BOUNDS.items():
         if step == 0:
             continue  # locked params not offered to the LLM
         cur = params.get(p, "unset")
-        tunable_lines.append(f"- {p}: current={cur}, allowed range [{lo}, {hi}], max change per cycle {step}")
+        flags = []
+        if p in avoid:
+            flags.append("RECENTLY ADJUSTED — avoid")
+        if p in REPLAY_BLIND_PARAMS:
+            flags.append("not replay-validatable")
+        suffix = f"  [{'; '.join(flags)}]" if flags else ""
+        tunable_lines.append(
+            f"- {p}: current={cur}, allowed range [{lo}, {hi}], max change per cycle {step}{suffix}")
 
     regime = breakdown_by(trades, "market_regime")
     direction = breakdown_by(trades, "direction")
@@ -553,13 +620,22 @@ def propose_change(strategy: dict, metrics: dict, trades: list[dict],
         "- The parameter MUST be one of the tunable parameters listed by the user.\n"
         "- new_value MUST be inside the allowed range and within max-change-per-cycle of the current value.\n"
         "- Do NOT re-propose a direction that previously degraded performance (see history outcomes).\n"
-        "- Prefer parameters that were never explored, but only with a plausible causal hypothesis.\n"
+        "- Do NOT propose a parameter flagged 'RECENTLY ADJUSTED' — it will be auto-rejected as oscillation. "
+        "Pick a DIFFERENT parameter and explore the rest of the space.\n"
+        "- Ground the choice in the BY DIRECTION and INDICATOR-LEVEL ANALYSIS evidence: target the "
+        "specific bucket (RSI zone, ADX band, direction, volume) that is losing money, and pick the "
+        "parameter that gates that bucket.\n"
+        "- Parameters flagged 'not replay-validatable' (min_confidence, kronos_*) cannot be checked by "
+        "the replay simulator; prefer a filter-level parameter (adx/rsi/volume/rr gates) when the "
+        "indicator evidence points there.\n"
         "- If win rate is healthy but trade count is low, consider relaxing a filter; "
         "if win rate is poor, consider tightening one."
     )
     # Build indicator analysis if DB-sourced trades have rich data
     ind_analysis = indicator_analysis(trades)
     ind_block = f"\n\nINDICATOR-LEVEL ANALYSIS (from trade database):\n{ind_analysis}" if ind_analysis else ""
+    avoid_block = (f"\n\nRECENTLY ADJUSTED (do NOT propose these — pick something else): {avoid}"
+                   if avoid else "")
 
     user_prompt = (
         f"CURRENT STRATEGY VERSION: {strategy.get('version')}\n\n"
@@ -568,10 +644,20 @@ def propose_change(strategy: dict, metrics: dict, trades: list[dict],
         f"BY REGIME: {json.dumps(regime)}\n"
         f"BY DIRECTION: {json.dumps(direction)}"
         f"{ind_block}\n\n"
-        f"CHANGE HISTORY WITH MEASURED OUTCOMES:\n{_hypotheses_with_outcomes(hypotheses)}\n\n"
+        f"CHANGE HISTORY WITH MEASURED OUTCOMES:\n{_hypotheses_with_outcomes(hypotheses)}"
+        f"{avoid_block}\n\n"
         f"TUNABLE PARAMETERS:\n" + "\n".join(tunable_lines) +
         f"\n\nGOALS: {json.dumps(strategy.get('goal', {}))}"
     )
+    return system_prompt, user_prompt
+
+
+def propose_change(strategy: dict, metrics: dict, trades: list[dict],
+                   hypotheses: list[dict]) -> dict | None:
+    """Ask DeepSeek for exactly one parameter change. Returns validated dict
+    {parameter, new_value, hypothesis, analysis} or None."""
+    params = strategy.get("params", {})
+    system_prompt, user_prompt = build_proposal_prompts(strategy, metrics, trades, hypotheses)
 
     try:
         resp = requests.post(
@@ -724,6 +810,17 @@ def replay_validate(strategy: dict, proposal: dict, max_days: int = 5) -> dict |
     if base_m["closed_trades"] == 0 and cand_m["closed_trades"] == 0:
         return None  # not enough simulated activity to judge
 
+    # The filter-level replay does not model the DeepSeek/Kronos confidence
+    # layer, so confidence and kronos_* params produce identical baseline and
+    # candidate metrics. A "pass" here is then vacuous — report it honestly
+    # rather than letting it masquerade as validation.
+    if (base_m["total_pnl"] == cand_m["total_pnl"]
+            and base_m["win_rate"] == cand_m["win_rate"]
+            and base_m["closed_trades"] == cand_m["closed_trades"]):
+        logger.info("Replay cannot distinguish %s (not modeled at filter level) — "
+                    "validation inconclusive, not used as a gate.", proposal["parameter"])
+        return None
+
     degraded = (cand_m["total_pnl"] < base_m["total_pnl"]
                 and cand_m["win_rate"] < base_m["win_rate"])
     detail = (f"replayed {dates}: baseline pnl={base_m['total_pnl']} wr={base_m['win_rate']}% "
@@ -783,6 +880,28 @@ def run_reflection(dry_run: bool = False) -> dict:
     proposal = propose_change(strategy, metrics, trades, hypotheses)
     if proposal is None:
         return {"action": "skipped", "reason": "no valid proposal"}
+
+    # Step 3b: anti-oscillation guard. Reject proposals that simply undo the
+    # most recent change to the same parameter (the min_confidence flip-flop).
+    cur_value = strategy.get("params", {}).get(proposal["parameter"])
+    if is_oscillation(proposal["parameter"], proposal["new_value"], cur_value, hypotheses):
+        logger.info("Proposal rejected as oscillation: %s %s -> %s would undo the last change.",
+                    proposal["parameter"], cur_value, proposal["new_value"])
+        if not dry_run:
+            append_hypothesis({
+                "timestamp": datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S"),
+                "action": "rejected_oscillation",
+                "old_version": strategy.get("version"),
+                "new_version": strategy.get("version"),
+                "parameter_changed": proposal["parameter"],
+                "old_value": cur_value,
+                "new_value": proposal["new_value"],
+                "hypothesis": proposal["hypothesis"],
+                "reasoning": "Rejected: proposal reverts the most recent change to this parameter (oscillation guard).",
+                "metrics": metrics,
+            })
+        return {"action": "rejected_oscillation", "parameter": proposal["parameter"],
+                "new_value": proposal["new_value"]}
 
     # Step 4: replay validation — if stored candle data exists, simulate the
     # last few sessions under old vs new params and reject clear degradations.
