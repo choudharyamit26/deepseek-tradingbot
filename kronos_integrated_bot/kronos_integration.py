@@ -43,6 +43,10 @@ class KronosIntegration:
     def ready(self) -> bool:
         return self._predictor is not None
 
+    @property
+    def device(self) -> str:
+        return self._predictor.device if self._predictor else "cpu"
+
     def predict(self, df: pd.DataFrame, symbol: str = "",
                 force: bool = False) -> pd.DataFrame | None:
         if not self.ready:

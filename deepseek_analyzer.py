@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class DeepSeekStockAnalyzer:
     # Sane bounds for LLM-suggested SL/TP percentages; values outside are
     # dropped so the caller falls back to its ATR-based defaults.
-    SL_TP_MIN_PCT = 0.2
+    SL_TP_MIN_PCT = 0.25
     SL_TP_MAX_PCT = 5.0
 
     def __init__(self, api_key, alert_cb=None, min_confidence=60, min_adx=18,
@@ -154,7 +154,7 @@ class DeepSeekStockAnalyzer:
            or POSITIVE for SELL signals — regardless of magnitude.
            If conflict -> -8 penalty. If aligned AND pred_range_pct > 0.5% -> +2 bonus.
            Kronos predicts the next 30 minutes. Use pred_range_pct to tune SL/TP:
-           if pred_range_pct < 0.2% (tight range), tighten your stop_loss_percent.
+           if pred_range_pct < 0.2% (tight range), reduce conviction; never tighten stop_loss_percent below the ATR floor.
            if pred_range_pct > 0.6% (wide range), consider widening target_percent.
         6. ANALOG EVIDENCE: If an ANALOG SETUPS section is present in the context:
            - win rate < 35% among similar past trades -> apply -10 confidence penalty

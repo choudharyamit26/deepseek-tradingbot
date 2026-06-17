@@ -10,6 +10,7 @@ from indicators import calculate_technical_indicators
 from signal_logger import SignalLogger
 from regime_filter import RegimeFilter
 from reversal_detector import detect_reversals
+from risk_controls import normalize_stop_loss_percent, stop_loss_floor_percent
 
 logger = logging.getLogger(__name__)
 IST = ZoneInfo("Asia/Kolkata")
@@ -28,6 +29,8 @@ SCAN_INTERVAL = 180
 # overwrites these module globals from kronos_strategy.yaml at startup.
 MIN_PREFILTER_VOLUME_RATIO = 0.15    # Floor for truly dead volume bars
 MIN_PREFILTER_ATR_PCT = 0.30         # Raised to 0.30 based on reflection agent to filter out low-volatility choppy stocks
+STOP_LOSS_ATR_MULTIPLIER = 1.5       # Execution floor: never risk less than 1.5x current 3m ATR
+MIN_STOP_LOSS_PCT = 0.25             # Absolute execution floor to avoid microscopic stops
 MIN_VOLUME_RATIO_TRENDING = 0.40     # Volume floor applied even in trending mode
 NEUTRAL_RSI_LOW, NEUTRAL_RSI_HIGH = 38, 62  # Dead zone — bypassed when trending
 MIN_RR_RATIO = 1.8                   # Minimum reward:risk ratio
@@ -156,16 +159,21 @@ class IntradayStockBot:
             if not ind:
                 continue
             close = ind.get("close", 0)
-            sma = ind.get("sma_20", close)
-            if close > sma:
+            # The 15m trend uses EMA-9 to match the hard MTF veto
+            # (_validate_mtf_alignment._trend_15m); 3m/1h use SMA-20.
+            if label == "15-Min":
+                ref_label, ref = "EMA9", ind.get("ema_9", close)
+            else:
+                ref_label, ref = "SMA20", ind.get("sma_20", close)
+            if close > ref:
                 trend = "BULLISH"
-            elif close < sma:
+            elif close < ref:
                 trend = "BEARISH"
             else:
                 trend = "NEUTRAL"
             rsi = ind.get("rsi", 50)
             adx = ind.get("adx", 20)
-            lines.append(f"{label}: RSI={rsi}, ADX={adx}, Price={close:.2f}, SMA20={sma:.2f} -> {trend}")
+            lines.append(f"{label}: RSI={rsi}, ADX={adx}, Price={close:.2f}, {ref_label}={ref:.2f} -> {trend}")
         if len(lines) >= 2:
             return "Multi-Timeframe Analysis:\n" + "\n".join(lines)
         return ""
@@ -241,7 +249,15 @@ class IntradayStockBot:
     # ── IMPROVEMENT #7: Hard MTF alignment veto AFTER AI signal ────────────────
     @staticmethod
     def _validate_mtf_alignment(sig_type: str, i3m: dict, i15m: dict, i1h: dict) -> tuple[bool, str]:
-        """Veto signals that contradict multi-timeframe alignment."""
+        """Veto signals that contradict multi-timeframe alignment.
+
+        Hard gate (both directions, symmetric):
+          SELL needs 3m BEARISH, at least one higher TF (15m/1h) BEARISH,
+               and NO higher TF BULLISH.
+          BUY  needs 3m BULLISH, at least one higher TF (15m/1h) BULLISH,
+               and NO higher TF BEARISH.
+        3m/1h trend = close vs SMA-20; 15m trend = close vs EMA-9.
+        """
         def _trend_3m_1h(ind):
             if not ind:
                 return "NEUTRAL"
@@ -254,21 +270,28 @@ class IntradayStockBot:
                 return "NEUTRAL"
             c = ind.get("close", 0)
             e = ind.get("ema_9", c)
-            return "BULLISH" if c > e else "BEARISH"
+            return "BULLISH" if c > e else "BEARISH" if c < e else "NEUTRAL"
 
         t3, t1h = _trend_3m_1h(i3m), _trend_3m_1h(i1h)
         t15 = _trend_15m(i15m)
+        higher = [("15m", t15), ("1H", t1h)]
 
         if sig_type == "BUY":
-            if t15 != "BULLISH":
-                return False, f"BUY vetoed: 15m trend is {t15} (need BULLISH)"
-            if t1h == "BEARISH":
-                return False, f"BUY vetoed: 1H trend is BEARISH"
+            if t3 != "BULLISH":
+                return False, f"BUY vetoed: 3m trend is {t3} (need BULLISH)"
+            opposing = [n for n, t in higher if t == "BEARISH"]
+            if opposing:
+                return False, f"BUY vetoed: higher TF bearish: {', '.join(opposing)} (15m={t15}, 1H={t1h})"
+            if not any(t == "BULLISH" for _, t in higher):
+                return False, f"BUY vetoed: no higher TF is bullish (15m={t15}, 1H={t1h})"
         elif sig_type == "SELL":
-            if t15 != "BEARISH":
-                return False, f"SELL vetoed: 15m trend is {t15} (need BEARISH)"
-            if t1h == "BULLISH":
-                return False, f"SELL vetoed: 1H trend is BULLISH"
+            if t3 != "BEARISH":
+                return False, f"SELL vetoed: 3m trend is {t3} (need BEARISH)"
+            opposing = [n for n, t in higher if t == "BULLISH"]
+            if opposing:
+                return False, f"SELL vetoed: higher TF bullish: {', '.join(opposing)} (15m={t15}, 1H={t1h})"
+            if not any(t == "BEARISH" for _, t in higher):
+                return False, f"SELL vetoed: no higher TF is bearish (15m={t15}, 1H={t1h})"
         return True, f"MTF OK: 3m={t3}, 15m={t15}, 1H={t1h}"
 
     def _notify_telegram(self, symbol, tag, direction, quantity, price,
@@ -470,8 +493,15 @@ class IntradayStockBot:
 
         atr_value = indicators_3m.get("atr", 1) if isinstance(indicators_3m.get("atr"), (int, float)) else 1
         atr_pct = (atr_value / ltp * 100) if ltp > 0 else 1.0
-        sl_percent = signal.get("stop_loss_percent", round(atr_pct * 1.5, 2))
-        target_percent = signal.get("target_percent", round(atr_pct * 3.0, 2))
+        default_sl_percent = stop_loss_floor_percent(
+            atr_value, ltp, STOP_LOSS_ATR_MULTIPLIER, MIN_STOP_LOSS_PCT
+        )
+        sl_percent = normalize_stop_loss_percent(
+            signal.get("stop_loss_percent", default_sl_percent),
+            atr_value, ltp, STOP_LOSS_ATR_MULTIPLIER, MIN_STOP_LOSS_PCT
+        )
+        fallback_target = round(max(atr_pct * 3.0, sl_percent * MIN_RR_RATIO), 2)
+        target_percent = signal.get("target_percent", fallback_target)
 
         # ── IMPROVEMENT #8: Enforce minimum R:R ratio ──────────────────────────
         if sl_percent > 0 and target_percent < sl_percent * MIN_RR_RATIO:

@@ -12,6 +12,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from stock_trading_bot import IntradayStockBot
 from reversal_detector import detect_reversals
 from analog_rag import AnalogRAG
+from risk_controls import normalize_stop_loss_percent, stop_loss_floor_percent
 
 from . import config as cfg
 from .kronos_integration import KronosIntegration
@@ -95,6 +96,12 @@ class EnhancedIntradayBot(IntradayStockBot):
         per-stock _analyze() calls hit the cache for free.
         """
         if not self.cfg["enabled"] or not self.kronos.ready:
+            return
+
+        # On CPU, batch=99 is slower than 99 concurrent batch=1 calls from _analyze().
+        # Skip and let per-stock predict() run in parallel via asyncio.gather.
+        if self.kronos.device == "cpu":
+            logger.info("Kronos batch: CPU device — skipping batch, using per-stock inference")
             return
 
         now_ist = self._now_ist()
@@ -187,12 +194,13 @@ class EnhancedIntradayBot(IntradayStockBot):
                                 pnl_str = row.get("pnl", "").strip()
                                 exit_str = row.get("exit_price", "").strip()
                                 if pnl_str and exit_str:  # only closed trades
+                                    conf_str = row.get("confidence", "").strip()
                                     trades.append({
                                         "symbol": row["symbol"],
                                         "direction": row.get("direction", ""),
-                                        "confidence": int(row.get("confidence", 0)),
+                                        "confidence": int(conf_str) if conf_str else 0,
                                         "pnl": float(pnl_str),
-                                        "entry": float(row.get("entry_price", 0)),
+                                        "entry": float(row.get("entry_price", 0) or 0),
                                         "exit": float(exit_str),
                                         "date": d,
                                         "market_regime": row.get("market_regime", ""),
@@ -318,9 +326,11 @@ class EnhancedIntradayBot(IntradayStockBot):
         sma20 = indicators.get("sma_20", close)
 
         # MTF trends
+        # 15m uses EMA-9 to match the hard MTF veto (_validate_mtf_alignment._trend_15m)
+        # and the MTF summary shown to the AI; 3m/1h use SMA-20.
         close_15m = indicators_15m.get("close", 0) if indicators_15m else 0
-        sma20_15m = indicators_15m.get("sma_20", close_15m) if indicators_15m else close_15m
-        trend_15m = "BULLISH" if close_15m > sma20_15m else "BEARISH" if close_15m else "NEUTRAL"
+        ema9_15m = indicators_15m.get("ema_9", close_15m) if indicators_15m else close_15m
+        trend_15m = "BULLISH" if close_15m > ema9_15m else "BEARISH" if close_15m else "NEUTRAL"
 
         close_1h = indicators_1h.get("close", 0) if indicators_1h else 0
         sma20_1h = indicators_1h.get("sma_20", close_1h) if indicators_1h else close_1h
@@ -761,8 +771,12 @@ class EnhancedIntradayBot(IntradayStockBot):
 
         if sig_type not in ("BUY", "SELL") or confidence < cfg.MIN_CONFIDENCE:
             if sig_type in ("BUY", "SELL"):
-                logger.info("%s %s dropped: confidence %d < %d after regime adjustment",
-                            symbol, sig_type, confidence, cfg.MIN_CONFIDENCE)
+                logger.warning(
+                    "%s %s REGIME-KILLED: AI conf=%d → after regime penalty → %d < %d "
+                    "(nifty=%s intraday=%+.2f%%, sector=%s)",
+                    symbol, sig_type, signal.get("confidence", 0), confidence, cfg.MIN_CONFIDENCE,
+                    nifty_trend, nifty_intraday_chg, sector_trend,
+                )
             return
 
         # ── Same-direction deduplication ─────────────────────────────────────
@@ -825,7 +839,20 @@ class EnhancedIntradayBot(IntradayStockBot):
 
         atr_value = indicators_3m.get("atr", 1) if isinstance(indicators_3m.get("atr"), (int, float)) else 1
         atr_pct = (atr_value / ltp * 100) if ltp > 0 else 1.0
-        sl_percent = signal.get("stop_loss_percent", round(atr_pct * 1.5, 2))
+        default_sl_percent = stop_loss_floor_percent(
+            atr_value, ltp, cfg.STOP_LOSS_ATR_MULTIPLIER, cfg.MIN_STOP_LOSS_PCT
+        )
+        raw_sl_percent = signal.get("stop_loss_percent", default_sl_percent)
+        sl_percent = normalize_stop_loss_percent(
+            raw_sl_percent, atr_value, ltp, cfg.STOP_LOSS_ATR_MULTIPLIER, cfg.MIN_STOP_LOSS_PCT
+        )
+        try:
+            raw_sl_for_log = float(raw_sl_percent)
+        except (TypeError, ValueError):
+            raw_sl_for_log = default_sl_percent
+        if sl_percent > raw_sl_for_log:
+            logger.info("%s SL raised to execution floor: %.2f%% -> %.2f%%",
+                        symbol, raw_sl_for_log, sl_percent)
         # Fallback target must clear the R:R gate below; a plain 2x SL default
         # is auto-rejected whenever MIN_RR_RATIO is tuned above 2.0.
         fallback_target = round(max(atr_pct * 3.0, sl_percent * cfg.MIN_RR_RATIO), 2)
@@ -842,9 +869,13 @@ class EnhancedIntradayBot(IntradayStockBot):
             range_score = kronos_conf.get("range_score", 0)
             if 0 < range_score <= 0.3:
                 tight_factor = 0.5 + 0.5 * range_score
-                sl_percent = round(sl_percent * tight_factor, 2)
-                logger.info("%s Kronos range=%.2f tightened SL: -> %.2f%%",
-                            symbol, range_score, sl_percent)
+                proposed_sl = round(sl_percent * tight_factor, 2)
+                sl_floor = stop_loss_floor_percent(
+                    atr_value, ltp, cfg.STOP_LOSS_ATR_MULTIPLIER, cfg.MIN_STOP_LOSS_PCT
+                )
+                sl_percent = max(proposed_sl, sl_floor)
+                logger.info("%s Kronos range=%.2f tightened SL: %.2f%% -> %.2f%% (floor=%.2f%%)",
+                            symbol, range_score, proposed_sl, sl_percent, sl_floor)
 
         capital = self.risk.current_capital
         quantity = self.risk.calculate_position_size(capital, sl_percent, ltp)
@@ -1064,4 +1095,3 @@ class EnhancedIntradayBot(IntradayStockBot):
                 logger.debug("RAG stored: %s %s P&L=%.2f (%.2f%%)", symbol, signal_type, pnl_est, pnl_pct_est)
             except Exception as exc:
                 logger.warning("RAG store_setup failed for %s: %s", symbol, exc)
-

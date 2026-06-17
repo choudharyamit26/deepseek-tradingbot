@@ -407,6 +407,65 @@ AI penalty breakdown: Start 100 − 12 (volume 0.46 < 0.5) − 7 (15m NEUTRAL) �
 
 ---
 
+### Section AC — 2026-06-17 (MTF Hard Gate + Trend Definition Unification)
+
+#### AC.1 — Root Cause: TORNTPOWER SELL with No Bearish Timeframe
+
+**Problem**: TORNTPOWER fired a SELL at 09:52 despite the MTF summary showing `15-Min -> BULLISH`. User expected no SELL when higher timeframes aren't bearish.
+
+**Root cause — two different 15m trend definitions**:
+
+| Layer | Basis | TORNTPOWER result |
+|---|---|---|
+| `_build_mtf_summary` (displayed label) | close vs **SMA-20** | BULLISH (what user saw) |
+| `_validate_mtf_alignment` (hard veto) | close vs **EMA-9** | BEARISH (so SELL passed) |
+
+The hard veto at `stock_trading_bot.py:_validate_mtf_alignment` already existed and **did** require 15m to be bearish for SELL — but used EMA-9. The log label used SMA-20. Price was above SMA-20 (slow, showed BULLISH) but below EMA-9 (fast, showed BEARISH to the gate). Classic short-term pullback inside a longer uptrend that slipped through a label mismatch.
+
+The scoring matrix in `enhanced_bot.py` also used SMA-20 for 15m, meaning the `15m=BULLISH vs 3m=BEARISH: -7` penalty line in logs was also computed on a different basis than the gate.
+
+#### AC.2 — Fix: Unify 15m Trend Definition to EMA-9
+
+Changed the two display/scoring sites to use EMA-9 (matching the authoritative gate). 3m and 1h remain SMA-20, consistent with the gate's `_trend_3m_1h` helper.
+
+**Files changed**:
+- `stock_trading_bot.py:_build_mtf_summary` — 15m trend now EMA-9; label in context now shows `EMA9=X.XX` instead of `SMA20=X.XX`
+- `kronos_integrated_bot/enhanced_bot.py:_compute_matrix_ceiling` — `sma20_15m` → `ema9_15m`; trend_15m now EMA-9 based
+
+**Effect**: The `15m=BULLISH vs 3m=BEARISH: -7` label in the log now matches what the gate actually checks. A trade that passes the veto will always show the 15m label consistent with that outcome.
+
+#### AC.3 — Stronger Hard Gate: Full MTF Regime Confirmation Required
+
+Rewrote `_validate_mtf_alignment` (`stock_trading_bot.py:249-297`) with a stricter symmetric rule:
+
+**SELL requires ALL of**:
+1. 3m trend is **BEARISH**
+2. At least one higher TF (15m or 1h) is **BEARISH**
+3. NO higher TF is **BULLISH**
+
+**BUY requires ALL of** (mirror):
+1. 3m trend is **BULLISH**
+2. At least one higher TF (15m or 1h) is **BULLISH**
+3. NO higher TF is **BEARISH**
+
+NEUTRAL higher TF is allowed (neither confirms nor blocks). A trade like TORNTPOWER — 3m BEARISH, 15m BULLISH — is now hard-vetoed with `SELL vetoed: higher TF bullish: 15m`.
+
+Also fixed a latent bug: the old `_trend_15m` helper returned `BEARISH` on an exact `close == ema_9` tie (no NEUTRAL branch). Fixed to return NEUTRAL on equality, consistent with `_trend_3m_1h`.
+
+**Truth-table verified (12 cases, all directions and NEUTRAL combinations)**:
+
+| Scenario | Result |
+|---|---|
+| SELL: 3m BEARISH, 15m BEARISH, 1H BEARISH | PASS |
+| SELL: 3m BEARISH, 15m BEARISH, 1H NEUTRAL | PASS |
+| SELL: 3m BEARISH, 15m NEUTRAL, 1H BEARISH | PASS |
+| SELL: 3m BEARISH, 15m NEUTRAL, 1H NEUTRAL | VETO (no higher bearish) |
+| SELL: 3m BEARISH, 15m BULLISH, 1H BEARISH | VETO (higher TF bullish) |
+| SELL: 3m NEUTRAL/BULLISH, any | VETO (3m not bearish) |
+| BUY: mirror of above | all correct |
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.

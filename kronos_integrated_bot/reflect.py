@@ -31,6 +31,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sqlite3
 import re
 import sys
 from copy import deepcopy
@@ -52,6 +53,7 @@ LOG_DIR = os.path.join(str(cfg.PROJECT_ROOT), "trading_logs")
 HISTORY_DIR = cfg.STATE_DIR / "history"
 HYPOTHESES_FILE = cfg.STATE_DIR / "hypotheses.jsonl"
 REFLECTION_LOG = cfg.STATE_DIR / "reflection.log"
+ANALOG_DB = cfg.PROJECT_ROOT / "analog_history.db"
 
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 DEEPSEEK_MODEL = "deepseek-v4-pro"
@@ -170,6 +172,76 @@ def load_closed_trades(days_back: int = 14, since: datetime | None = None) -> li
     return trades
 
 
+def load_closed_trades_from_db(days_back: int = 60, since: datetime | None = None) -> list[dict]:
+    """Load closed trades from analog_history.db.
+
+    The DB stores richer per-trade indicator snapshots (RSI, ADX, volume_ratio,
+    MFI, ATR%, Kronos alignment, Nifty trend, market_regime) than the CSV logs,
+    giving the reflection LLM much better signal for parameter optimization.
+    """
+    if not ANALOG_DB.exists():
+        logger.warning("analog_history.db not found at %s", ANALOG_DB)
+        return []
+
+    trades = []
+    now = datetime.now(IST)
+    cutoff = now - timedelta(days=days_back)
+
+    try:
+        conn = sqlite3.connect(str(ANALOG_DB))
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT * FROM setups WHERE outcome IS NOT NULL ORDER BY ts ASC"
+        ).fetchall()
+        conn.close()
+    except Exception as e:
+        logger.warning("Error reading analog_history.db: %s", e)
+        return []
+
+    for row in rows:
+        try:
+            ts_str = row["ts"]
+            # DB timestamps are ISO format (2026-06-02T09:53:11)
+            ts = datetime.fromisoformat(ts_str).replace(tzinfo=IST)
+        except (ValueError, KeyError):
+            ts = None
+
+        if ts is not None and ts < cutoff:
+            continue
+        if since is not None and ts is not None and ts <= since:
+            continue
+
+        pnl = row["pnl"]
+        if pnl is None:
+            continue
+
+        trades.append({
+            "timestamp": ts_str,
+            "symbol": row["symbol"],
+            "direction": row["signal_type"],
+            "confidence": int(row["confidence"] or 0),
+            "pnl": float(pnl),
+            "pnl_pct": float(row["pnl_pct"] or 0),
+            "market_regime": row["market_regime"] or "",
+            "signal_type": row["signal_type"],
+            "outcome": row["outcome"],
+            "date": ts_str[:10] if ts_str else "",
+            # Rich indicator data only available from DB
+            "rsi": float(row["rsi"] or 50),
+            "adx": float(row["adx"] or 20),
+            "volume_ratio": float(row["volume_ratio"] or 1.0),
+            "mfi": float(row["mfi"] or 50),
+            "atr_pct": float(row["atr_pct"] or 0.5),
+            "kronos_aligned": bool(row["kronos_aligned"]),
+            "kronos_direction": row["kronos_direction"] or "",
+            "nifty_trend": row["nifty_trend"] or "",
+        })
+
+    trades.sort(key=lambda t: t["timestamp"])
+    logger.info("Loaded %d closed trades from analog_history.db (days_back=%d)", len(trades), days_back)
+    return trades
+
+
 def compute_metrics(trades: list[dict]) -> dict:
     """Win rate, PnL, expectancy, per-trade sharpe, max drawdown on cum PnL."""
     n = len(trades)
@@ -214,6 +286,67 @@ def breakdown_by(trades: list[dict], key: str) -> dict:
         b["win_rate"] = round(b["winners"] / b["count"] * 100, 1) if b["count"] else 0.0
         b["pnl"] = round(b["pnl"], 2)
     return out
+
+
+def indicator_analysis(trades: list[dict]) -> str:
+    """Build indicator-level analysis from DB-sourced trades.
+
+    Buckets trades by RSI zone, ADX strength, volume, Kronos alignment, and
+    Nifty trend to surface which indicator conditions correlate with wins/losses.
+    Only meaningful when trades carry rich indicator data (from the DB).
+    """
+    if not trades or "rsi" not in trades[0]:
+        return ""
+
+    def _bucket_stats(trades: list[dict], key: str, bucket_fn) -> dict:
+        buckets: dict[str, dict] = {}
+        for t in trades:
+            label = bucket_fn(t.get(key))
+            b = buckets.setdefault(label, {"count": 0, "pnl": 0.0, "wins": 0})
+            b["count"] += 1
+            b["pnl"] += t["pnl"]
+            if t["pnl"] > 0:
+                b["wins"] += 1
+        for b in buckets.values():
+            b["win_rate"] = round(b["wins"] / b["count"] * 100, 1) if b["count"] else 0.0
+            b["pnl"] = round(b["pnl"], 2)
+        return buckets
+
+    def rsi_zone(v):
+        if v is None: return "unknown"
+        if v < 30: return "oversold(<30)"
+        if v < 45: return "weak(30-45)"
+        if v < 55: return "neutral(45-55)"
+        if v < 70: return "strong(55-70)"
+        return "overbought(>70)"
+
+    def adx_zone(v):
+        if v is None: return "unknown"
+        if v < 15: return "no_trend(<15)"
+        if v < 25: return "weak(15-25)"
+        if v < 40: return "strong(25-40)"
+        return "very_strong(>40)"
+
+    def vol_zone(v):
+        if v is None: return "unknown"
+        if v < 0.3: return "low(<0.3)"
+        if v < 0.7: return "normal(0.3-0.7)"
+        return "high(>0.7)"
+
+    def kronos_label(v):
+        return "aligned" if v else "conflicted"
+
+    def nifty_label(v):
+        return v if v else "unknown"
+
+    sections = []
+    sections.append(f"RSI ZONES: {json.dumps(_bucket_stats(trades, 'rsi', rsi_zone))}")
+    sections.append(f"ADX STRENGTH: {json.dumps(_bucket_stats(trades, 'adx', adx_zone))}")
+    sections.append(f"VOLUME RATIO: {json.dumps(_bucket_stats(trades, 'volume_ratio', vol_zone))}")
+    sections.append(f"KRONOS ALIGNMENT: {json.dumps(_bucket_stats(trades, 'kronos_aligned', kronos_label))}")
+    sections.append(f"NIFTY TREND: {json.dumps(_bucket_stats(trades, 'nifty_trend', nifty_label))}")
+
+    return "\n".join(sections)
 
 
 # ── Strategy / hypotheses I/O ────────────────────────────────────────────────
@@ -424,12 +557,17 @@ def propose_change(strategy: dict, metrics: dict, trades: list[dict],
         "- If win rate is healthy but trade count is low, consider relaxing a filter; "
         "if win rate is poor, consider tightening one."
     )
+    # Build indicator analysis if DB-sourced trades have rich data
+    ind_analysis = indicator_analysis(trades)
+    ind_block = f"\n\nINDICATOR-LEVEL ANALYSIS (from trade database):\n{ind_analysis}" if ind_analysis else ""
+
     user_prompt = (
         f"CURRENT STRATEGY VERSION: {strategy.get('version')}\n\n"
         f"PERFORMANCE SINCE LAST CHANGE ({metrics['closed_trades']} closed trades, infra failures excluded):\n"
         f"{json.dumps(metrics, indent=2)}\n\n"
         f"BY REGIME: {json.dumps(regime)}\n"
-        f"BY DIRECTION: {json.dumps(direction)}\n\n"
+        f"BY DIRECTION: {json.dumps(direction)}"
+        f"{ind_block}\n\n"
         f"CHANGE HISTORY WITH MEASURED OUTCOMES:\n{_hypotheses_with_outcomes(hypotheses)}\n\n"
         f"TUNABLE PARAMETERS:\n" + "\n".join(tunable_lines) +
         f"\n\nGOALS: {json.dumps(strategy.get('goal', {}))}"
@@ -612,14 +750,16 @@ def run_reflection(dry_run: bool = False) -> dict:
         return {"action": "revert", "parameter": revert["record"].get("parameter_changed")}
 
     # Step 2: evidence gate.
-    # Load ALL available trades (no since-filter) so the full signals history
-    # is used for analysis. The auto-revert check in Step 1 already evaluates
-    # whether the last parameter change specifically helped or hurt.
+    # Try the DB first (richer indicator data), fall back to CSVs.
     since = last_change_time(hypotheses)
-    trades = load_closed_trades(days_back=60, since=None)
+    trades = load_closed_trades_from_db(days_back=60, since=None)
+    trade_source = "DB"
+    if not trades:
+        trades = load_closed_trades(days_back=60, since=None)
+        trade_source = "CSV"
     metrics = compute_metrics(trades)
-    logger.info("Total closed trades available: %d (gate: %d, last change: %s)",
-                metrics["closed_trades"], min_trades,
+    logger.info("Total closed trades available: %d from %s (gate: %d, last change: %s)",
+                metrics["closed_trades"], trade_source, min_trades,
                 since.strftime("%Y-%m-%d %H:%M") if since else "never")
 
     if metrics["closed_trades"] < min_trades:
