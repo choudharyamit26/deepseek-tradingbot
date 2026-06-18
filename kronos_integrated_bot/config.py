@@ -49,6 +49,7 @@ MIN_CONFIDENCE = 80  # raised floor — reject borderline setups
 MIN_RR_RATIO = 1.8
 STOP_LOSS_ATR_MULTIPLIER = 1.5
 MIN_STOP_LOSS_PCT = 0.25
+MAX_STOP_LOSS_PCT = 1.0  # hard ceiling on per-trade stop %; caps the fat loss tail from wide ATR stops on high-ATR names (0 = no cap)
 MIN_ADX_TRENDING = 18
 MIN_PREFILTER_VOLUME_RATIO = 0.15
 MIN_PREFILTER_ATR_PCT = 0.30
@@ -72,8 +73,9 @@ PARTIAL_PROFIT_PCT = 0.0           # % of position to book at first target (0=of
 POSITION_CONFIDENCE_SCALAR = 1.0   # Position size multiplier when confidence>=85
 MAX_DAILY_TRADES = 5               # Max trades per day
 RISK_PER_TRADE_PCT = 2.0           # % of capital risked per trade
-CASH_BUFFER_PCT = 20.0             # % of capital always kept undeployed
-MAX_POSITION_CAPITAL_PCT = 100.0   # max % of capital in a single position (100 = no cap)
+CASH_BUFFER_PCT = 20.0             # % of buying power always kept undeployed
+LEVERAGE = 5.0                     # intraday MIS margin multiplier (5x = Rs1000 -> Rs5000 buying power)
+MAX_POSITION_CAPITAL_PCT = 25.0    # max % of buying power in a single position (25% of 5x = 1.25x cash)
 
 # ── Strategy params for self-improvement ─────────────────────────────────────
 STRATEGY_FILE = Path(__file__).parent / "kronos_strategy.yaml"

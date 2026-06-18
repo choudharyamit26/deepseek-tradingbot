@@ -742,6 +742,32 @@ class EnhancedIntradayBot(IntradayStockBot):
                 confidence = matrix_score
             signal["confidence"] = confidence
 
+        # ── HARD GATE: BUY only in a confirmed bullish regime ──────────────
+        # Empirical: across 106 closed trades BUY is structurally unprofitable
+        # — 14 trades, 28.6% win rate, payoff 0.42, accounting for -87 of the
+        # -123 total pnl, and it loses in every Nifty trend bucket. Permit a
+        # BUY only when BOTH the Nifty and the stock's sector are bullish;
+        # block every other BUY outright (a hard gate, not a soft penalty).
+        if sig_type == "BUY" and not (nifty_trend == "bullish" and sector_trend == "bullish"):
+            logger.warning(
+                "%s BUY HARD-GATED: requires nifty AND sector bullish (nifty=%s, sector=%s, conf=%d)",
+                symbol, nifty_trend, sector_trend, confidence,
+            )
+            return
+
+        # ── HARD GATE: block counter-trend SELLs (SELL into a bullish Nifty) ──
+        # Empirical: SELL while the Nifty is bullish lost -19.55 over 9 trades
+        # (payoff 0.44). NOTE the gate is Nifty-only — it deliberately does NOT
+        # look at sector: SELLs while the *sector* is bullish are the strategy's
+        # best edge (+60.25 over 10 trades, payoff 3.73, mean-reversion shorts
+        # on extended sector names), so gating on sector would destroy profit.
+        if sig_type == "SELL" and nifty_trend == "bullish":
+            logger.warning(
+                "%s SELL HARD-GATED: counter-trend (nifty bullish, sector=%s, conf=%d)",
+                symbol, sector_trend, confidence,
+            )
+            return
+
         # ── Kronos: position scaler (never blocks, only adjusts size) ──────
         kronos_ratio = 1.0
         kronos_conf = pre_kronos_conf
@@ -846,6 +872,16 @@ class EnhancedIntradayBot(IntradayStockBot):
         sl_percent = normalize_stop_loss_percent(
             raw_sl_percent, atr_value, ltp, cfg.STOP_LOSS_ATR_MULTIPLIER, cfg.MIN_STOP_LOSS_PCT
         )
+        # ── Hard ceiling on the stop ────────────────────────────────────────
+        # ATR-based sizing has only a FLOOR (MIN_STOP_LOSS_PCT); high-ATR names
+        # (ATR up to ~2%) otherwise get stops as wide as ~3%, producing the fat
+        # loss tail that sank the book (trades worse than -1% were -66 of -123).
+        # Cap the per-trade stop; combined with the 25%-of-buying-power position
+        # cap this bounds worst-case loss to ~(0.25*buying_power)*MAX_STOP_LOSS_PCT.
+        max_sl = getattr(cfg, "MAX_STOP_LOSS_PCT", 0)
+        if max_sl and sl_percent > max_sl:
+            logger.info("%s SL capped to ceiling: %.2f%% -> %.2f%%", symbol, sl_percent, max_sl)
+            sl_percent = max_sl
         try:
             raw_sl_for_log = float(raw_sl_percent)
         except (TypeError, ValueError):

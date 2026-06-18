@@ -216,6 +216,7 @@ async def main():
         min_confidence=cfg.MIN_CONFIDENCE,
         cash_buffer_pct=cfg.CASH_BUFFER_PCT,
         max_position_capital_pct=cfg.MAX_POSITION_CAPITAL_PCT,
+        leverage=cfg.LEVERAGE,
     )
 
     # Init Enhanced Bot

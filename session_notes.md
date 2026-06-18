@@ -501,6 +501,61 @@ Replay over `['2026-06-11','2026-06-12','2026-06-15','2026-06-16','2026-06-17']`
 
 ---
 
+## AC. Leverage Modeling, Directional Gating & Loss-Tail Fix (2026-06-18)
+
+### AC.1 — Intraday Leverage & Position Sizing (`risk_manager.py`, `config.py`, `main.py`)
+
+**Problem**: no leverage was modeled. `get_available_balance()` returns Dhan's cash (e.g. ₹1,000 on a ₹5× intraday margin account), and `calculate_position_size()` capped affordability at `1×cash`. The 25%-of-capital position cap was being applied to cash, not buying power.
+
+**Fix**:
+
+- Added `leverage` param (default 1.0) to `RiskManager.__init__()`.
+- Both `check_cash_buffer()` and `calculate_position_size()` now use `buying_power = capital × leverage`.
+- Risk-based sizing still uses **real cash** (correct — a stop-out loses actual money, not leveraged money).
+- Updated config: `LEVERAGE=5.0`, `MAX_POSITION_CAPITAL_PCT=25.0` (25% of buying power = 1.25× cash max per position).
+- All 33 e2e tests pass, including new leverage test cases (e.g. ₹1k account, 5× margin, 25% cap → single position max ₹1,250).
+
+**Design note**: this differs from the old "Bug 3" (was 25% of cash, shrinking positions) — the new version is 25% of 5×buying power, which is larger and correct.
+
+### AC.2 — 106-Trade Directional Analysis & Empirical Gating (`enhanced_bot.py`)
+
+Loaded 106 closed trades from `analog_history.db` and broke down by direction/regime. **The story**: payoff asymmetry (realized 0.82 vs configured 1.8 R:R), not win rate (46%). Two concentrated culprits:
+
+1. **BUY is structurally broken**: 14 trades, 28.6% WR, payoff 0.42, −87 of −123 total pnl. Loses in *every* Nifty bucket (even bullish-Nifty BUY was −42.97, 20% WR).
+   - **Applied hard gate** ([enhanced_bot.py:745](kronos_integrated_bot/enhanced_bot.py#L745)): BUY now allowed **only when nifty_trend AND sector_trend both == "bullish"**. Early `return`, logs `BUY HARD-GATED`.
+
+2. **Counter-trend SELL (selling into a bullish Nifty)**: −19.55 over 9 trades, payoff 0.44.
+   - **Applied hard gate** ([enhanced_bot.py:759](kronos_integrated_bot/enhanced_bot.py#L759)): SELL blocked when `nifty_trend == "bullish"`. Early `return`, logs `SELL HARD-GATED`.
+   - **Critical caveat**: do NOT gate SELL on sector-bullish. SELL while the *sector* is bullish is the strategy's **best edge** (+60.25 over 10 trades, payoff 3.73, 60% WR — mean-reversion shorts on extended sector names). Gating it would destroy +60 and leave the book at −77.
+
+### AC.3 — Loss-Tail Fix via MAX_STOP_LOSS_PCT Ceiling
+
+**Discovery**: the payoff leak isn't capped winners (winners median +0.23%, rarely hit the 0.5–1.2% target) — it's the opposite: winners cut tiny, **losers run wide** (tail to −2.76%). The 20 trades worse than −0.5% totaled −241.
+
+Root cause: ATR-based stops (`1.5×ATR`, ATR up to ~2%) had only a floor (`MIN_STOP_LOSS_PCT=0.25`), **no ceiling** → high-ATR names got stops as wide as ~3%. The trailing stop is effectively dead (activates at 3% profit, but the broker's fixed target leg closes first, so it never fires).
+
+**Fix**:
+
+- Added `MAX_STOP_LOSS_PCT=1.0` to `config.py` ([config.py:52](kronos_integrated_bot/config.py#L52)).
+- Clamp `sl_percent` to this ceiling after `normalize_stop_loss_percent()` ([enhanced_bot.py:875](kronos_integrated_bot/enhanced_bot.py#L875)), logs `SL capped to ceiling`.
+- **Counterfactual impact**: capping loss at −1.0% clips 4 catastrophic outliers (−1.5% to −2.76%) for +33.34 pnl improvement; −0.75% would clip 9 for +47.73. Conservative first step; can tighten if live behavior allows.
+- Combined with the 25%-of-buying-power position cap, worst-case per-trade loss is now rigorously bounded: `≈ (0.25 × buying_power) × max_stop_loss%`.
+
+**Honest caveat**: with pure risk-based sizing a tighter stop grows share count, offsetting some gains. But your account is affordability-bound (qty 1–11), so the cap genuinely bounds the tail here. The mechanism composes correctly with the position cap.
+
+### AC.4 — Reflection Agent (Live Cycle)
+
+Ran the real reflection cycle (no dry-run). It passed the revert check (prior `rsi_ob_limit` hypothesis pending) and evidence gate (106 trades ≥ 30), then the LLM proposed raising `min_prefilter_volume_ratio` 0.3 → 0.4 to filter low-volume losers. **Rejected by replay guard**: candidate pnl 55.61 vs baseline 56.7 (slightly worse), so the change was not applied. Strategy remains at `kronos-v19`.
+
+**Finding**: the reflection agent cannot find a single-parameter tuning that survives replay validation with the current structural issues (BUY weakness, wide loss tail). The direction gates + loss-ceiling fixes target these structural problems directly and are not on the self-tuner's exploration surface.
+
+### AC.5 — Remaining Levers (Not Touched)
+
+- **Winner exit timing**: Kronos/time-based/close-exit paths cut winners early (the other half of the payoff asymmetry). Urgency thresholds and 180-min time-exit could be loosened, but intraday exit tuning is subtle.
+- **Kronos backfill bug**: all 106 rows have `kronos_aligned=0` — alignment signal not being logged, masking whether Kronos is helping.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.

@@ -382,6 +382,52 @@ except Exception as exc:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+print("=" * 70)
+print("  FEATURE 5b: Intraday Leverage Buying Power")
+print("=" * 70)
+
+try:
+    from risk_manager import RiskManager
+
+    # 5x intraday leverage, 25% of buying power cap, 20% buffer.
+    rm = RiskManager(
+        initial_capital=1_000,
+        max_position_capital_pct=25.0,
+        cash_buffer_pct=20.0,
+        leverage=5.0,
+    )
+    check("RiskManager stores leverage=5.0", rm.leverage == 5.0)
+
+    # buying_power = 1000 * 5 = 5000; max single position = 25% = 1250.
+    # cash buffer: max deployable = 5000 * 0.80 = 4000.
+    check("check_cash_buffer: 3999 deployed -> OK (under 4000 of 5000 BP)",
+          rm.check_cash_buffer(3_999) == True)
+    check("check_cash_buffer: 4000 deployed -> BLOCKED",
+          rm.check_cash_buffer(4_000) == False)
+
+    # Single position cap = 25% of 5000 = 1250. @ Rs250 -> 5 shares (1250).
+    # risk-based: risk_amount=1000*2%=20, sl=2% -> risk_per_share=5 -> 4 shares.
+    # min(4 risk, 20 afford, 5 cap) = 4.
+    qty = rm.calculate_position_size(1_000, stop_loss_percent=2.0, entry_price=250.0)
+    check("position size @ Rs250 sl2%: risk-bound to 4 shares (<1250 cap)",
+          qty == 4, f"got qty={qty}")
+
+    # Wide stop lets risk-based qty exceed the 25%-of-BP cap, so cap binds.
+    # risk_amount=20, sl=10% -> risk_per_share=25 -> 0 shares risk-bound... use bigger capital
+    rm2 = RiskManager(initial_capital=10_000, max_position_capital_pct=25.0,
+                      cash_buffer_pct=20.0, leverage=5.0)
+    # BP=50000, cap=25% -> 12500 max. @Rs250 cap_qty=50.
+    # risk_amount=200, sl=0.5% -> risk_per_share=1.25 -> 160 shares risk-bound.
+    # min(160, afford=200, cap=50) = 50 (cap binds, 50*250=12500=25% of BP).
+    qty2 = rm2.calculate_position_size(10_000, stop_loss_percent=0.5, entry_price=250.0)
+    check("position size: 25%-of-buying-power cap binds at 50 shares (Rs12500)",
+          qty2 == 50, f"got qty={qty2}")
+
+except Exception as exc:
+    check("Feature 5b leverage buying power", False, str(exc)[:120])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Summary
 # ─────────────────────────────────────────────────────────────────────────────
 print()
