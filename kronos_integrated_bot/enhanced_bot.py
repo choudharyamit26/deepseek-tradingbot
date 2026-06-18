@@ -371,10 +371,14 @@ class EnhancedIntradayBot(IntradayStockBot):
             score -= 7
             penalties.append(f"15m={trend_15m} vs 3m={trend_3m}: -7")
 
-        # 1h disagrees with 3m
+        # 1h disagrees with 3m. Softened -5 -> -3: the 1h trend only became a
+        # real (non-NEUTRAL) signal after the MIN_BARS_1H / multi-day-fetch fix
+        # (AC.6), so it has zero validated performance history. The only TF-
+        # alignment evidence we have (15m) shows alignment is non-predictive /
+        # slightly negative, so a freshly-live signal should nudge, not dominate.
         if trend_1h != "NEUTRAL" and trend_1h != trend_3m:
-            score -= 5
-            penalties.append(f"1h={trend_1h} vs 3m={trend_3m}: -5")
+            score -= 3
+            penalties.append(f"1h={trend_1h} vs 3m={trend_3m}: -3")
 
         # MFI extremes with potential stalling
         if mfi > 80:
@@ -406,10 +410,16 @@ class EnhancedIntradayBot(IntradayStockBot):
             bonus_total += 2
             bonuses.append(f"vol={volume_ratio:.2f} strong: +2")
 
+        # All-TF-aligned bonus, softened +3 -> +1. This bonus was effectively
+        # never granted before the 1h fix (1h was always NEUTRAL). Since 15m
+        # alignment was shown non-predictive/slightly negative, granting a large
+        # bonus would over-promote the exact trades that did slightly worse
+        # (and, via position_confidence_scalar at conf>=85, oversize them).
+        # Keep it a small nudge until live 1h-aligned trades justify more.
         if (trend_15m == trend_3m and trend_1h == trend_3m and
                 trend_15m != "NEUTRAL" and trend_1h != "NEUTRAL"):
-            bonus_total += 3
-            bonuses.append(f"All TFs aligned ({trend_3m}): +3")
+            bonus_total += 1
+            bonuses.append(f"All TFs aligned ({trend_3m}): +1")
 
         if kronos_conf and not kronos_conf.get("conflict") and kronos_conf.get("pred_range_pct", 0) > 0.5:
             bonus_total += 2
@@ -828,6 +838,16 @@ class EnhancedIntradayBot(IntradayStockBot):
         elif sig_type == "SELL" and rsi_3m <= cfg.RSI_OS_LIMIT:
             logger.info("%s SELL vetoed: RSI is oversold (%.2f <= %d)",
                         symbol, rsi_3m, cfg.RSI_OS_LIMIT)
+            return
+
+        # ── RSI quality gate: don't short into deep oversold ─────────────────
+        # Empirical (106 trades): SELL with RSI<35 had payoff 0.58 (chasing the
+        # bottom into snap-back risk); the RSI 35-45 zone was the only profitable
+        # bucket (payoff 1.41, +22.67). Block shorts below the floor.
+        min_rsi_short = getattr(cfg, "MIN_RSI_FOR_SHORT", 0)
+        if sig_type == "SELL" and min_rsi_short and rsi_3m < min_rsi_short:
+            logger.info("%s SELL RSI-GATED: RSI %.2f < %d (deep-oversold short, poor-payoff zone)",
+                        symbol, rsi_3m, min_rsi_short)
             return
 
         # ── Reversal check on entry ─────────────────────────────────────────

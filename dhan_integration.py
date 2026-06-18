@@ -417,20 +417,29 @@ class DhanStockTradingBot:
                 }).dropna()
                 dfs.append(resampled)
 
-        # Always fetch previous trading day when today's data is below min_bars
-        prev = self._prev_trading_day()
-        prev_df = self._fetch_intraday(security_id, prev, interval_int, exchange_segment=exchange_segment)
-        if prev_df is not None and len(prev_df) > 0:
-            dfs.append(prev_df)
-        elif interval_int != 1:
-            # Fallback: fetch prev day 1-min and resample
-            prev_1m = self._fetch_intraday(security_id, prev, 1, exchange_segment=exchange_segment)
-            if prev_1m is not None and len(prev_1m) > 0:
-                resampled = prev_1m.resample(resample_rule).agg({
-                    "open": "first", "high": "max", "low": "min",
-                    "close": "last", "volume": "sum",
-                }).dropna()
-                dfs.append(resampled)
+        # Fetch previous trading days until min_bars is met. Higher timeframes
+        # yield few bars per session (60-minute ≈ 6/day), so SMA-20 / RSI-14 /
+        # ADX-14 need several prior sessions of context. Fetching only ONE prior
+        # day left the 1-hour frame with ~12 bars — below the gate and far below
+        # the 20 SMA-20 needs — so indicators_1h was empty/degenerate and the 1h
+        # trend logged NEUTRAL on every signal. The early-break leaves 3m/15m
+        # (already satisfied by today's data) untouched.
+        for prev in self._prev_n_trading_days(7):
+            have = pd.concat(dfs) if dfs else None
+            if have is not None and len(have[~have.index.duplicated()]) >= min_bars:
+                break
+            prev_df = self._fetch_intraday(security_id, prev, interval_int, exchange_segment=exchange_segment)
+            if prev_df is not None and len(prev_df) > 0:
+                dfs.append(prev_df)
+            elif interval_int != 1:
+                # Fallback: fetch that day's 1-min bars and resample
+                prev_1m = self._fetch_intraday(security_id, prev, 1, exchange_segment=exchange_segment)
+                if prev_1m is not None and len(prev_1m) > 0:
+                    resampled = prev_1m.resample(resample_rule).agg({
+                        "open": "first", "high": "max", "low": "min",
+                        "close": "last", "volume": "sum",
+                    }).dropna()
+                    dfs.append(resampled)
 
         if not dfs:
             return pd.DataFrame()

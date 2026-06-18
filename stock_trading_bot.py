@@ -147,7 +147,9 @@ class IntradayStockBot:
     # Increased from 5 to 20 to let RSI-14 and SMA-20 stabilize properly
     MIN_BARS = 5
     MIN_BARS_15M = 25
-    MIN_BARS_1H = 15
+    # 1h trend uses SMA-20, which needs >=20 bars; 15 always yielded a NaN SMA
+    # (→ sma_20 fell back to close → trend always NEUTRAL). Must be >= 20.
+    MIN_BARS_1H = 20
 
     # ── IMPROVEMENT #9 & #10: Fixed VWAP + Added ADX/MFI ──────────────────────
     def calculate_technical_indicators(self, df):

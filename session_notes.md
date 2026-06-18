@@ -554,6 +554,38 @@ Ran the real reflection cycle (no dry-run). It passed the revert check (prior `r
 - **Winner exit timing**: Kronos/time-based/close-exit paths cut winners early (the other half of the payoff asymmetry). Urgency thresholds and 180-min time-exit could be loosened, but intraday exit tuning is subtle.
 - **Kronos backfill bug**: all 106 rows have `kronos_aligned=0` — alignment signal not being logged, masking whether Kronos is helping.
 
+### AC.6 — 1h-Trend Bug Fix, RSI Short Gate & MTF Weight Revisit (2026-06-18)
+
+#### AC.6.1 — The "1h always NEUTRAL" bug (`dhan_integration.py`, `stock_trading_bot.py`)
+
+**Discovery**: analysing MTF alignment across all 13 signal CSVs, `mtf_1h` was `NEUTRAL` for **105 of 106** trades — the 1-hour confirmation was an inert constant (hence the LLM's reasoning saying "1h NEUTRAL" on every signal). Two compounding root causes:
+
+1. **`MIN_BARS_1H = 15` but the 1h trend uses SMA-20** (`talib.SMA(timeperiod=20)` needs ≥20 bars). With 15–19 bars `sma_20` is NaN → `calculate_technical_indicators` falls back to `close` ([indicators.py:63](indicators.py#L63)) → `_tf_trend` sees `close == sma_20` → returns NEUTRAL. (The old `session_notes` claim that 15 bars suffices for SMA-20 was simply wrong: 15 < 20.)
+2. **The fetch only pulled today + 1 prior day** (~12 hourly bars, below even the gate), so `indicators_1h = {}` → NEUTRAL anyway.
+
+**Fix**:
+
+- Raised `MIN_BARS_1H` 15 → **20** so SMA-20 is mathematically valid when the gate passes ([stock_trading_bot.py:150](stock_trading_bot.py#L150)).
+- Generalised `_get_historical_data_uncached` to **fetch back up to 7 prior trading days until `min_bars` is met** ([dhan_integration.py:420](dhan_integration.py#L420)) (was: a single prior day). Early-break leaves 3m/15m — already satisfied by today's data — untouched and avoids over-fetching. 60-minute bars are cached 1800s, so the extra ~4-day backfill per symbol is light.
+- **Caveat**: the multi-day fetch is logic-verified + parses, but needs **live Dhan API** to confirm it returns ≥20 hourly bars per symbol.
+
+#### AC.6.2 — RSI<35 SELL gate (`config.py`, `enhanced_bot.py`)
+
+The mean-reversion-vs-momentum breakdown found SELL with RSI<35 had **payoff 0.58** (chasing the bottom into snap-back risk; 55.6% WR but small wins, big losses), while the **RSI 35–45 zone was the only profitable bucket** (payoff 1.41, +22.67, n=49). The existing oversold veto only blocked `RSI ≤ 30` (`RSI_OS_LIMIT`), leaving the 30–35 zone open. Added `MIN_RSI_FOR_SHORT=35` ([config.py:65](kronos_integrated_bot/config.py#L65)) and a hard SELL gate ([enhanced_bot.py:833](kronos_integrated_bot/enhanced_bot.py#L833)), logs `SELL RSI-GATED`.
+
+**Note**: the broader "fade vs momentum" result (+59 fade vs −183 momentum) was *not* a clean mean-reversion edge — the entire fade pocket collapsed to the 10-trade SELL-into-bullish-sector cluster already known. The RSI 35–45 zone (n=49) was the only finding solid enough to act on.
+
+#### AC.6.3 — MTF penalty/bonus revisit (`enhanced_bot.py`)
+
+Fixing the 1h data **activated two previously-dead scoring elements** in `_compute_score_matrix` (1h was always NEUTRAL, so neither ever fired). Softened both, because the only TF-alignment evidence we have (15m) showed alignment is **non-predictive / slightly negative** (aligned payoff 0.78 vs neutral 0.83), and there is **zero** validated 1h-performance data:
+
+| Element | Was | Now | Why |
+| --- | --- | --- | --- |
+| 1h disagrees with 3m | −5 | **−3** | Unvalidated signal should nudge, not dominate |
+| All 3 TFs aligned | +3 | **+1** | Avoid over-promoting (and via `position_confidence_scalar` oversizing) the trades that did slightly worse |
+
+Left the 15m weights (−7 penalty) untouched — they were already live in the tuned strategy. These softened 1h weights are flagged for the reflection agent / future analysis to re-tune once real 1h-aligned trades accumulate.
+
 ---
 
 ## 5. Future Development Ideas

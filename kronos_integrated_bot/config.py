@@ -61,6 +61,7 @@ MAX_DAILY_SIGNALS = 20  # hard cap on total entry signals per day
 SAME_DIRECTION_COOLDOWN = 3600  # 1-hour block for repeat same-direction signal
 RSI_OB_LIMIT = 70
 RSI_OS_LIMIT = 30
+MIN_RSI_FOR_SHORT = 35  # block SELLs with 3m RSI below this (RSI<35 shorts had payoff 0.58; RSI 35-45 zone is the only profitable bucket, payoff 1.41)
 
 # ── Intraday-specific params (tunable by self-improvement agent) ────────────
 TRAILING_SL_ACTIVATION_PCT = 3.0   # Profit % at which trailing SL activates
