@@ -472,7 +472,12 @@ def evaluate_previous_hypothesis(hypotheses: list[dict], min_eval_trades: int) -
     if changed_at is None:
         return None
 
-    post_trades = load_closed_trades(days_back=30, since=changed_at)
+    # Measure post-change outcome from the same source as the proposal path
+    # (the DB, richer and far more complete than the daily CSVs which hold only
+    # a handful of rows/day). Fall back to CSVs only if the DB is empty.
+    post_trades = load_closed_trades_from_db(days_back=30, since=changed_at)
+    if not post_trades:
+        post_trades = load_closed_trades(days_back=30, since=changed_at)
     if len(post_trades) < min_eval_trades:
         logger.info("Previous hypothesis (%s) has %d/%d evaluation trades — verdict pending.",
                     last.get("parameter_changed"), len(post_trades), min_eval_trades)
@@ -847,15 +852,22 @@ def run_reflection(dry_run: bool = False) -> dict:
         return {"action": "revert", "parameter": revert["record"].get("parameter_changed")}
 
     # Step 2: evidence gate.
+    # Only trades that closed AFTER the last applied change count toward the
+    # gate, the LLM's performance view, and the baseline a future revert is
+    # measured against. Using the full 60-day pool (since=None) defeated the
+    # evidence gate — the agent always saw 100+ trades, always passed the gate,
+    # and retuned every cycle on stale data it could never attribute to any one
+    # change. With min_trades_per_change=30, the LLM is only ever consulted once
+    # >=30 fresh trades exist, so its indicator buckets stay well-populated.
     # Try the DB first (richer indicator data), fall back to CSVs.
     since = last_change_time(hypotheses)
-    trades = load_closed_trades_from_db(days_back=60, since=None)
+    trades = load_closed_trades_from_db(days_back=60, since=since)
     trade_source = "DB"
     if not trades:
-        trades = load_closed_trades(days_back=60, since=None)
+        trades = load_closed_trades(days_back=60, since=since)
         trade_source = "CSV"
     metrics = compute_metrics(trades)
-    logger.info("Total closed trades available: %d from %s (gate: %d, last change: %s)",
+    logger.info("Closed trades since last change: %d from %s (gate: %d, last change: %s)",
                 metrics["closed_trades"], trade_source, min_trades,
                 since.strftime("%Y-%m-%d %H:%M") if since else "never")
 
