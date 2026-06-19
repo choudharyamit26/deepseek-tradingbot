@@ -554,7 +554,7 @@ Ran the real reflection cycle (no dry-run). It passed the revert check (prior `r
 - **Winner exit timing**: Kronos/time-based/close-exit paths cut winners early (the other half of the payoff asymmetry). Urgency thresholds and 180-min time-exit could be loosened, but intraday exit tuning is subtle.
 - **Kronos backfill bug**: all 106 rows have `kronos_aligned=0` — alignment signal not being logged, masking whether Kronos is helping.
 
-### AC.6 — 1h-Trend Bug Fix, RSI Short Gate & MTF Weight Revisit (2026-06-18)
+### AC.6 — 1h-Trend Bug Fix, RSI Short Gate & MTF Weight Revisit (2026-06-18 to 2026-06-19)
 
 #### AC.6.1 — The "1h always NEUTRAL" bug (`dhan_integration.py`, `stock_trading_bot.py`)
 
@@ -621,6 +621,12 @@ if (sig_type == "SELL" and nifty_trend == "bullish"
 `session_trend == "bearish"` triggers at intraday ≤ −0.5% ([regime_filter.py:259](regime_filter.py#L259)) — the system's own definition of a red session — so selling into a clearly-down day is no longer treated as "selling into strength". Chosen over the −1.0% soft-penalty threshold because that would still have blocked the −0.8% case that prompted this. The warning now logs `intraday` + `session` so the reason is self-evident. `session_trend` defaults to `neutral` on a data gap, preserving the conservative (gated) default.
 
 **Verification** (`regime_filter._calc_regime`, synthetic): daily-bullish + intraday −0.81% → `session=bearish` → SELL **allowed**; daily-bullish + intraday +0.20% → `session=neutral` → SELL **still blocked**; no live price → `session=neutral` → **still blocked**. `tests/test_regime_cache.py` + `tests/test_indicators.py` pass (6/6). Flagged for the reflection agent to validate once intraday-red SELL trades accumulate — this loosens an empirically-derived gate (AC.2), so it should be watched.
+
+#### AC.6.6 — BUY gate intraday-aware (considered and reverted) (`enhanced_bot.py`)
+
+**Attempted**: applied the symmetric change to the BUY gate — added `nifty_ok = nifty_session_trend == "bullish" or ...` so a BUY would be allowed when nifty daily trend is bearish but intraday session is `"bullish"` (≥+0.5%). Committed as `c10dfff`.
+
+**Reverted immediately** (`8d44d75`): the BUY gate is intentionally asymmetric because the BUY side is structurally broken (14 trades, 28.6% WR, −87 of −123 total PnL, loses in *every* Nifty bucket including bullish-Nifty, AC.2). Loosening the BUY gate on a daily-bearish day (i.e., allowing BUY only because the morning is green) would expand exposure in the category with the worst empirical edge. The SELL loosening (AC.6.5) was safe because the SELL-into-bullish-sector cluster (best edge, +60 PnL) is orthogonal; no equivalent rescue cluster exists on the BUY side. Decision: revisit only after BUY win rate improves materially from regime/strategy changes.
 
 ---
 
