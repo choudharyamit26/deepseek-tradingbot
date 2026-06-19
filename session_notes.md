@@ -628,6 +628,16 @@ if (sig_type == "SELL" and nifty_trend == "bullish"
 
 **Reverted immediately** (`8d44d75`): the BUY gate is intentionally asymmetric because the BUY side is structurally broken (14 trades, 28.6% WR, −87 of −123 total PnL, loses in *every* Nifty bucket including bullish-Nifty, AC.2). Loosening the BUY gate on a daily-bearish day (i.e., allowing BUY only because the morning is green) would expand exposure in the category with the worst empirical edge. The SELL loosening (AC.6.5) was safe because the SELL-into-bullish-sector cluster (best edge, +60 PnL) is orthogonal; no equivalent rescue cluster exists on the BUY side. Decision: revisit only after BUY win rate improves materially from regime/strategy changes.
 
+#### AC.6.7 — Reflection evidence-gate + revert data-source fixes, BUY kill-switch (2026-06-19)
+
+Ran the reflection agent (`--dry-run`); it proposed `min_rr_ratio 1.9 → 2.2` and self-rejected as oscillation (4th straight stalled cycle). Investigation found two real defects + one structural gap. Fixes in `e4cc5f6` (`reflect.py`) and `f3807b4` (kill-switch).
+
+- **Defect 1 — evidence gate read the full pool, not since-last-change** (`reflect.py:run_reflection`). It computed `since = last_change_time(...)` then loaded with `since=None`, so the 30-trade gate always saw the full 60-day pool (109 trades), always passed, and the LLM retuned every cycle on data it couldn't attribute to any change → repeated oscillation/replay rejections. Now both the gate and the stored revert baseline use only trades closed after the last applied change.
+- **Defect 2 — auto-revert read the wrong source.** `evaluate_previous_hypothesis` measured post-change outcome from the daily CSVs (a few rows/day) while the proposal path used the DB, so revert effectively never fired. Now reads the DB with a CSV fallback.
+- **Structural — BUY has no tunable lever.** 60-day data: BUY 14 trades 28.6% WR −87.1 of −132.85 total; confidence is *anti*-predictive (conf≥89 → 17% WR vs conf<89 → 38%), so a `buy_min_confidence` floor is the wrong tool. Added a `buy_enabled` master switch (`config.py` `BUY_ENABLED`, wired via `main.py apply_strategy_to_config`, enforced atop the BUY gate in `enhanced_bot.py`). **Defaults to `true` everywhere — no live behavior change.** Flip `buy_enabled: false` in the strategy YAML to suppress all longs (≈ −87 PnL removed from the 60-day sample). Intentionally NOT added to `reflect.py PARAM_BOUNDS`: the LLM proposal path is numeric-only, so this stays a human-controlled switch.
+
+> **IMPORTANT — not "stuck".** After AC.6.7 the agent correctly **holds in `analysis_only` until ≥30 trades close since the last change** (the evidence gate working as designed, no longer bypassed). A dry-run reporting e.g. "3/30 since last change → no change proposed" is the intended conservative behavior, **not** the degenerate oscillation loop diagnosed in AD.1. Only treat it as stuck if it *applies* a change every cycle or ping-pongs one parameter. Optional future refinement: feed the LLM a broad diagnostic window while gating decisions on the narrow since-change window (currently both use the narrow window).
+
 ---
 
 ## 5. Future Development Ideas
