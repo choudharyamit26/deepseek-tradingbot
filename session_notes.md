@@ -622,21 +622,6 @@ if (sig_type == "SELL" and nifty_trend == "bullish"
 
 **Verification** (`regime_filter._calc_regime`, synthetic): daily-bullish + intraday −0.81% → `session=bearish` → SELL **allowed**; daily-bullish + intraday +0.20% → `session=neutral` → SELL **still blocked**; no live price → `session=neutral` → **still blocked**. `tests/test_regime_cache.py` + `tests/test_indicators.py` pass (6/6). Flagged for the reflection agent to validate once intraday-red SELL trades accumulate — this loosens an empirically-derived gate (AC.2), so it should be watched.
 
-#### AC.6.6 — BUY hard-gate made intraday-aware (symmetric) (`enhanced_bot.py`)
-
-Applied the same daily-vs-intraday logic to the BUY gate ([enhanced_bot.py:764](kronos_integrated_bot/enhanced_bot.py#L764)). The gate required `nifty_trend == "bullish" AND sector_trend == "bullish"` (both *daily*), so a day Nifty is strongly green intraday but still below its 10-day SMA (daily-NON-bullish) blocked the BUY. The **Nifty leg** is now satisfied by daily-bullish **OR** session-bullish (intraday ≥ +0.5%):
-
-```python
-nifty_ok = nifty_trend == "bullish" or nifty_session_trend == "bullish"
-if sig_type == "BUY" and not (nifty_ok and sector_trend == "bullish"):
-```
-
-Symmetry with AC.6.5: in both gates the *session* can override the *daily* trend **only when it points in the signal's direction** (SELL ← session bearish; BUY ← session bullish). The **sector leg stays daily-only** — mirroring that the SELL gate is Nifty-only, and sector `session_trend` isn't currently extracted. The warning logs `intraday` + `session`.
-
-**Verification** (`regime_filter._calc_regime`, synthetic): daily-bearish + intraday +0.60% (session bullish) + sector bullish → BUY **allowed**; same green day with sector neutral → **still blocked** (sector leg intact); daily-bearish + intraday +0.19% (session neutral) + sector bullish → **still blocked**; no live price → **still blocked**. Tests pass (6/6).
-
-**Risk note**: BUY is the **weakest side empirically** (AC.2: 28.6% WR, loses in every Nifty bucket), so this is the riskier of the two overrides — it can re-admit BUYs the AC.2 gate was built to exclude. Watch the first live intraday-green BUYs closely; flagged for the reflection agent.
-
 ---
 
 ## 5. Future Development Ideas

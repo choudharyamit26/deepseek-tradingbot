@@ -761,25 +761,10 @@ class EnhancedIntradayBot(IntradayStockBot):
         # -123 total pnl, and it loses in every Nifty trend bucket. Permit a
         # BUY only when BOTH the Nifty and the stock's sector are bullish;
         # block every other BUY outright (a hard gate, not a soft penalty).
-        #
-        # Intraday override (symmetric with the SELL gate below): "bullish" is
-        # the *daily* (10-day-SMA) trend, so a day that is strongly green
-        # intraday can still read daily-NON-bullish (e.g. Nifty up sharply but
-        # still below its 10-day SMA after a downtrend). Treat the Nifty leg as
-        # satisfied when the daily trend is bullish OR the *session* is bullish
-        # (intraday >= +0.5%, see regime_filter._calc_regime) — the intraday
-        # tape pointing the BUY's way. The sector leg stays daily-only (sector
-        # session_trend isn't tracked, and the AC.2 sector-tailwind requirement
-        # is deliberately strict). session_trend defaults to "neutral" on a data
-        # gap, preserving the conservative (gated) default. NOTE BUY is the
-        # weakest side empirically, so this is the riskier of the two overrides
-        # — flagged for the reflection agent to validate.
-        nifty_ok = nifty_trend == "bullish" or nifty_session_trend == "bullish"
-        if sig_type == "BUY" and not (nifty_ok and sector_trend == "bullish"):
+        if sig_type == "BUY" and not (nifty_trend == "bullish" and sector_trend == "bullish"):
             logger.warning(
-                "%s BUY HARD-GATED: requires nifty(daily|session) AND sector bullish "
-                "(nifty=%s, intraday=%+.2f%%, session=%s, sector=%s, conf=%d)",
-                symbol, nifty_trend, nifty_intraday_chg, nifty_session_trend, sector_trend, confidence,
+                "%s BUY HARD-GATED: requires nifty AND sector bullish (nifty=%s, sector=%s, conf=%d)",
+                symbol, nifty_trend, sector_trend, confidence,
             )
             return
 
