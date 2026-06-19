@@ -140,6 +140,7 @@ def apply_strategy_to_config(strategy: dict):
     cfg.MIN_PREFILTER_VOLUME_RATIO = params.get("min_prefilter_volume_ratio", 0.15)
     cfg.MIN_PREFILTER_ATR_PCT = params.get("min_prefilter_atr_pct", 0.30)
     cfg.MAX_CONCURRENT_POSITIONS = params.get("max_concurrent_positions", 3)
+    cfg.BUY_ENABLED = params.get("buy_enabled", True)
 
     # Patch the base-class module globals used by the inherited gates.
     base.MIN_ADX_TRENDING = cfg.MIN_ADX_TRENDING

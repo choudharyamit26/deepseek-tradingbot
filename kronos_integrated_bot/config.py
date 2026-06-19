@@ -47,6 +47,9 @@ SCAN_INTERVAL = 180  # seconds between scan cycles
 COOLDOWN_SECONDS = 1800  # 30-min cooldown per stock after a signal
 MIN_CONFIDENCE = 80  # raised floor — reject borderline setups
 MIN_RR_RATIO = 1.8
+BUY_ENABLED = True  # master kill-switch for long entries (BUY is the worst
+# performer historically: 28.6% WR, -87 of -133 total pnl, confidence
+# anti-predictive). Left enabled; flip to false to suppress all BUYs.
 STOP_LOSS_ATR_MULTIPLIER = 1.5
 MIN_STOP_LOSS_PCT = 0.25
 MAX_STOP_LOSS_PCT = 1.0  # hard ceiling on per-trade stop %; caps the fat loss tail from wide ATR stops on high-ATR names (0 = no cap)

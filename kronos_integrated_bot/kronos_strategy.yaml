@@ -7,6 +7,7 @@ goal:
   reflection_every_n_trades: 5
   target_return_pct: 5.0
 params:
+  buy_enabled: true
   cooldown_seconds: 1800
   kronos_bonus_align: 1.1
   kronos_confidence_weight: 0.35

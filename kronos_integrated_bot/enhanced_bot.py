@@ -755,6 +755,15 @@ class EnhancedIntradayBot(IntradayStockBot):
                 confidence = matrix_score
             signal["confidence"] = confidence
 
+        # ── KILL SWITCH: BUY disabled by strategy (buy_enabled=false) ──────
+        # BUY is structurally unprofitable (14 trades, 28.6% WR, -87 of -133
+        # total pnl) and confidence is anti-predictive for it (conf>=89 -> 17%
+        # WR). No threshold fixes that, so suppression is a switch, not a gate.
+        # Default true (BUY runs); flip buy_enabled=false to suppress all longs.
+        if sig_type == "BUY" and not getattr(cfg, "BUY_ENABLED", True):
+            logger.warning("%s BUY SUPPRESSED: buy_enabled=false (conf=%d)", symbol, confidence)
+            return
+
         # ── HARD GATE: BUY only in a confirmed bullish regime ──────────────
         # Empirical: across 106 closed trades BUY is structurally unprofitable
         # — 14 trades, 28.6% win rate, payoff 0.42, accounting for -87 of the
