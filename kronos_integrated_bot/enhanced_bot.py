@@ -774,10 +774,21 @@ class EnhancedIntradayBot(IntradayStockBot):
         # look at sector: SELLs while the *sector* is bullish are the strategy's
         # best edge (+60.25 over 10 trades, payoff 3.73, mean-reversion shorts
         # on extended sector names), so gating on sector would destroy profit.
-        if sig_type == "SELL" and nifty_trend == "bullish":
+        #
+        # Intraday override: "bullish" here is the *daily* (10-day-SMA) trend,
+        # so a session that is sharply red intraday can still read daily-bullish
+        # (e.g. Nifty down 200 pts but still above its 10-day SMA). Selling into
+        # a Nifty whose *session* is already bearish (intraday <= -0.5%, see
+        # regime_filter._calc_regime) is not "selling into strength", so lift the
+        # gate there. session_trend defaults to "neutral" when no live price is
+        # available, so the conservative (gated) behaviour is preserved on a data
+        # gap. Flagged for the reflection agent to validate once such trades
+        # accumulate.
+        if (sig_type == "SELL" and nifty_trend == "bullish"
+                and nifty_session_trend != "bearish"):
             logger.warning(
-                "%s SELL HARD-GATED: counter-trend (nifty bullish, sector=%s, conf=%d)",
-                symbol, sector_trend, confidence,
+                "%s SELL HARD-GATED: counter-trend (nifty bullish daily, intraday=%+.2f%%, session=%s, sector=%s, conf=%d)",
+                symbol, nifty_intraday_chg, nifty_session_trend, sector_trend, confidence,
             )
             return
 

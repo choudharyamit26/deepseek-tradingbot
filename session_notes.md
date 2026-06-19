@@ -605,6 +605,23 @@ Left the 15m weights (−7 penalty) untouched — they were already live in the 
 
 The new path engages the multi-day backfill (148 bars / 2 days, confirming AC.6.1's fetch works live) and ADX now varies per stock — TCS/INFY/HDFCBANK/SBIN/AXISBANK clear the 22 gate as genuinely trending while RELIANCE/ICICIBANK/ITC stay below as ranging, instead of a blanket morning block. `tests/test_indicators.py` still passes (4/4).
 
+#### AC.6.5 — SELL hard-gate made intraday-aware (`enhanced_bot.py`)
+
+**Symptom**: a SELL was `SELL HARD-GATED: counter-trend (nifty bullish …)` on a day Nifty was **down ~200 pts**. The confusion: `nifty_trend` is the **daily** regime — `current > 10-day-SMA * 1.005` ([regime_filter.py:252](regime_filter.py#L252)) — not the intraday move. After a multi-week run-up, a single red session can still sit above the 10-day SMA, so daily `trend` stays `bullish`. "Down 200" is the *intraday* figure (`intraday_chg_pct`, [regime_filter.py:258](regime_filter.py#L258)), a separate field the gate never consulted.
+
+**The gap**: the *soft* penalty just above the gate ([enhanced_bot.py:734-743](kronos_integrated_bot/enhanced_bot.py#L734)) already scales the bullish-vs-SELL penalty by the intraday move, but the *hard* gate ([enhanced_bot.py:777](kronos_integrated_bot/enhanced_bot.py#L777)) then `return`ed on daily-trend alone — so the intraday-aware logic was dead for SELLs (the gate killed them first).
+
+**Fix**: the SELL gate now also requires the **session** to not be bearish:
+
+```python
+if (sig_type == "SELL" and nifty_trend == "bullish"
+        and nifty_session_trend != "bearish"):
+```
+
+`session_trend == "bearish"` triggers at intraday ≤ −0.5% ([regime_filter.py:259](regime_filter.py#L259)) — the system's own definition of a red session — so selling into a clearly-down day is no longer treated as "selling into strength". Chosen over the −1.0% soft-penalty threshold because that would still have blocked the −0.8% case that prompted this. The warning now logs `intraday` + `session` so the reason is self-evident. `session_trend` defaults to `neutral` on a data gap, preserving the conservative (gated) default.
+
+**Verification** (`regime_filter._calc_regime`, synthetic): daily-bullish + intraday −0.81% → `session=bearish` → SELL **allowed**; daily-bullish + intraday +0.20% → `session=neutral` → SELL **still blocked**; no live price → `session=neutral` → **still blocked**. `tests/test_regime_cache.py` + `tests/test_indicators.py` pass (6/6). Flagged for the reflection agent to validate once intraday-red SELL trades accumulate — this loosens an empirically-derived gate (AC.2), so it should be watched.
+
 ---
 
 ## 5. Future Development Ideas
