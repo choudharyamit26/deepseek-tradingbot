@@ -504,7 +504,10 @@ class EnhancedIntradayBot(IntradayStockBot):
             return
 
         async with self._dhan_sem:
-            historical = await asyncio.to_thread(self.dhan.get_historical_data, security_id, "3minute", self.MIN_BARS)
+            historical = await asyncio.to_thread(self.dhan.get_historical_data, security_id, "3minute", self.MIN_BARS_3M_WARMUP)
+        # Holiday/empty guard stays on the small floor: a symbol with a handful
+        # of real bars is tradeable; MIN_BARS_3M_WARMUP only drives how much
+        # history the fetch backfills for indicator warmup (esp. ADX-14).
         if len(historical) < self.MIN_BARS:
             logger.info("%s -- insufficient 3m bars (%d) - possible holiday", symbol, len(historical))
             return

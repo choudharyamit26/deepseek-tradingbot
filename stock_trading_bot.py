@@ -146,6 +146,14 @@ class IntradayStockBot:
 
     # Increased from 5 to 20 to let RSI-14 and SMA-20 stabilize properly
     MIN_BARS = 5
+    # 3m entry frame needs real ADX-14 from the open. ADX needs ~2*period (~28)
+    # warmup bars; with min_bars=5 the fetch early-returned today's bars only,
+    # so today alone didn't reach 28 until ~10:40 → ADX was NaN → fell back to
+    # the constant 20 (which fails the min_adx_trending=22 gate). Fetching with
+    # this larger floor routes 3m through the multi-day backfill (like 15m/1h),
+    # giving valid ADX from market open. VWAP is daily-reset so prior-day
+    # warmup does not distort the current-session VWAP gate.
+    MIN_BARS_3M_WARMUP = 30
     MIN_BARS_15M = 25
     # 1h trend uses SMA-20, which needs >=20 bars; 15 always yielded a NaN SMA
     # (→ sma_20 fell back to close → trend always NEUTRAL). Must be >= 20.

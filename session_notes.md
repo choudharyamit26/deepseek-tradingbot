@@ -586,6 +586,25 @@ Fixing the 1h data **activated two previously-dead scoring elements** in `_compu
 
 Left the 15m weights (−7 penalty) untouched — they were already live in the tuned strategy. These softened 1h weights are flagged for the reflection agent / future analysis to re-tune once real 1h-aligned trades accumulate.
 
+#### AC.6.4 — 3m ADX stuck at constant 20 (NaN fallback) (`stock_trading_bot.py`, `enhanced_bot.py`)
+
+**Discovery**: reviewing the 2026-06-19 live log, the 3-minute `ADX` was the **exact constant 20** for all 100 stocks on every scan from 09:30–10:10 — in both the pre-filter (`ADX too low (20) … ranging market`) and the scoring matrix (`ADX=20 borderline: -5`). RSI/MFI were real (e.g. 85), so it wasn't a data outage. Root cause: `talib.ADX(timeperiod=14)` needs **~2×period (~28) warmup bars** before its first non-NaN value; the 3m entry fetch ([enhanced_bot.py:507](kronos_integrated_bot/enhanced_bot.py#L507)) requested `min_bars=5`, and `_get_historical_data_uncached` **early-returns today's bars only** once `min_bars` is met ([dhan_integration.py:404](dhan_integration.py#L404)). Today alone doesn't reach 28 three-minute bars until ~10:40, so ADX was NaN → fell back to `20` ([indicators.py:72](indicators.py#L72)). Since the strategy YAML sets `min_adx_trending: 22`, the fallback-20 *failed* the gate, silently blocking nearly every stock for the first ~80 min of each session. (15m/1h were unaffected — their larger `min_bars` already forced the multi-day backfill, the same path AC.6.1 generalised.)
+
+**Fix**:
+
+- Added `MIN_BARS_3M_WARMUP = 30` ([stock_trading_bot.py:156](stock_trading_bot.py#L156)) and fetch the 3m entry frame with it ([enhanced_bot.py:507](kronos_integrated_bot/enhanced_bot.py#L507)), routing 3m through the same multi-day backfill as 15m/1h so ADX-14 has warmup from the open.
+- The "insufficient bars / possible holiday" guard stays on the small `MIN_BARS` floor, so genuinely-empty symbols are still caught.
+- Safe because VWAP is **daily-reset** ([indicators.py:32](indicators.py#L32)) — prior-day warmup doesn't distort the current-session VWAP gate — and the backfill returns a deduped, ascending-sorted frame so `latest = df.iloc[-1]` stays the current bar.
+
+**Live Dhan API verification (2026-06-19, after hours)** — also closes the AC.6.1 caveat:
+
+| Path | bars | trading days | ADX (RELIANCE / TCS / INFY / HDFCBANK / ICICIBANK / SBIN / AXISBANK / ITC) |
+| --- | --- | --- | --- |
+| old `min_bars=5` | 23 | 1 (today) | 20 / 20 / 20 / 20 / 20 / 20 / 20 / 20 (all NaN-fallback) |
+| new `min_bars=30` | 148 | **2** | 17.71 / 51.90 / 62.09 / 44.08 / 20.77 / 41.47 / 33.74 / 17.41 |
+
+The new path engages the multi-day backfill (148 bars / 2 days, confirming AC.6.1's fetch works live) and ADX now varies per stock — TCS/INFY/HDFCBANK/SBIN/AXISBANK clear the 22 gate as genuinely trending while RELIANCE/ICICIBANK/ITC stay below as ranging, instead of a blanket morning block. `tests/test_indicators.py` still passes (4/4).
+
 ---
 
 ## 5. Future Development Ideas
