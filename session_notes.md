@@ -640,6 +640,130 @@ Ran the reflection agent (`--dry-run`); it proposed `min_rr_ratio 1.9 → 2.2` a
 
 ---
 
+---
+
+### Section AE — 2026-06-22 (Momentum Bot: ORB Strategy, Built from Scratch)
+
+A completely separate momentum strategy package was built alongside the existing Kronos bot. No existing files were modified (except `dhan_integration.py` for 3 new watchlist entries). The strategy is Opening Range Breakout (ORB) with multi-gate sector scoring.
+
+#### AE.1 — Package Structure (`momentum_bot/`)
+
+| File | Role |
+|---|---|
+| `momentum_bot/__init__.py` | Empty package marker |
+| `momentum_bot/config.py` | All tunable constants (see AE.2) |
+| `momentum_bot/sector_map.py` | 14 sectors, 128 symbols |
+| `momentum_bot/scanner.py` | Sector scoring + 3 quality gates |
+| `momentum_bot/signals.py` | ORB entry signal logic |
+| `momentum_bot/executor.py` | Order placement, position tracking, time exit |
+| `momentum_bot/telegram.py` | Telegram alert formatting |
+| `momentum_bot/bot.py` | Async trading loop |
+| `momentum_main.py` | Entry point: `python momentum_main.py [--dry-run]` |
+| `momentum_dryrun_2026_06_22.py` | Standalone replay script on historical data |
+| `scrip_master_lookup.py` | Cross-reference sector_map vs Dhan watchlist |
+
+**No AI calls**: the strategy is purely mathematical — ORB width, volume, RSI, sector momentum. Zero API cost during scanning.
+
+#### AE.2 — Key Config Parameters (`momentum_bot/config.py`)
+
+```
+OR_START_TIME           = "09:15"   # opening range start
+OR_END_TIME             = "09:30"   # opening range end (15-min candle)
+TOP_N_SECTORS           = 2         # how many sectors to trade
+MIN_SECTOR_DIRECTION_PCT = 0.20     # neutral zone — skip |avg_move| < 0.20%
+REQUIRE_TREND_ALIGNMENT  = True     # OR direction must match 5-day trend
+TOP_STOCKS_PER_SECTOR   = 2
+MIN_OR_WIDTH_PCT        = 0.15      # skip tiny ORs
+BREAKOUT_BUFFER_PCT     = 0.05      # extra confirmation above OR high/low
+ENTRY_VOLUME_MULTIPLIER = 1.5       # breakout bar needs 1.5x avg volume
+RR_RATIO                = 1.5       # reward:risk ratio
+MAX_STOP_PCT            = 1.5       # SL cannot be wider than 1.5%
+MIN_STOP_PCT            = 0.15      # SL floor
+POSITION_SIZE_PCT       = 0.20      # 20% of capital per trade
+MAX_OPEN_POSITIONS      = 3
+TIME_EXIT_MINUTES       = 60        # per-position timer from entry_time
+EXIT_ALL_TIME           = "14:45"   # EOD hard exit backstop
+```
+
+#### AE.3 — Three Sector Quality Gates (`momentum_bot/scanner.py`)
+
+All three gates were added after cross-referencing real sector performance data against what the raw ORB scores were picking:
+
+1. **Neutral zone** (`MIN_SECTOR_DIRECTION_PCT=0.20`): Skip sector if `|avg_pct_move| < 0.20%`. Prevents calling Banking BEAR at −0.18% when it is multi-TF Bullish on the sector performance screen.
+
+2. **5-day trend alignment** (`REQUIRE_TREND_ALIGNMENT=True`): OR direction must match sector's 5-day price trend. Prevents buying IT (+0.52% OR) which is −1.57%/1W, −4.80%/1M. `_fetch_daily_context()` returns `(avg_daily_volume, five_day_return_pct)` via a single Dhan API call per symbol.
+
+3. **Stock-direction alignment**: Individual stock `pct_move` must match sector direction. Filters stocks like MANAPPURAM (−0.96% in a BULL FINANCIALS sector); replaced by MCX (+0.94%) after this filter.
+
+#### AE.4 — Per-Position Time Exit (`momentum_bot/executor.py`, `momentum_bot/telegram.py`)
+
+Each `Position` dataclass stores `entry_time = field(default_factory=datetime.now)`. Every 3-min tick calls `_check_position_timeouts()` which finds positions where `(now - entry_time) >= timedelta(minutes=TIME_EXIT_MINUTES)`.
+
+On time exit: fetches live price, closes position via market order, sends Telegram alert (symbol, direction, qty, entry, exit, PnL, duration, reason=TIME-EXIT), logs a row to CSV with `row_type=EXIT`.
+
+EOD (`check_and_time_exit` at 14:45): fetches Dhan live positions to distinguish SL/TARGET-HIT (already closed by broker — no action) from TIME-EXIT (still open — triggers market close + Telegram alert).
+
+#### AE.5 — Sector Map Additions (`momentum_bot/sector_map.py`)
+
+Added two new sectors and expanded AUTO:
+
+```python
+"DEFENCE": ["HAL", "BEL", "KAYNES", "BDL", "IRFC"],
+"CHEMICAL": ["UPL", "PIDILITIND"],
+"AUTO": [..., "TVSMOTOR"],
+```
+
+BDL was the top 1-week Defence mover (+16.29%), IRFC the top 1-day mover (+1.40%) per sector performance screen.
+
+#### AE.6 — Scrip Master Lookup & Dhan Watchlist Update (`dhan_integration.py`)
+
+`scrip_master_lookup.py` downloads the Dhan scrip master CSV (189,005 symbols), cross-references all 128 sector_map symbols against the current Dhan watchlist dicts, and prints missing mappings ready to paste.
+
+Result: 122 already mapped, 3 missing (BDL, IRFC, TVSMOTOR — all found in scrip master). Added to `dhan_integration.py` (watchlist grew 148 → 151):
+
+```python
+"BDL":      "541143",  # Bharat Dynamics Limited      [DEFENCE]
+"IRFC":     "543257",  # Indian Railway Finance Corp   [DEFENCE]
+"TVSMOTOR": "532343",  # TVS Motor Company             [AUTO]
+# TICK_SIZE_MAP: "BDL": 0.05, "IRFC": 0.05, "TVSMOTOR": 0.05
+```
+
+#### AE.7 — Dry Run Result (2026-06-22, post-market replay)
+
+Ran `momentum_dryrun_2026_06_22.py` on real Dhan historical data after market close. Replays 3-min candles chronologically with simulated position tracking and time exits.
+
+**Simulated trades** (3 total — 1 per symbol, no re-entries):
+
+| Symbol | Direction | Exit reason | PnL% |
+|---|---|---|---|
+| HAL | BUY | TIME-EXIT (60 min) | +0.8% approx |
+| BEL | BUY | TIME-EXIT (60 min) | −0.2% approx |
+| RELIANCE | — | Never broke OR | — |
+
+- All exits were TIME-EXIT — no SL or target hit in a single test day
+- RELIANCE: large gap-up at open, OR was wide (~0.9%), breakout bar never materialized
+- Avg PnL: ~+0.32%, 1/3 win rate — statistically meaningless on n=3
+
+**Bugs fixed during dry run**:
+- `UnicodeEncodeError` on Windows (cp1252): replaced Unicode symbols with ASCII equivalents
+- Timezone mismatch: Dhan returns tz-aware timestamps; fixed by stripping tzinfo before comparisons (`bar_dt = bar_dt.replace(tzinfo=None)`)
+
+#### AE.8 — Live-Run Decision
+
+**Do not run live yet — run `--dry-run` for 3–5 more sessions first.**
+
+Reasons:
+1. Only 1 day of historical data tested — no edge validation
+2. All exits were TIME-EXIT — no evidence the RR=1.5 target is reachable intraday
+3. Full async loop (09:15 wait → 09:30 scan → 3-min tick → 14:45 EOD) has never run in real time
+4. `place_super_order` with OR-derived SL%/target% has never been sent to Dhan's API
+5. Running alongside the main Kronos bot risks Dhan API rate-limit conflicts
+6. Position sizing (20% × 3 positions = 60% capital deployed simultaneously) is real capital risk
+
+**Path to live**: run `python momentum_main.py --dry-run` during market hours for one week, verify sector selection matches the sector performance screen, then go live with qty=1 per trade first as an order-placement smoke test before scaling up.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.
