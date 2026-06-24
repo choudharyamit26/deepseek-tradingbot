@@ -764,6 +764,111 @@ Reasons:
 
 ---
 
+### Section AF — 2026-06-24 (DhanMCP Server + MarketFeed WebSocket + Hosting)
+
+#### AF.1 — DhanMCP: Model Context Protocol Server (`DhanMCP/server.py`)
+
+Built a first-party MCP server that exposes the Dhan trading account as natural-language tools for any MCP-compatible client (Claude Desktop, Cursor, VS Code). Based on the [dhanhq-skills](https://github.com/dhan-oss/dhanhq-skills) repo and DhanHQ MCP docs.
+
+**File:** `DhanMCP/server.py` — FastMCP server (18 tools), stdio + HTTP transport.
+
+**Tools exposed:**
+
+| Category | Tools |
+|----------|-------|
+| Portfolio | `get_fund_limits`, `get_positions`, `get_holdings` |
+| Orders | `get_order_list`, `get_order_by_id`, `place_order`, `modify_order`, `cancel_order`, `get_trade_book`, `place_super_order` |
+| Market Data | `get_live_quote`, `get_intraday_candles`, `get_daily_candles`, `get_option_chain`, `get_expiry_list` |
+| Margin/Utility | `calculate_margin`, `lookup_security_id`, `market_status` |
+
+**Usage:**
+```bash
+# stdio (Claude Desktop / Cursor)
+python DhanMCP/server.py
+
+# HTTP
+python DhanMCP/server.py --transport http --port 8765
+```
+
+Credentials live in `DhanMCP/claude_desktop_config.json` (copy `mcpServers` block into `%APPDATA%\Claude\claude_desktop_config.json` and restart Claude Desktop).
+
+**Bug fixed at launch**: `mcp.list_tools()` is async — calling it at module level raised `TypeError: 'coroutine' object is not iterable`. Removed the log line; server starts clean.
+
+#### AF.2 — dhanhq-skills Repo Audit
+
+Reviewed [github.com/dhan-oss/dhanhq-skills](https://github.com/dhan-oss/dhanhq-skills). Key findings relevant to this bot:
+
+1. **Supported intraday intervals**: official SDK supports **1, 5, 15, 25, 60 minutes only** — not 3 or 10. The bot requests `interval=3` and `interval=10` via `intraday_minute_data()`. If the API silently rejects or returns wrong data for unsupported intervals, the 1-minute fallback path engages automatically (see AF.3). Worth monitoring logs for `"API error for ... int=3"` lines.
+
+2. **OrderUpdate WebSocket**: `dhanhq.OrderUpdate` streams fill/cancel/reject events in real time — not yet integrated. Would allow Kronos to detect SL/target hits immediately instead of waiting for the next position-sync poll.
+
+3. **Forever / GTT orders**: `dhan.place_forever_order()` supports persistent SL+target across days (OCO mode). Enables multi-day position management for the momentum bot — not yet integrated.
+
+4. **Correlation ID tracking**: `place_order(..., tag="kronos_SYMBOL_entry_001")` + `get_order_by_correlationID()` for clean per-trade audit trail — not yet used.
+
+#### AF.3 — Resampling Verification
+
+Audited the entire codebase for resampling. Findings:
+
+**`dhan_integration.py:_get_historical_data_uncached()` (lines 502–552)**:
+- Primary path: requests native interval directly from API (`intraday_minute_data(interval=3)` or `interval=10`)
+- Fallback (when native fails or returns < min_bars): **always fetches 1-minute data** and resamples to the target using `pandas.resample()`
+- `_INTERVAL_MAP = {"3minute": 3, "10minute": 10, ...}` — both intervals ARE sent to the API
+- `_RESAMPLE_MAP = {3: "3min", 10: "10min", ...}` — fallback source is always 1-min, NOT 5-min→10min
+
+**Confirmed patterns:**
+- ✅ 1min → 3min: YES (fallback when native 3-min API call fails)
+- ❌ 5min → 10min: NO — actual fallback is **1min → 10min** (5-min is never used as source)
+
+**Other resampling locations** (both are 3min → 15min, not 5min → 10min):
+- `kronos_integrated_bot/enhanced_guardian.py:97` — guardian resamples 3m candles to 15m for trailing SL indicators
+- `kronos_integrated_bot/timestamp_replay.py:68` — replay resamples 3m to 15m for Kronos input window
+
+#### AF.4 — MarketFeed WebSocket: Replace REST Polling (`dhan_integration.py`, `stock_trading_bot.py`)
+
+Replaced the chunked REST polling path for live prices with push-based `MarketFeed` WebSocket (Quote subscription, type 17).
+
+**Changes in `dhan_integration.py`:**
+
+- `__init__`: stores `self._dhan_ctx` (needed by MarketFeed); adds `_feed` / `_feed_thread` slots
+- `start_live_feed(security_ids, exchange=None)`: creates `MarketFeed.Quote` subscription for all given IDs; `on_message` callback writes `{last_price, high_price, low_price, volume}` into `live_quotes_cache` on every tick; runs via `feed.start()` (daemon thread, auto-reconnects)
+- `subscribe_live(security_ids)`: adds symbols mid-session via `feed.subscribe_symbols()` without restarting the connection
+- `stop_live_feed()`: closes the WebSocket cleanly
+- `is_feed_active()`: returns `True` if feed thread is alive
+- `clear_live_quotes_cache()`: **no-op when feed active** — previously cleared freshly pushed ticks every scan cycle
+- `fetch_live_data_multi()`: when feed active, reads directly from the push-populated cache dict (zero REST calls, zero rate-limit exposure); full chunked REST path preserved as fallback when feed not running
+- `cache_live_quotes()`: **no-op when feed active** — the two `asyncio.to_thread` REST calls per scan cycle are eliminated
+
+**Changes in `stock_trading_bot.py`:**
+
+- `run()`: calls `self.dhan.start_live_feed(_feed_sids)` once before the scan loop — only caller change required
+
+**Impact:**
+
+| Before | After |
+|--------|-------|
+| 50+ stocks = chunked REST every scan | 0 REST calls for live prices |
+| `time.sleep(0.3)` between chunks | Removed (no-op path) |
+| 10s cache TTL; prices up to 10s stale | Sub-second push ticks |
+| Rate-limit / circuit-breaker risk from bursts | Feed immune to 1-req/sec quota |
+| `_dhan_sem` contention on price fetches | No contention — local dict read |
+
+#### AF.5 — Hosting Decision: Hostinger KVM 1 Mumbai
+
+**Problem**: `DH-905 Invalid IP` — Dhan order API requires static IP whitelisting. Home ISP IPs rotate.
+
+**Decision**: Hostinger KVM 1 VPS, India - Mumbai location (~₹999/mo on 1-month plan).
+
+**Alternatives ruled out:**
+- **Heroku**: no static IP on any dyno plan; Fixie/QuotaGuard addon adds ~$19/mo → total ~$26+/mo; US/EU only
+- **PythonAnywhere**: shared rotating IPs on all plans (no static IP option at all); outbound WebSocket to `wss://api-feed.dhan.co` blocked by domain whitelist → MarketFeed also fails
+
+**Chosen spec**: KVM 1 (1 vCPU, 4 GB RAM, 50 GB NVMe, Mumbai). RAM budget: Kronos model ~1.5 GB + bot ~200 MB + OS ~300 MB = ~2 GB peak; 4 GB gives comfortable headroom. Mumbai gives ~35ms latency to Dhan API.
+
+**Deployment**: systemd service with `Restart=on-failure`; credentials in `.env` file; static IP whitelisted on Dhan developer portal.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.

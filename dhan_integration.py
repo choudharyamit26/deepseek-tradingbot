@@ -64,6 +64,10 @@ VWAP_RECLAIM_STOCKS: dict[str, str] = {
     "TATAELXSI": "3411", "TATAPOWER": "3426", "TRENT": "1964",
     "ZYDUSLIFE": "7929",
     "MANKIND": "543904",
+    # ── Momentum bot additions (resolved from scrip master 2026-06-22) ─────────
+    "BDL": "541143",       # Bharat Dynamics Limited  [DEFENCE]
+    "IRFC": "543257",      # Indian Railway Finance Co  [DEFENCE]
+    "TVSMOTOR": "532343",  # TVS Motor Company  [AUTO]
 }
 
 TICK_SIZE_MAP: dict[str, float] = {
@@ -102,6 +106,8 @@ TICK_SIZE_MAP: dict[str, float] = {
     # ── Liquid ETFs ─────────────────────────────────────────────────────────
     "NIFTYBEES": 0.05, "BANKBEES": 0.05, "ITBEES": 0.05,
     "GOLDBEES": 0.05, "SILVERBEES": 0.05, "JUNIORBEES": 0.05,
+    # ── Momentum bot additions ───────────────────────────────────────────────
+    "BDL": 0.05, "IRFC": 0.05, "TVSMOTOR": 0.05,
 }
 
 
@@ -120,7 +126,8 @@ class DhanStockTradingBot:
     def __init__(self):
         self.client_id = os.getenv("DHAN_CLIENT_ID")
         self.access_token = os.getenv("DHAN_ACCESS_TOKEN")
-        self.dhan = dhanhq(DhanContext(self.client_id, self.access_token))
+        self._dhan_ctx = DhanContext(self.client_id, self.access_token)
+        self.dhan = dhanhq(self._dhan_ctx)
         self.security_ids = {**FNO_UNIVERSE, **ETF_LIQUID, **FILTERED_FNO_UNIVERSE, **VWAP_RECLAIM_STOCKS, **NIFTY50_UNIVERSE}
         self.historical_cache = {}  # key -> (timestamp, df)
         self.historical_cache_ttl = 120  # seconds (default / 3-minute bars)
@@ -149,6 +156,108 @@ class DhanStockTradingBot:
         # (breaker counters, candle-store file writes) needs real locks.
         self._breaker_lock = threading.Lock()
         self._persist_lock = threading.Lock()
+        # MarketFeed WebSocket (push-based live quotes, replaces REST polling)
+        self._feed = None
+        self._feed_thread = None
+
+    # ── MarketFeed WebSocket ─────────────────────────────────────────────────
+
+    def start_live_feed(self, security_ids: list, exchange: int = None):
+        """Start a MarketFeed Quote WebSocket in a background daemon thread.
+
+        After this call, live_quotes_cache is kept fresh by push ticks and
+        cache_live_quotes() / fetch_live_data_multi() become no-ops — all
+        callers automatically get sub-second prices from cache.
+
+        Args:
+            security_ids: List of integer or string security IDs to subscribe.
+            exchange:     MarketFeed exchange constant (default: MarketFeed.NSE = 1).
+        """
+        from dhanhq import MarketFeed
+
+        if self._feed is not None:
+            logger.warning("start_live_feed: feed already running; use subscribe_live() to add symbols.")
+            return
+
+        if exchange is None:
+            exchange = MarketFeed.NSE
+
+        instruments = [
+            (exchange, str(int(sid)), MarketFeed.Quote)
+            for sid in security_ids if sid
+        ]
+        if not instruments:
+            logger.warning("start_live_feed: no valid security_ids provided.")
+            return
+
+        def _on_message(feed, data):
+            if not isinstance(data, dict):
+                return
+            tick_type = data.get("type")
+            if tick_type not in ("Quote Data", "Ticker Data"):
+                return
+            sid = str(data.get("security_id", ""))
+            if not sid:
+                return
+            def _f(v):
+                try: return float(v)
+                except (TypeError, ValueError): return 0.0
+            if tick_type == "Quote Data":
+                qdata = {
+                    "last_price": _f(data.get("LTP")),
+                    "high_price": _f(data.get("high")),
+                    "low_price": _f(data.get("low")),
+                    "volume": int(data.get("volume") or 0),
+                }
+            else:
+                qdata = {"last_price": _f(data.get("LTP")), "high_price": 0.0, "low_price": 0.0, "volume": 0}
+            self.live_quotes_cache[sid] = (time.time(), qdata)
+
+        def _on_error(feed, exc):
+            logger.error("MarketFeed error: %s", exc)
+
+        def _on_close(feed):
+            logger.info("MarketFeed connection closed")
+
+        self._feed = MarketFeed(
+            self._dhan_ctx, instruments, version="v2",
+            on_message=_on_message, on_error=_on_error, on_close=_on_close,
+        )
+        self._feed_thread = self._feed.start()
+        logger.info("MarketFeed started: %d instruments subscribed", len(instruments))
+
+    def subscribe_live(self, security_ids: list, exchange: int = None):
+        """Add more symbols to a running MarketFeed without restarting it."""
+        from dhanhq import MarketFeed
+        if self._feed is None:
+            self.start_live_feed(security_ids, exchange)
+            return
+        if exchange is None:
+            exchange = MarketFeed.NSE
+        new_instruments = [
+            (exchange, str(int(sid)), MarketFeed.Quote)
+            for sid in security_ids if sid
+        ]
+        if new_instruments:
+            self._feed.subscribe_symbols(new_instruments)
+            logger.debug("MarketFeed: subscribed %d more instruments", len(new_instruments))
+
+    def stop_live_feed(self):
+        """Close the MarketFeed WebSocket connection."""
+        if self._feed is not None:
+            try:
+                self._feed.close_connection()
+            except Exception as exc:
+                logger.warning("stop_live_feed error: %s", exc)
+            finally:
+                self._feed = None
+                self._feed_thread = None
+            logger.info("MarketFeed stopped")
+
+    def is_feed_active(self) -> bool:
+        return self._feed is not None and self._feed_thread is not None and self._feed_thread.is_alive()
+
+    # ── Circuit breaker ──────────────────────────────────────────────────────
 
     def _breaker_is_open(self) -> bool:
         return time.time() < self._breaker_open_until
@@ -185,7 +294,8 @@ class DhanStockTradingBot:
             del self.historical_cache[key]
 
     def clear_live_quotes_cache(self):
-        self.live_quotes_cache.clear()
+        if not self.is_feed_active():
+            self.live_quotes_cache.clear()
 
     def _fetch_intraday(self, security_id, date_str, interval_int, exchange_segment=None):
         return self._fetch_intraday_range(security_id, date_str, date_str, interval_int, exchange_segment=exchange_segment)
@@ -504,10 +614,24 @@ class DhanStockTradingBot:
                                        order_type="MARKET", product_type=product_type)
 
     def fetch_live_data_multi(self, security_ids: list):
-        """Fetch live quotes for multiple security IDs in chunks.
-        security_ids can be strings or integers.
+        """Return live quotes for multiple security IDs.
+
+        When MarketFeed is active, reads directly from the push-populated cache
+        (no REST call, no rate-limit exposure). Falls back to chunked quote_data()
+        REST calls when the feed is not running.
+
         Returns dict: str(security_id) -> {last_price, high_price, low_price, volume}
         """
+        if self.is_feed_active():
+            results = {}
+            for sid in security_ids:
+                sid_str = str(sid)
+                entry = self.live_quotes_cache.get(sid_str)
+                if entry:
+                    results[sid_str] = entry[1]
+            return results
+
+        # ── REST fallback (feed not running) ──────────────────────────────────
         int_ids = []
         for sid in security_ids:
             try:
@@ -549,7 +673,13 @@ class DhanStockTradingBot:
         return results
 
     def cache_live_quotes(self, security_ids: list):
-        """Fetch and cache live quotes for the given security IDs."""
+        """Pre-populate live_quotes_cache for the given security IDs.
+
+        No-op when MarketFeed is active — the feed already keeps the cache
+        current via push ticks, so the REST bulk-fetch is unnecessary.
+        """
+        if self.is_feed_active():
+            return
         quotes = self.fetch_live_data_multi(security_ids)
         now = time.time()
         for sid, qdata in quotes.items():

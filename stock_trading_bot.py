@@ -793,6 +793,13 @@ class IntradayStockBot:
                     FIRST_ENTRY_HOUR, FIRST_ENTRY_MIN,
                     LAST_ENTRY_HOUR, LAST_ENTRY_MIN,
                     MAX_SIGNALS_PER_STOCK_PER_DAY, scan_interval)
+
+        # Start push-based live feed for the whole watchlist — replaces REST polling
+        # for all fetch_live_data / cache_live_quotes calls during the session.
+        _feed_sids = [self.dhan.security_ids[s] for s in self.watchlist if s in self.dhan.security_ids]
+        if _feed_sids:
+            self.dhan.start_live_feed(_feed_sids)
+
         while True:
             try:
                 self._reset_daily_if_needed()
