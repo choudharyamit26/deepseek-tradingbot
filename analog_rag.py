@@ -31,6 +31,21 @@ class AnalogRAG:
 
     # ── schema ────────────────────────────────────────────────────────────────
 
+    # Columns added after the original schema. Persisted at entry so a backtest
+    # can reconstruct the FULL matrix-authoritative confidence (the 3m-only
+    # columns above cannot reconstruct MTF/regime/candle penalties). Migrated
+    # onto existing DBs via ALTER TABLE (new rows fill them; old rows stay NULL).
+    _EXTRA_COLUMNS = (
+        ("matrix_score",     "INTEGER"),
+        ("matrix_breakdown", "TEXT    DEFAULT ''"),
+        ("trend_15m",        "TEXT    DEFAULT ''"),
+        ("trend_1h",         "TEXT    DEFAULT ''"),
+        ("sector_trend",     "TEXT    DEFAULT ''"),
+        ("candle_against",   "INTEGER DEFAULT 0"),
+        ("analog_wr",        "REAL"),
+        ("kronos_pred_return", "REAL"),  # signed forecast return (fraction); +ve=bullish
+    )
+
     def _init_db(self):
         conn = sqlite3.connect(self.db_path)
         conn.execute("""
@@ -54,6 +69,11 @@ class AnalogRAG:
                 outcome         TEXT
             )
         """)
+        existing = {r[1] for r in conn.execute("PRAGMA table_info(setups)")}
+        for col, decl in self._EXTRA_COLUMNS:
+            if col not in existing:
+                conn.execute(f"ALTER TABLE setups ADD COLUMN {col} {decl}")
+                logger.info("AnalogRAG DB migrated: added column %s", col)
         conn.commit()
         conn.close()
         logger.debug("AnalogRAG DB ready: %s", self.db_path)
@@ -71,14 +91,27 @@ class AnalogRAG:
         confidence: int,
         pnl: float,
         pnl_pct: float,
+        matrix_score: int = 0,
+        matrix_breakdown: str = "",
+        trend_15m: str = "",
+        trend_1h: str = "",
+        sector_trend: str = "",
+        candle_against: bool = False,
+        analog_wr: float | None = None,
     ):
-        """Persist a completed trade setup with its outcome."""
+        """Persist a completed trade setup with its outcome.
+
+        The matrix_* / trend_* / sector / candle / analog_wr fields capture the
+        full matrix-authoritative decision context at entry so a later backtest
+        can reconstruct the complete confidence (not just the 3m-only part)."""
         outcome = "WIN" if pnl > 0 else "LOSS"
         kronos_aligned = 0
         kronos_direction = ""
+        kronos_pred_return = None
         if kronos_conf:
             kronos_aligned = 0 if kronos_conf.get("conflict") else 1
             kronos_direction = str(kronos_conf.get("pred_direction", ""))
+            kronos_pred_return = float(kronos_conf.get("pred_return", 0.0))
 
         row = (
             datetime.utcnow().isoformat(),
@@ -97,6 +130,14 @@ class AnalogRAG:
             float(pnl),
             float(pnl_pct),
             outcome,
+            int(matrix_score),
+            str(matrix_breakdown),
+            str(trend_15m),
+            str(trend_1h),
+            str(sector_trend),
+            int(bool(candle_against)),
+            (float(analog_wr) if analog_wr is not None else None),
+            kronos_pred_return,
         )
         try:
             conn = sqlite3.connect(self.db_path)
@@ -104,8 +145,11 @@ class AnalogRAG:
                 INSERT INTO setups
                     (ts, symbol, rsi, adx, volume_ratio, mfi, atr_pct,
                      kronos_aligned, kronos_direction, nifty_trend,
-                     market_regime, signal_type, confidence, pnl, pnl_pct, outcome)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     market_regime, signal_type, confidence, pnl, pnl_pct, outcome,
+                     matrix_score, matrix_breakdown, trend_15m, trend_1h,
+                     sector_trend, candle_against, analog_wr, kronos_pred_return)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        ?, ?, ?, ?, ?, ?, ?, ?)
             """, row)
             conn.commit()
             conn.close()
@@ -115,19 +159,11 @@ class AnalogRAG:
 
     # ── read ──────────────────────────────────────────────────────────────────
 
-    def query_similar(
-        self,
-        indicators: dict,
-        kronos_conf: dict | None = None,
-        nifty_trend: str = "",
-        market_regime: str = "",
-        signal_type: str = "",
-        n: int = 5,
-    ) -> str:
-        """
-        Return a formatted string of the n most similar past setups.
-        Empty string if fewer than 3 setups are stored.
-        """
+    def _similar_rows(self, indicators: dict, n: int) -> list:
+        """Return the n most similar stored setups (raw DB rows) by normalized
+        Euclidean distance. Empty list if fewer than 3 setups are stored or on
+        any DB error. Shared by query_similar (formatting) and analog_stats
+        (numeric scoring) so both use identical neighbour selection."""
         try:
             conn = sqlite3.connect(self.db_path)
             rows = conn.execute("""
@@ -141,10 +177,10 @@ class AnalogRAG:
             conn.close()
         except Exception as exc:
             logger.warning("AnalogRAG query failed: %s", exc)
-            return ""
+            return []
 
         if len(rows) < 3:
-            return ""
+            return []
 
         query_vec = np.array([
             indicators.get("rsi", 50),
@@ -162,15 +198,48 @@ class AnalogRAG:
         db_norm = db_vecs / feat_std
         dists = np.linalg.norm(db_norm - query_norm, axis=1)
         top_idx = np.argsort(dists)[:n]
+        return [rows[i] for i in top_idx]
 
-        top_rows = [rows[i] for i in top_idx]
+    def analog_stats(self, indicators: dict, n: int = 5) -> dict:
+        """Numeric analog evidence for programmatic confidence scoring.
+
+        Returns {"n": int, "win_rate": float|None, "avg_pnl": float}.
+        win_rate is None when there is insufficient history (< 3 setups), so
+        callers can distinguish 'no signal' from a genuine 0% win rate."""
+        top_rows = self._similar_rows(indicators, n)
+        if not top_rows:
+            return {"n": 0, "win_rate": None, "avg_pnl": 0.0}
+        winners = [r for r in top_rows if r[10] == "WIN"]
+        return {
+            "n": len(top_rows),
+            "win_rate": len(winners) / len(top_rows) * 100,
+            "avg_pnl": float(np.mean([r[8] for r in top_rows])),
+        }
+
+    def query_similar(
+        self,
+        indicators: dict,
+        kronos_conf: dict | None = None,
+        nifty_trend: str = "",
+        market_regime: str = "",
+        signal_type: str = "",
+        n: int = 5,
+    ) -> str:
+        """
+        Return a formatted string of the n most similar past setups.
+        Empty string if fewer than 3 setups are stored.
+        """
+        top_rows = self._similar_rows(indicators, n)
+        if not top_rows:
+            return ""
+
         winners = [r for r in top_rows if r[10] == "WIN"]
 
         win_rate = len(winners) / len(top_rows) * 100 if top_rows else 0
         avg_pnl = float(np.mean([r[8] for r in top_rows])) if top_rows else 0.0
 
         lines = [f"ANALOG SETUPS ({len(top_rows)} most similar past trades):"]
-        for rank, (idx, row) in enumerate(zip(top_idx, top_rows), 1):
+        for rank, row in enumerate(top_rows, 1):
             rsi, adx, vol, mfi, atr, kal, sig, conf, pnl, pnl_pct, outcome, sym, ts = row
             lines.append(
                 f"  [{rank}] {sym} {sig} RSI={rsi:.0f} ADX={adx:.0f} Vol={vol:.2f}"

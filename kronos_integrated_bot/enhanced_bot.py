@@ -305,9 +305,11 @@ class EnhancedIntradayBot(IntradayStockBot):
                         total, win_rate, total_pnl)
             return record
 
-    def _compute_score_matrix(self, indicators: dict, regime_data: dict,
+    @staticmethod
+    def _compute_score_matrix(indicators: dict, regime_data: dict,
                                indicators_15m: dict, indicators_1h: dict,
-                               kronos_conf: dict | None = None) -> tuple[int, str]:
+                               kronos_conf: dict | None = None,
+                               kronos_align_bonus_max: int = 4) -> tuple[int, str]:
         """Compute confidence ceiling from raw indicators. Returns (score, breakdown_str).
 
         This is the AUTHORITATIVE confidence score. The AI's self-assessed score
@@ -328,15 +330,13 @@ class EnhancedIntradayBot(IntradayStockBot):
         # MTF trends
         # 15m uses EMA-9 to match the hard MTF veto (_validate_mtf_alignment._trend_15m)
         # and the MTF summary shown to the AI; 3m/1h use SMA-20.
-        close_15m = indicators_15m.get("close", 0) if indicators_15m else 0
-        ema9_15m = indicators_15m.get("ema_9", close_15m) if indicators_15m else close_15m
-        trend_15m = "BULLISH" if close_15m > ema9_15m else "BEARISH" if close_15m else "NEUTRAL"
-
-        close_1h = indicators_1h.get("close", 0) if indicators_1h else 0
-        sma20_1h = indicators_1h.get("sma_20", close_1h) if indicators_1h else close_1h
-        trend_1h = "BULLISH" if close_1h > sma20_1h else "BEARISH" if close_1h else "NEUTRAL"
-
-        trend_3m = "BULLISH" if close > sma20 else "BEARISH"
+        # Trend labels via _tf_trend (NEUTRAL on an exact tie / missing data) —
+        # consistent with the MTF gate (_validate_mtf_alignment / _trend_3m_1h,
+        # AC.3/AC.6.1) and with the entry snapshot persisted to the RAG DB.
+        # 15m uses EMA-9; 3m/1h use SMA-20.
+        trend_15m = EnhancedIntradayBot._tf_trend(indicators_15m, "ema_9")
+        trend_1h = EnhancedIntradayBot._tf_trend(indicators_1h, "sma_20")
+        trend_3m = EnhancedIntradayBot._tf_trend(indicators, "sma_20")
         price_above_vwap = close > vwap if vwap > 0 else True
 
         # Nifty/sector regime
@@ -421,9 +421,23 @@ class EnhancedIntradayBot(IntradayStockBot):
             bonus_total += 1
             bonuses.append(f"All TFs aligned ({trend_3m}): +1")
 
-        if kronos_conf and not kronos_conf.get("conflict") and kronos_conf.get("pred_range_pct", 0) > 0.5:
-            bonus_total += 2
-            bonuses.append(f"Kronos strongly aligned: +2")
+        # Kronos alignment as a WEIGHTED, graduated bonus (entry-supportive),
+        # not the old flat +2. Scaled by the volatility-normalized forecast
+        # magnitude (0-1) so a strong, high-conviction forecast contributes more
+        # and can lift a borderline setup over MIN_CONFIDENCE — i.e. acts as an
+        # entry trigger, without bypassing any hard gate. Still gated on
+        # conviction (pred_range_pct) so weak/flat forecasts earn little.
+        # kronos_align_bonus_max=0 disables it. NOTE: Kronos's real edge is not
+        # yet validated (kronos_aligned was historically unlogged, AC.5); the
+        # forecast is now persisted to DB+CSV so this weight can be tuned/checked.
+        if kronos_conf and not kronos_conf.get("conflict") and kronos_align_bonus_max > 0:
+            mag = float(kronos_conf.get("magnitude", 0) or 0)
+            rng = float(kronos_conf.get("pred_range_pct", 0) or 0)
+            if mag > 0 and rng >= 0.3:
+                kb = int(round(kronos_align_bonus_max * mag))
+                if kb > 0:
+                    bonus_total += kb
+                    bonuses.append(f"Kronos aligned (mag={mag:.2f}, range={rng:.2f}%): +{kb}")
 
         # Nifty intraday momentum bonus: if session trend aligns with 3m direction
         if trend_3m == "BULLISH" and nifty_intraday >= 1.0:
@@ -452,6 +466,38 @@ class EnhancedIntradayBot(IntradayStockBot):
         breakdown = " | ".join(parts)
 
         return max(score, 0), breakdown
+
+    @staticmethod
+    def _tf_trend(ind: dict, ma_key: str) -> str:
+        """Trend label for a timeframe: close vs the given moving average,
+        NEUTRAL on an exact tie or missing data. Single source used by both the
+        scoring matrix and the entry snapshot so the two always agree."""
+        if not ind:
+            return "NEUTRAL"
+        close = ind.get("close", 0)
+        if not close:
+            return "NEUTRAL"
+        ma = ind.get(ma_key, close)
+        return "BULLISH" if close > ma else "BEARISH" if close < ma else "NEUTRAL"
+
+    @staticmethod
+    def _candles_against(bars, sig_type: str) -> bool:
+        """True if the last 3 completed bars net-moved AGAINST the signal
+        direction (rising price for a SELL, falling price for a BUY). Mirrors
+        the prompt's old '-8 last 3 candles against signal' penalty, computed
+        deterministically in code now that the matrix is authoritative."""
+        try:
+            closes = list(bars["close"])
+        except Exception:
+            return False
+        if len(closes) < 4:
+            return False
+        net = closes[-1] - closes[-4]  # net move over the last 3 bars
+        if sig_type == "SELL":
+            return net > 0
+        if sig_type == "BUY":
+            return net < 0
+        return False
 
     async def _analyze(self, symbol: str):
         self.filter_stats["total_scans"] += 1
@@ -642,7 +688,8 @@ class EnhancedIntradayBot(IntradayStockBot):
                 logger.warning("%s Pre-AI Kronos conf error: %s", symbol, e)
 
         matrix_score, matrix_breakdown = self._compute_score_matrix(
-            indicators_3m, regime_data, indicators_15m, indicators_1h, pre_kronos_conf
+            indicators_3m, regime_data, indicators_15m, indicators_1h, pre_kronos_conf,
+            kronos_align_bonus_max=int(self.cfg.get("kronos_matrix_bonus_max", 4)),
         )
         logger.info("%s Pre-computed scoring matrix ceiling: %d (%s)", symbol, matrix_score, matrix_breakdown)
 
@@ -671,11 +718,13 @@ class EnhancedIntradayBot(IntradayStockBot):
         # ── Feature 3: RAG/analog context ───────────────────────────────────
         nifty_trend_for_rag = (regime_data.get("nifty", {}) or {}).get("trend", "") if regime_data else ""
         regime_str_for_rag = (regime_data.get("nifty", {}) or {}).get("trend", "") if regime_data else ""
+        analog_win_rate = None  # numeric analog evidence for the matrix-authoritative score
         try:
             atr_value_raw = indicators_3m.get("atr", 1)
             atr_pct_for_rag = (float(atr_value_raw) / ltp * 100) if ltp > 0 and atr_value_raw else 0.5
             indicators_for_rag = dict(indicators_3m)
             indicators_for_rag["atr_pct"] = atr_pct_for_rag
+            analog_win_rate = self.rag.analog_stats(indicators_for_rag, n=5).get("win_rate")
             analog_context = self.rag.query_similar(
                 indicators_for_rag, pre_kronos_conf,
                 nifty_trend_for_rag, regime_str_for_rag,
@@ -700,8 +749,18 @@ class EnhancedIntradayBot(IntradayStockBot):
 
         current_trade = self.active_trades.get(symbol)
         sig_type = signal.get("signal", "HOLD")
-        confidence = signal.get("confidence", 0)
+        ai_confidence = signal.get("confidence", 0)  # advisory only — NOT used for the gate
         reasoning = signal.get("reasoning", "")
+
+        # ── AUTHORITATIVE CONFIDENCE = deterministic matrix score ────────────
+        # The AI's self-reported confidence is unstable (the same input scored
+        # 83 then 76, and the emitted field decoupled from its own reasoning), so
+        # the AI now decides only DIRECTION (sig_type) and SL/TP. The binding
+        # number is _compute_score_matrix, which already folds in volume / ADX /
+        # MTF / Kronos / MFI / Nifty-intraday. The two direction-dependent
+        # penalties the matrix could not compute before the AI picked a side —
+        # analog evidence and candle agreement — are applied below.
+        confidence = matrix_score
 
         nifty_data = regime_data.get("nifty", {}) if regime_data else {}
         nifty_trend = nifty_data.get("trend", "neutral")
@@ -721,6 +780,21 @@ class EnhancedIntradayBot(IntradayStockBot):
         # Symmetric logic applies for bullish daily trend vs SELL signals.
         INTRADAY_SCALE_PCT = 1.0
         if sig_type in ("BUY", "SELL"):
+            # Analog evidence (mechanical: <35% WR -> -10, >=65% -> +5). None
+            # means insufficient history (< 3 similar setups) -> no adjustment.
+            if analog_win_rate is not None:
+                if analog_win_rate < 35:
+                    confidence -= 10
+                    reasoning += f" | Analog WR {analog_win_rate:.0f}% < 35% (-10)"
+                elif analog_win_rate >= 65:
+                    confidence += 5
+                    reasoning += f" | Analog WR {analog_win_rate:.0f}% >= 65% (+5)"
+
+            # Candle agreement: last 3 completed bars moving against the signal.
+            if self._candles_against(recent_bars, sig_type):
+                confidence -= 8
+                reasoning += " | Last 3 candles against signal (-8)"
+
             if nifty_trend == "bearish" and sig_type == "BUY":
                 scale = min(max(nifty_intraday_chg, 0.0), INTRADAY_SCALE_PCT) / INTRADAY_SCALE_PCT
                 nifty_pen = -round(6 * (1 - scale))
@@ -745,15 +819,15 @@ class EnhancedIntradayBot(IntradayStockBot):
             if sector_trend == "bearish" and sig_type == "BUY":
                 confidence -= 4
                 reasoning += " | Sector bearish vs BUY penalty (-4)"
-            elif sector_trend == "bullish" and sig_type == "SELL":
-                confidence -= 4
-                reasoning += " | Sector bullish vs SELL penalty (-4)"
+            # NOTE: no penalty for sector-bullish SELL — that is the strategy's
+            # best edge (mean-reversion shorts, +60.25 over 10 trades, payoff 3.73).
 
-            if confidence > matrix_score:
-                logger.info("%s AI confidence %d capped by matrix ceiling %d (%s)",
-                            symbol, confidence, matrix_score, matrix_breakdown)
-                confidence = matrix_score
+            confidence = max(0, min(100, int(round(confidence))))
             signal["confidence"] = confidence
+            logger.info("%s confidence: matrix=%d -> final=%d (analog_wr=%s, AI advisory=%s)",
+                        symbol, matrix_score, confidence,
+                        f"{analog_win_rate:.0f}%" if analog_win_rate is not None else "n/a",
+                        ai_confidence)
 
         # ── KILL SWITCH: BUY disabled by strategy (buy_enabled=false) ──────
         # BUY is structurally unprofitable (14 trades, 28.6% WR, -87 of -133
@@ -778,23 +852,19 @@ class EnhancedIntradayBot(IntradayStockBot):
             return
 
         # ── HARD GATE: block counter-trend SELLs (SELL into a bullish Nifty) ──
-        # Empirical: SELL while the Nifty is bullish lost -19.55 over 9 trades
-        # (payoff 0.44). NOTE the gate is Nifty-only — it deliberately does NOT
-        # look at sector: SELLs while the *sector* is bullish are the strategy's
-        # best edge (+60.25 over 10 trades, payoff 3.73, mean-reversion shorts
-        # on extended sector names), so gating on sector would destroy profit.
-        #
-        # Intraday override: "bullish" here is the *daily* (10-day-SMA) trend,
-        # so a session that is sharply red intraday can still read daily-bullish
-        # (e.g. Nifty down 200 pts but still above its 10-day SMA). Selling into
-        # a Nifty whose *session* is already bearish (intraday <= -0.5%, see
-        # regime_filter._calc_regime) is not "selling into strength", so lift the
-        # gate there. session_trend defaults to "neutral" when no live price is
-        # available, so the conservative (gated) behaviour is preserved on a data
-        # gap. Flagged for the reflection agent to validate once such trades
-        # accumulate.
+        # Empirical: SELL while Nifty is bullish and sector is NOT bullish lost
+        # -19.55 over 9 trades (payoff 0.44) — gate those.
+        # Exception 1 — sector bullish: SELL while the *sector* is bullish is
+        # the strategy's BEST edge (+60.25 over 10 trades, payoff 3.73, 60% WR,
+        # mean-reversion shorts on extended sector names). Gate must not apply.
+        # Exception 2 — intraday override: "bullish" is the *daily* (10-day-SMA)
+        # trend; a session sharply red intraday is not "selling into strength",
+        # so lift the gate when nifty_session_trend == "bearish" (intraday
+        # <= -0.5%, see regime_filter._calc_regime). session_trend defaults to
+        # "neutral" on a data gap, preserving the conservative (gated) behaviour.
         if (sig_type == "SELL" and nifty_trend == "bullish"
-                and nifty_session_trend != "bearish"):
+                and nifty_session_trend != "bearish"
+                and sector_trend != "bullish"):
             logger.warning(
                 "%s SELL HARD-GATED: counter-trend (nifty bullish daily, intraday=%+.2f%%, session=%s, sector=%s, conf=%d)",
                 symbol, nifty_intraday_chg, nifty_session_trend, sector_trend, confidence,
@@ -831,9 +901,9 @@ class EnhancedIntradayBot(IntradayStockBot):
         if sig_type not in ("BUY", "SELL") or confidence < cfg.MIN_CONFIDENCE:
             if sig_type in ("BUY", "SELL"):
                 logger.warning(
-                    "%s %s REGIME-KILLED: AI conf=%d → after regime penalty → %d < %d "
+                    "%s %s SCORE-KILLED: matrix=%d → final conf=%d < %d "
                     "(nifty=%s intraday=%+.2f%%, sector=%s)",
-                    symbol, sig_type, signal.get("confidence", 0), confidence, cfg.MIN_CONFIDENCE,
+                    symbol, sig_type, matrix_score, confidence, cfg.MIN_CONFIDENCE,
                     nifty_trend, nifty_intraday_chg, sector_trend,
                 )
             return
@@ -1047,6 +1117,15 @@ class EnhancedIntradayBot(IntradayStockBot):
             "_entry_kronos_conf": kronos_conf,
             "_entry_nifty": nifty_regime,
             "_entry_regime": regime_str_for_rag,
+            # Full matrix-authoritative decision context (so a backtest can
+            # reconstruct the complete confidence, not just the 3m-only part).
+            "_entry_matrix_score": matrix_score,
+            "_entry_matrix_breakdown": matrix_breakdown,
+            "_entry_trend_15m": self._tf_trend(indicators_15m, "ema_9"),
+            "_entry_trend_1h": self._tf_trend(indicators_1h, "sma_20"),
+            "_entry_sector_trend": sector_trend,
+            "_entry_candle_against": self._candles_against(recent_bars, sig_type),
+            "_entry_analog_wr": analog_win_rate,
         }
 
         fail_remarks = ""
@@ -1118,6 +1197,9 @@ class EnhancedIntradayBot(IntradayStockBot):
             mtf_3m=mtf_3m,
             mtf_15m=mtf_15m,
             mtf_1h=mtf_1h,
+            kronos_direction=(kronos_conf.get("pred_direction", "") if kronos_conf else ""),
+            kronos_pred_return=(f"{kronos_conf.get('pred_return', 0) * 100:.3f}" if kronos_conf else ""),
+            kronos_aligned=("" if not kronos_conf else ("0" if kronos_conf.get("conflict") else "1")),
             slot_reserved=not order_failed,  # only count slot if order succeeded
         )
 
@@ -1137,6 +1219,13 @@ class EnhancedIntradayBot(IntradayStockBot):
         entry_regime = trade.get("_entry_regime", "")
         signal_type = trade.get("signal_type", "")
         confidence = trade.get("confidence", 0)
+        entry_matrix_score = trade.get("_entry_matrix_score", 0)
+        entry_matrix_breakdown = trade.get("_entry_matrix_breakdown", "")
+        entry_trend_15m = trade.get("_entry_trend_15m", "")
+        entry_trend_1h = trade.get("_entry_trend_1h", "")
+        entry_sector_trend = trade.get("_entry_sector_trend", "")
+        entry_candle_against = trade.get("_entry_candle_against", False)
+        entry_analog_wr = trade.get("_entry_analog_wr")
 
         # Estimate exit price and PnL before parent closes the trade.
         # Only store to RAG if we actually get a price — pnl=0 would record
@@ -1170,6 +1259,13 @@ class EnhancedIntradayBot(IntradayStockBot):
                     confidence=int(confidence),
                     pnl=pnl_est,
                     pnl_pct=pnl_pct_est,
+                    matrix_score=int(entry_matrix_score or 0),
+                    matrix_breakdown=entry_matrix_breakdown,
+                    trend_15m=entry_trend_15m,
+                    trend_1h=entry_trend_1h,
+                    sector_trend=entry_sector_trend,
+                    candle_against=entry_candle_against,
+                    analog_wr=entry_analog_wr,
                 )
                 logger.debug("RAG stored: %s %s P&L=%.2f (%.2f%%)", symbol, signal_type, pnl_est, pnl_pct_est)
             except Exception as exc:

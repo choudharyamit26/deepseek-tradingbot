@@ -131,108 +131,55 @@ class DeepSeekStockAnalyzer:
         {{
             "signal": "BUY" | "SELL" | "HOLD",
             "confidence": 0-100,
-            "reasoning": "Step-by-step reasoning showing your evaluation and penalty deductions",
+            "reasoning": "Step-by-step reasoning for your DIRECTION choice (advisory)",
             "stop_loss_percent": {example_sl},
             "target_percent": {example_tp},
-            "setup_type": "VWAP_RECLAIM" | "BREAKOUT" | "REVERSAL" | "MOMENTUM" | "NONE",
-            "penalty_breakdown": "e.g. -10 MTF, -10 Kronos = -20 total"
+            "setup_type": "VWAP_RECLAIM" | "BREAKOUT" | "REVERSAL" | "MOMENTUM" | "NONE"
         }}
 
-        REASONING PROTOCOL — Follow each step IN ORDER before deciding:
-        1. VIABILITY: Check mandatory rules for each direction.
-           BUY: price above VWAP, RSI < {self.rsi_ob}, ADX > {self.min_adx}.
+        YOUR JOB: choose the DIRECTION (BUY / SELL / HOLD) and the risk levels
+        (stop_loss_percent, target_percent). You do NOT score the trade. The
+        SYSTEM computes the authoritative confidence (volume, ADX, MTF, Kronos,
+        MFI, analog history, Nifty/sector regime) and decides whether it passes.
+        Your `confidence` field is ADVISORY ONLY — report your honest qualitative
+        conviction, but NEVER downgrade a viable BUY/SELL to HOLD because you
+        think the number looks low. Direction is your job; scoring is the system's.
+
+        REASONING PROTOCOL — follow each step IN ORDER:
+        1. VIABILITY (this step decides the direction):
+           BUY:  price above VWAP, RSI < {self.rsi_ob}, ADX > {self.min_adx}.
            SELL: price below VWAP, RSI > {self.rsi_os}, ADX > {self.min_adx}.
-           If neither direction passes all its rules -> HOLD immediately.
-        2. VOLUME: Evaluate volume_ratio with context.
-           Trending (price above VWAP+SMA20, ADX>{self.min_adx + 4}): vol >= 0.5 ok.
-           Breakout/Reversal: vol > 1.2 required.
-           vol < 0.3 always -> HOLD (see penalty matrix below).
-        3. CANDLES: Check last 5 candles — is price moving with or against your signal?
-        4. MTF: Check multi-timeframe alignment. 15-min/1-hour disagree? Apply penalty.
-        5. KRONOS: Read the KRONOS TIME-SERIES FORECAST section carefully.
-           KRONOS CONFLICT definition: total forecast return is NEGATIVE for BUY signals,
-           or POSITIVE for SELL signals — regardless of magnitude.
-           If conflict -> -8 penalty. If aligned AND pred_range_pct > 0.5% -> +2 bonus.
-           Kronos predicts the next 30 minutes. Use pred_range_pct to tune SL/TP:
-           if pred_range_pct < 0.2% (tight range), reduce conviction; never tighten stop_loss_percent below the ATR floor.
-           if pred_range_pct > 0.6% (wide range), consider widening target_percent.
-        6. ANALOG EVIDENCE: If an ANALOG SETUPS section is present in the context:
-           - win rate < 35% among similar past trades -> apply -10 confidence penalty
-           - win rate >= 65% among similar past trades -> apply +5 confidence bonus
-           - Always include analog win rate in your penalty_breakdown.
-           If no ANALOG SETUPS section present, skip this step.
-        7. R:R: Set stop_loss_percent = 1.5 x ATR% for this stock ({atr_sl_hint}).
-           Target must be >= {min_rr:g}x SL (min_tp_floor = {min_tp_floor}%).
-           The system HARD-REJECTS any trade with target below {min_rr:g}x the stop loss.
-           Do NOT copy example values — calculate from the actual ATR in Technical Indicators.
-           Each stock has different volatility.
-        8. CONFIDENCE: Apply the PENALTY MATRIX below. Start at 100 and SUBTRACT.
-           Compute final score, then:
-           - If score < {self.min_confidence}: set signal=HOLD, setup_type=NONE,
-             confidence=computed score (NOT zero — always report the actual number).
-           - If score >= {self.min_confidence}: you MUST output the BUY/SELL signal.
-             NO further overrides allowed after the math passes.
+           Pick the direction that passes ALL of its rules. If neither passes -> HOLD.
+        2. VOLUME context: trending (price above VWAP+SMA20, ADX>{self.min_adx + 4})
+           wants vol >= 0.5; a fresh breakout/reversal wants vol > 1.2. Thin
+           volume weakens the case but the system applies the volume penalty —
+           you do not need to subtract anything.
+        3. CANDLES: do the last 5 candles move WITH your chosen direction? If they
+           clearly move against it, prefer HOLD.
+        4. MTF: note whether the 15-min / 1-hour trends agree (informational; the
+           system scores alignment).
+        5. KRONOS: read the KRONOS TIME-SERIES FORECAST section. Use it ONLY to
+           tune the risk levels — pred_range_pct < 0.2% (tight range) -> lower
+           conviction, keep stop_loss_percent at the ATR floor; pred_range_pct
+           > 0.6% (wide range) -> consider a wider target_percent.
+        6. ANALOG EVIDENCE: if an ANALOG SETUPS section is present and similar
+           setups lose money historically, prefer HOLD or a cleaner setup. The
+           system applies the numeric analog penalty/bonus itself.
+        7. RISK LEVELS: stop_loss_percent = 1.5 x ATR% for this stock ({atr_sl_hint}).
+           target_percent must be >= {min_rr:g}x SL (floor = {min_tp_floor}%).
+           The system HARD-REJECTS any trade with target below {min_rr:g}x the stop.
+           Calculate from the actual ATR in Technical Indicators — each stock has
+           different volatility. NEVER copy the example numbers.
 
-        ═══════════════════════════════════════════════════════════
-        CONFIDENCE PENALTY MATRIX (MANDATORY — apply ALL that match)
-        ═══════════════════════════════════════════════════════════
-        Start at 100. Subtract each applicable penalty:
-
-        CRITICAL (any one -> signal=HOLD, confidence=computed score):
-        - ADX < {self.min_adx}                                    -> HOLD
-        - Volume ratio < 0.3 in any market             -> HOLD
-        - BUY when price below VWAP                    -> HOLD
-        - SELL when price above VWAP                   -> HOLD
-
-        MAJOR PENALTIES:
-        - Volume ratio 0.3-0.5 (very weak volume)     -> -12 points
-        - Volume ratio 0.5-0.8 (below average)        -> -8 points
-        - Kronos forecast CONFLICTS with signal        -> -8 points
-        - 15-min timeframe disagrees with signal       -> -7 points
-        - 1-hour timeframe disagrees with signal       -> -5 points
-        - Last 3+ candles move AGAINST signal dir.     -> -8 points
-        - MFI > 80 with stalling price (for BUY)      -> -12 points
-        - MFI < 20 with stalling price (for SELL)      -> -12 points
-        - Analog similar-setup win rate < 35%          -> -10 points
-
-        MINOR PENALTIES:
-        - ADX borderline ({self.min_adx}-{self.min_adx + 4})                        -> -5 points
-        - Volume ratio 0.8-1.0 (slightly below avg)   -> -3 points
-        - Kronos pred_range_pct < 0.2% (low forecast conviction) -> -3 points
-        - R:R ratio barely meets minimum               -> -3 points
-
-        NOTE: Nifty/sector regime penalties (-6/-4) are applied automatically
-        by the system AFTER your output. Do NOT subtract them here.
-
-        BONUSES (max +10 total):
-        - Volume ratio > 2.0 (exceptional volume)      -> +3 points
-        - Volume ratio > 1.5 (strong volume)           -> +2 points
-        - All 3 timeframes aligned with signal         -> +3 points
-        - Kronos aligned AND pred_range_pct > 0.5%    -> +2 points
-        - Analog similar-setup win rate >= 65%         -> +5 points
-
-        Final confidence = 100 - (sum of penalties) + (sum of bonuses, capped at +10)
-        If final confidence < {self.min_confidence} -> set signal=HOLD.
-        If final confidence >= {self.min_confidence} -> you MUST output the active signal (BUY or SELL).
-        Once the math passes the threshold, do NOT second-guess, add qualitative concerns,
-        or downgrade to HOLD. The numeric score is BINDING. If the number passes, the trade passes.
-        The system discards any signal below {self.min_confidence}; do not
-        round up to sneak past the threshold.
-        When signal=HOLD: always set setup_type=NONE.
-
-        PENALTY MATH EXAMPLES (pass threshold = {self.min_confidence}):
-        - Perfect setup: 100 + 5 bonuses = 105 -> capped at 100, strong PASS -> output BUY/SELL
-        - Good setup, slightly low volume: 100 - 8 = 92 -> {"PASS -> output BUY/SELL" if 92 >= self.min_confidence else "FAIL -> HOLD"}
-        - Weak volume + Kronos conflict: 100 - 12 - 8 = 80 -> {"PASS -> output BUY/SELL" if 80 >= self.min_confidence else "FAIL -> HOLD"}
-        - Very weak volume + MTF disagree: 100 - 12 - 7 = 81 -> {"PASS -> output BUY/SELL" if 81 >= self.min_confidence else "FAIL -> HOLD"}
-        - Marginal SELL, vol ok, 15m opposes: 100 - 8 - 7 = 85 -> {"PASS -> output SELL, do NOT change to HOLD" if 85 >= self.min_confidence else "FAIL -> HOLD"}
-        - Weak vol + bad analogs + Kronos conflict: 100 - 12 - 10 - 8 = 70 -> {"PASS -> output BUY/SELL" if 70 >= self.min_confidence else "FAIL -> HOLD"}
-        - Strong volume + all aligned + good analogs: 100 + 3 + 3 + 5 = 111 -> capped 100, strong PASS -> output BUY/SELL
-
-        You MUST list each penalty/bonus applied in your penalty_breakdown field.
-        Do NOT rationalize away violations. If volume is 0.48, it is < 0.5, PERIOD.
-        Do NOT round up borderline values. 0.48 is not "approximately 0.5".
-        ═══════════════════════════════════════════════════════════
+        DECISION RULES:
+        - Output BUY or SELL whenever its viability rules (step 1) pass and the
+          setup is not flatly contradicted by candles (step 3) or analog history.
+        - Output HOLD only when neither direction is viable.
+        - Do NOT compute a 0-100 threshold, and do NOT talk yourself out of a
+          viable trade with extra qualitative worries — the system scores and
+          gates it. When signal=HOLD, set setup_type=NONE.
+        - Do NOT rationalize away a viability violation. If price is above VWAP,
+          SELL is not viable, PERIOD. Do not round borderline values.
 
         {rules_extra}
         """
@@ -260,18 +207,15 @@ class DeepSeekStockAnalyzer:
         If you want to give 82+ confidence, you ask self: is this REALLY different or am I just dumb caveman?
         """
 
-        # Inject algorithmic confidence ceiling
-        if matrix_score is not None:
-            user_prompt += f"""
-        === HARD CONFIDENCE CEILING ===
-        System calculate max possible confidence score for this setup is: {matrix_score}
-        Reason: {matrix_breakdown}
-        
-        CAVEMAN RULE: 
-        You CANNOT output confidence higher than {matrix_score}. 
-        If you write > {matrix_score}, system force-cap it to {matrix_score}.
-        Explain in reasoning how the ceiling limits your optimism.
-        """
+        # NOTE (C1 + matrix-authoritative, 2026-06-24): the algorithmic score is
+        # NOT injected into the prompt, and the AI's confidence number is no longer
+        # used for the trade gate at all. The AI's self-scored confidence proved
+        # unstable (same input -> 83 then 76; emitted field decoupled from its own
+        # reasoning), so it now only chooses DIRECTION + risk levels. The binding
+        # confidence is computed in enhanced_bot._analyze() as the deterministic
+        # _compute_score_matrix value (plus analog/candle/regime penalties). The AI's
+        # `confidence` field is advisory/logged only. matrix_score / matrix_breakdown
+        # are kept in the signature for logging/back-compat.
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",

@@ -14,6 +14,7 @@ _CSV_FIELDS = [
     "trailing_stop", "target", "confidence", "reasoning", "pnl", "mode",
     "market_regime", "sector_regime",
     "mtf_3m", "mtf_15m", "mtf_1h",
+    "kronos_direction", "kronos_pred_return", "kronos_aligned",
 ]
 
 
@@ -75,6 +76,8 @@ class SignalLogger:
                    mode: str = "DRY-RUN",
                    market_regime: str = "", sector_regime: str = "",
                    mtf_3m: str = "", mtf_15m: str = "", mtf_1h: str = "",
+                   kronos_direction: str = "", kronos_pred_return: str = "",
+                   kronos_aligned: str = "",
                    slot_reserved: bool = False) -> None:
         today = self._ensure_date()
         path = self._csv_path(today)
@@ -101,6 +104,9 @@ class SignalLogger:
             "mtf_3m": mtf_3m,
             "mtf_15m": mtf_15m,
             "mtf_1h": mtf_1h,
+            "kronos_direction": kronos_direction,
+            "kronos_pred_return": kronos_pred_return,
+            "kronos_aligned": kronos_aligned,
         }
 
         def _write_csv():

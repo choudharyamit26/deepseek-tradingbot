@@ -13,6 +13,7 @@ params:
   kronos_confidence_weight: 0.35
   kronos_enabled: true
   kronos_exit_threshold: -0.008
+  kronos_matrix_bonus_max: 4    # max matrix bonus for an aligned Kronos forecast (scaled by magnitude); 0 disables
   kronos_min_predicted_move: 0.003
   kronos_penalty_conflict: 0.5
   kronos_pred_len: 10

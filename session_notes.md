@@ -869,6 +869,87 @@ Replaced the chunked REST polling path for live prices with push-based `MarketFe
 
 ---
 
+### Section AG — 2026-06-24 (Matrix-Authoritative Confidence: kill the AI confidence flip-flop)
+
+Triggered by a code-review of live behavior + two `simulate_signal.py` runs on the **same** NTPC input that produced **different** results, exposing that the DeepSeek confidence number is unreliable.
+
+#### AG.1 — C1: stop injecting the matrix ceiling into the AI prompt (`deepseek_analyzer.py`)
+The prompt's `=== HARD CONFIDENCE CEILING ===` block told the AI *"max possible score is {matrix_score}, you CANNOT output higher"*. The AI anchored ON that number — computing an honest 71, then outputting the 89 ceiling. Removed the injection; the programmatic cap was already separate. (First step, then superseded by AG.3.)
+
+#### AG.2 — Diagnosis: the AI's confidence is non-deterministic AND decoupled
+Two identical NTPC runs:
+| | Run 1 | Run 2 | Deterministic matrix |
+|---|---|---|---|
+| 15m/1h NEUTRAL handling | 0 (correct) | −7/−5 (wrong) | 0 |
+| Computed score | 83 | 76 | 83/84 |
+| Emitted `confidence` field | **72** | **72** | — |
+
+Two defects: (a) the AI mis-applies its own penalty matrix run-to-run (NEUTRAL ≠ "disagrees"), swinging the score across the threshold; (b) the emitted `confidence` field (72) is decoupled from the AI's own reasoning (83/76). The prompt's "binding commitment" rule (AA.6 #8) did not hold.
+
+#### AG.3 — Fix: the deterministic matrix is now the authoritative confidence
+The AI no longer scores the trade. It chooses **direction (BUY/SELL/HOLD) + SL/TP + reasoning** only; the **number** is `_compute_score_matrix` (already deterministic — verified 84 on 5/5 identical calls).
+
+- **`analog_rag.py`**: extracted `_similar_rows()`; added `analog_stats(indicators, n) -> {n, win_rate|None, avg_pnl}` so the analog penalty can be applied programmatically (win_rate None = insufficient history, no adjustment).
+- **`enhanced_bot.py`**:
+  - `confidence = matrix_score` (was `signal.get("confidence")`). The old `min(ai_conf, matrix_score)` cap is gone.
+  - Folded the two former AI-only penalties into code: analog (`<35%` → −10, `≥65%` → +5) using `analog_stats`, and candle-against-direction (−8) via new `_candles_against(bars, sig_type)` staticmethod.
+  - Existing Nifty/sector regime penalties now apply to the matrix-based number. AI's number kept as `ai_confidence` (logged/advisory only). `_compute_score_matrix` made a `@staticmethod` (uses no `self`) for reuse.
+  - Log line `... SCORE-KILLED: matrix=X → final conf=Y < MIN` (was "REGIME-KILLED: AI conf=...").
+- **`deepseek_analyzer.py`**: prompt rewritten — removed the penalty matrix, the `start at 100 / threshold-HOLD` step, the binding-commitment block, and the math examples. New protocol = VIABILITY (picks direction) → context steps → RISK LEVELS; `confidence` field declared ADVISORY; dropped `penalty_breakdown` from the output schema.
+- **`simulate_signal.py`**: updated to mirror the new path — prints AI direction + advisory conf, then computes & gates on the matrix-authoritative confidence (was gating on the AI number).
+
+**Verification**: matrix deterministic (84 × 5); `_candles_against` + `analog_stats` correct; **42/42 tests pass**. Full e2e (confirming the AI now returns a *direction* instead of a threshold-HOLD) is a paid DeepSeek call via `python simulate_signal.py` — left for the user to run.
+
+**Why this is safe**: the matrix already covered volume/ADX/MTF/Kronos/MFI/Nifty; the two added penalties (analog, candle) preserve the prior behavior. The matrix gate (skip AI if `matrix < MIN_CONFIDENCE`) is unchanged, so the AI is only called on setups that can pass. The AI retains a HOLD veto via its *direction* output.
+
+#### AG.4 — Matrix trend tie → NEUTRAL (consistency fix)
+The first e2e run surfaced an inconsistency: `_compute_score_matrix` labelled `close == ma` as BEARISH (granting a spurious +1 "all TFs aligned" bonus → 84) while the MTF gate showed 1H=NEUTRAL for the same bar. Fixed the matrix's 3m/15m/1h trend calc to return NEUTRAL on an exact tie, matching `_validate_mtf_alignment`/`_trend_3m_1h` (AC.3/AC.6.1). NTPC now scores a clean **83** (`-12 vol, -5 ADX`). Only affects flat/insufficient-bar timeframes; matters because the matrix is now the sole authority. 42/42 tests still pass.
+
+#### AG.5 — Open calibration question (NOT yet acted on)
+With the AI no longer gating on its own score, this NTPC bar flipped **SKIP → ENTER SELL @ 83** — a thin-volume (0.46), borderline-ADX (21), losing-analog (40% WR, avg −1.48) short that the old (noisy) AI-HOLD used to drop. The matrix is now the *sole* filter, so its threshold/weights carry the full load. The analog penalty only fires `<35%` (40% escapes). **Before trusting this live, validate the matrix threshold + penalty weights against real fills in `analog_history.db`** (reflection agent / replay) and watch the first session's `SCORE-KILLED` vs ENTER rates. Candidate levers if entries are too loose: raise `MIN_CONFIDENCE`, add a graduated analog penalty (e.g. 35–45% WR → −5), or tighten the volume/ADX penalties.
+
+---
+
+#### AG.6 — Backtest of matrix-authoritative confidence vs real fills (`backtest_matrix.py`)
+New tool: recomputes the matrix confidence for every closed trade in `analog_history.db` and reports win%/PnL by score band, by candidate `MIN_CONFIDENCE`, and per-penalty. Findings on **123 real fills** (47% WR, −136 PnL):
+- **Threshold is inert**: win% ~46–47% whether the cut is 76 or 86 → `min_confidence` is not the lever.
+- **Direction is the story**: BUY 15 trades 27% WR −94.4 (69% of all losses; already gated/kill-switched); SELL 108 trades ~50% WR −41.7.
+- **Penalty weights (validated subset — DB lacks MTF/regime/candle, so only vol/ADX/MFI/analog testable)**: volume penalty −12/−8 shows **no edge** (48% fired vs 47% not — and it's the one that knocks scores down most); ADX −5 **justified** (36% vs 48%); analog **+5 strong** (67% vs 44%); analog **−10 backwards** (51% vs 45%); MFI n=4 inconclusive.
+- **Not acted on yet** (small samples + missing MTF/regime/candle coverage). Candidate moves once data is richer: cut the volume penalty, lift analog +bonus / drop analog −10, keep ADX.
+
+#### AG.7 — Persist full decision context to DB + CSV (unblocks full validation)
+The AG.6 backtest could only see 3m penalties because the DB didn't store the rest. Fixed so future fills capture the **whole** matrix-authoritative decision:
+- **`analog_rag.py`**: schema migrated (ALTER TABLE on the live DB) with `matrix_score, matrix_breakdown, trend_15m, trend_1h, sector_trend, candle_against, analog_wr, kronos_pred_return`. `store_setup()` takes + writes them.
+- **`enhanced_bot.py`**: entry snapshot (`trade_data`) captures all of the above (trends via new shared `_tf_trend` staticmethod, which `_compute_score_matrix` now also uses — single source, NEUTRAL on tie); passed through at exit-time `store_setup`.
+- **`signal_logger.py`**: signal CSV gains `kronos_direction, kronos_pred_return, kronos_aligned`; populated from `kronos_conf` at the log call in `enhanced_bot`.
+
+#### AG.8 — Kronos forecast as a weighted entry bonus (not just a veto)
+`_compute_score_matrix` previously gave Kronos only a −8 conflict penalty + a flat +2 align bonus. Replaced the flat bonus with a **graduated** one: when the forecast aligns (not conflict) and has conviction (`pred_range_pct ≥ 0.3`), `bonus = round(kronos_align_bonus_max × magnitude)` (magnitude = volatility-normalized forecast strength, 0–1). A strong forecast can now lift a borderline setup over `MIN_CONFIDENCE` — an entry trigger — without bypassing any hard gate. Configurable via `kronos_matrix_bonus_max` (yaml param, default **4**, 0 disables); wired through `_analyze`. The −8 conflict veto and −3 low-range penalty are unchanged.
+**Caveat**: Kronos's real edge is still unvalidated (`kronos_aligned` was historically unlogged, AC.5). AG.7 now persists the forecast to DB+CSV, so this bonus weight becomes measurable/tunable — treat the default 4 as a starting guess, not a validated value.
+
+**Verification (AG.6–AG.8)**: DB migration applied live; `store_setup` smoke test writes all new fields; 42/42 tests pass; `backtest_matrix.py` runs clean.
+
+#### AG.9 — NEXT STEPS (open loops for future runs)
+
+The matrix-authoritative rewrite is **structurally done and stable**, but its weights are **starting guesses, not validated**. The work now is a measure→tune loop. In priority order:
+
+1. **Accrue fills with full context, then re-validate.** Every new fill now persists the complete decision (AG.7). After a batch of new live/dry trades, re-run `python backtest_matrix.py` — but first **upgrade it** to read the *stored* `matrix_breakdown` / `trend_15m` / `trend_1h` / `sector_trend` / `candle_against` / `kronos_pred_return` for new rows (it currently *recomputes* a 3m-only partial because the old 123 rows predate those columns). Only then can MTF/regime/candle/Kronos contributions be validated. Old rows stay NULL → keep the recompute path as fallback.
+
+2. **Calibration moves pending evidence** (do NOT apply blind — AG.6 samples are small + 3m-only):
+   - Volume penalty (−12/−8) showed **no edge** → candidate to cut/zero.
+   - Analog: **+5 strong** (keep/raise), **−10 backwards** (drop/shrink).
+   - ADX −5 **justified** (keep).
+   - `kronos_matrix_bonus_max` default **4 is a guess** — tune once `kronos_pred_return`/`kronos_aligned` accrue and show whether Kronos alignment actually predicts wins.
+   - `min_confidence` is **inert** on real data (AG.6 [B]) — do NOT spend cycles tuning it.
+
+3. **Watch the first sessions' `SCORE-KILLED` vs ENTER log rates.** The AI now surfaces BUY/SELL directions more readily (it no longer self-gates on a confidence number), so the matrix threshold + hard gates carry the full filtering load. NTPC flipped SKIP→ENTER in testing — confirm entry frequency feels right; if too loose, the levers are the AG.6 weight findings, not `min_confidence`.
+
+4. **Reflection/replay alignment gap (Q1, bigger build, optional).** `reflect.py` can't tune the matrix weights (not in `PARAM_BOUNDS`) and `replay.py` doesn't model the matrix at all (`confidence: 0`, entry via `passes_prefilter`+`entry_direction`). So the reflection agent is currently blind to the live decision core. To fix: (a) make `replay.simulate_day` matrix-aware (compute `_compute_score_matrix`, gate on `min_confidence` — needs 15m/1h indicators + regime in replay), and (b) lift key matrix weights into `PARAM_BOUNDS`. Until then, validate via `backtest_matrix.py` on real fills, not the reflection agent.
+
+5. **Kronos edge still unproven.** AG.8 weights it as a bonus, but `kronos_aligned` was historically unlogged (AC.5). AG.7 fixes the logging; revisit the bonus weight (and whether Kronos should gate entries) only after real aligned/return data shows a measurable win-rate difference.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.

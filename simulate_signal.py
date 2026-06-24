@@ -229,18 +229,58 @@ async def simulate():
                                           regime_ctx, recent_bars=recent_bars)
 
     sig_type   = signal.get("signal", "HOLD")
-    confidence = signal.get("confidence", 0)
+    ai_conf    = signal.get("confidence", 0)   # advisory only — NOT used for the gate
     reasoning  = signal.get("reasoning", "")
     sl_pct     = signal.get("stop_loss_percent", 1.2)
     tp_pct     = signal.get("target_percent", 3.0)
     setup_type = signal.get("setup_type", "")
 
-    print(f"\n  Signal     : {sig_type}")
-    print(f"  Confidence : {confidence}")
-    print(f"  Setup type : {setup_type}")
-    print(f"  SL %       : {sl_pct}")
-    print(f"  Target %   : {tp_pct}")
+    print(f"\n  Signal       : {sig_type}  (direction chosen by AI)")
+    print(f"  AI confidence: {ai_conf}  (ADVISORY — not used for the gate)")
+    print(f"  Setup type   : {setup_type}")
+    print(f"  SL %         : {sl_pct}")
+    print(f"  Target %     : {tp_pct}")
     print(f"\n  Reasoning  :\n{reasoning}")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    sep("[5b]  MATRIX-AUTHORITATIVE CONFIDENCE  (mirrors enhanced_bot._analyze)")
+    # ─────────────────────────────────────────────────────────────────────────
+    from kronos_integrated_bot.enhanced_bot import EnhancedIntradayBot
+
+    # Lowercased regime in the shape _compute_score_matrix / _analyze expect.
+    regime_lc = {
+        "nifty": {"trend": "bearish", "intraday_chg_pct": 0.0, "session_trend": "neutral"},
+        "sector": {"trend": "neutral"},
+    }
+    matrix_score, matrix_breakdown = EnhancedIntradayBot._compute_score_matrix(
+        ind_3m, regime_lc, ind_15m, ind_60m, None
+    )
+    print(f"\n  Matrix score : {matrix_score}")
+    print(f"  Breakdown    : {matrix_breakdown}")
+
+    confidence = matrix_score
+    if sig_type in ("BUY", "SELL"):
+        wr = rag.analog_stats(ind_3m, n=5).get("win_rate")
+        if wr is None:
+            print("  Analog       : insufficient history -> no adjustment")
+        elif wr < 35:
+            confidence -= 10
+            print(f"  Analog       : WR {wr:.0f}% < 35%  -> -10")
+        elif wr >= 65:
+            confidence += 5
+            print(f"  Analog       : WR {wr:.0f}% >= 65% -> +5")
+        else:
+            print(f"  Analog       : WR {wr:.0f}%  -> no adjustment")
+
+        if EnhancedIntradayBot._candles_against(recent_bars, sig_type):
+            confidence -= 8
+            print(f"  Candles      : last 3 against {sig_type} -> -8")
+        else:
+            print(f"  Candles      : not against {sig_type} -> no adjustment")
+        # Regime penalties (nifty bearish vs BUY / bullish vs SELL, sector) — none here.
+        confidence = max(0, min(100, confidence))
+
+    print(f"\n  FINAL confidence (matrix-authoritative): {confidence}")
 
     # ─────────────────────────────────────────────────────────────────────────
     sep("[6]  POST-SIGNAL GATES")
@@ -248,13 +288,13 @@ async def simulate():
     if sig_type not in ("BUY", "SELL"):
         print(f"\n  Signal is {sig_type} — no further checks needed. SKIP.")
         sep("[8]  FINAL DECISION")
-        print(f"\n  RESULT: SKIP (AI said {sig_type}, conf={confidence})")
+        print(f"\n  RESULT: SKIP (AI direction={sig_type})")
         return
 
     if confidence < 80:
-        print(f"\n  Confidence {confidence} < 80 — SKIP.")
+        print(f"\n  Final confidence {confidence} < 80 — SKIP.")
         sep("[8]  FINAL DECISION")
-        print(f"\n  RESULT: SKIP (confidence below threshold)")
+        print(f"\n  RESULT: SKIP (matrix-authoritative confidence below threshold)")
         return
 
     # MTF alignment check
@@ -274,16 +314,8 @@ async def simulate():
     else:
         print(f"  RSI veto      : PASS [OK]  RSI={rsi_3m:.1f} (BUY OB>{RSI_OB} / SELL OS<{RSI_OS})")
 
-    # Sector regime penalty
-    sector_trend = regime_data.get("sector", {}).get("trend", "").upper()
-    conflict = (sig_type == "SELL" and sector_trend == "BULLISH") or \
-               (sig_type == "BUY" and sector_trend == "BEARISH")
-    if conflict:
-        penalty_conf = confidence - 5
-        print(f"  Sector penalty: conf {confidence}→{penalty_conf} ({sig_type} vs ENERGY={sector_trend})")
-        confidence = penalty_conf
-    else:
-        print(f"  Sector check  : PASS [OK]  no conflict ({sig_type} vs ENERGY={sector_trend})")
+    # (Sector/regime penalties are already folded into the matrix-authoritative
+    # confidence computed in [5b] — not re-applied here.)
 
     if not mtf_ok or not rsi_ok or confidence < 80:
         sep("[8]  FINAL DECISION")
