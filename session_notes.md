@@ -950,6 +950,35 @@ The matrix-authoritative rewrite is **structurally done and stable**, but its we
 
 ---
 
+### Section AH — 2026-06-24 (Hermes Agent reflection layer + DB diagnostics + backfill enrichment)
+
+#### AH.1 — Hermes Agent integrated as the reflection/self-improvement layer (NOT the signal path)
+Hermes Agent (Nous Research's self-improving operator framework) is a heavyweight multi-turn agent — a peer of Claude Code, not of DeepSeek/Kronos. Decision: wire it into the **nightly reflection loop**, not the per-tick signal path (per-tick agent calls would be slow, costly, and duplicate the DeepSeek analyzer). It runs as a **separate process** and drives tuning through a tool surface; it never imports trading code or touches the live loop.
+- **`kronos_integrated_bot/reflection_cli.py`** (new): JSON CLI over `reflect.py`. Subcommands `state | metrics | hypotheses | context | propose | apply | revert | schema | query | run`; one JSON object to stdout, logs to stderr. Every write (`apply`/`revert`) re-validates through the SAME guardrails as the in-house cycle (PARAM_BOUNDS clamp, locked-param veto, evidence gate, oscillation guard, replay). A refused write returns `{"ok": false, "refused": ...}` — **the external agent cannot bypass the evidence gate**. `propose` skips the slow replay by default (`--replay` to include); `apply` always runs it.
+- **`hermes/skills/trading/kronos-reflection/SKILL.md`** (new): agent-side skill manifest (when/how to use, the one rule = don't bypass the gate, procedure, verification). Install to `~/.hermes/skills/`.
+- **`hermes/README.md`** (new): wiring, nightly cron, Windows/WSL interop, CLI reference, read-only safety model.
+- **`tests/test_reflection_cli.py`** (new): 14 tests covering gate refusal, locked-param veto, step clamping, and the read-only query layer.
+
+#### AH.2 — Read-only `analog_history.db` query tool (diagnose, don't just tune)
+`reflection_cli schema` (tables + per-column **fill rates** + ts range) and `reflection_cli query "SELECT ..."`. Read-only enforced three independent ways: connection `mode=ro`, an authorizer denying all but SELECT/READ/FUNCTION on user SQL, and a single-statement SELECT/WITH whitelist. Rows capped at `--limit` (default 100, max 2000). This lets the agent investigate **structural** problems (time-of-day decay, sector regime, late entry) instead of only moving numeric knobs.
+
+#### AH.3 — Diagnostic findings (123 trades; small n — leads, not conclusions)
+- **Morning decay:** 09:30-10:29 ≈ 25% WR, 10:30-10:59 = 34.8% (worst bucket); flips to ~50%+ from 11:00, net positive 14:00+.
+- **Confidence calibration:** sub-80 band is worst (37.5% WR, avg_pct −0.527); WR/avg_pct improve monotonically with confidence → the `min_confidence=82` floor is justified. The ≥85 band has best avg_pct but worst rupee PnL (a few oversized losers → check `position_confidence_scalar`).
+- **Direction:** BUY loses in every regime (n=15, ~25% WR) → BUY kill-switch validated. SELL-into-bullish-sector is the only profitable bucket (see AH.5).
+
+#### AH.4 — Root-cause: why `candle_against`/`sector_trend`/`trend_15m`/`matrix_score` were 0% populated
+Two writers to `setups`: the **live path** (`enhanced_bot._exit_position` → `rag.store_setup`) populates all 24 columns, but only fires for a **bot-tracked** `active_trades` position that exits with a valid PnL. **`backfill_rag.py`** wrote only 16 columns (omitting the rich-context ones → table defaults) and hardcoded `kronos_aligned=0, kronos_direction=''`. Query confirmed **123/123 rows are backfill-fingerprinted, 0 live** — because entries are placed **manually** (DH-905 workaround), so no tracked position ever exits through the live store path. Not a bug in `store_setup`; the data simply arrives via a path that couldn't populate the columns.
+
+#### AH.5 — Backfill enrichment (`backfill_rag.py`)
+Future inserts now write `trend_15m`/`trend_1h`/`sector_trend` (from CSV `mtf_15m`/`mtf_1h`/`sector_regime`) and write kronos fields as **NULL** when absent (honest "unknown" vs the misleading hardcoded 0). New **`--reenrich`** flag backfills those context columns onto existing rows — context columns only, never `pnl`/`outcome`/entry. Format-matched to the live path (`mtf_*` UPPERCASE per `_tf_trend`; `sector_trend` lowercased per `sector_data.trend`). Ran `--reenrich`: **123 rows updated** (DB backed up first). Fill now 122/123 trend_15m/1h, 91/123 sector_trend. `matrix_score`/`matrix_breakdown`/`candle_against`/`analog_wr` stay NULL (not in CSVs — only the live path can fill them).
+- **Edge confirmed in DB for the first time:** `sector_trend=bullish` is the only profitable bucket (55.6% WR, +51) vs neutral (46.9%, −116) / bearish (33.3%, −52) — validates "never gate SELL on bullish sector".
+
+#### AH.6 — Staged knob: `market_open_skip_minutes` (act when the gate opens)
+Morning-decay (AH.3) maps to `market_open_skip_minutes`. PARAM_BOUNDS `(0, 60, 15)`: bound caps at 60 (entries from 10:30) and **max_step=15 means one 15-min step per gated cycle** — full ramp 0→60 takes 4 cycles, not one jump (requesting 60 clamps to 15). **STAGED, not applied:** the evidence gate is closed (17/30) and per the owner's rule it waits for ~13 more closed trades; validated as a clean candidate via `propose`. `min_confidence=82` and the BUY kill-switch are validated — left untouched.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.

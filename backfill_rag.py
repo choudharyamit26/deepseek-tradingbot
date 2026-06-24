@@ -156,7 +156,8 @@ def _load_csv_rows(date_filter: str | None = None) -> list[dict]:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def backfill(dry_run: bool = False, date_filter: str | None = None) -> int:
+def backfill(dry_run: bool = False, date_filter: str | None = None,
+             reenrich: bool = False) -> int:
     """
     Returns the number of new rows inserted (or that would be inserted
     in dry-run mode).
@@ -181,6 +182,7 @@ def backfill(dry_run: bool = False, date_filter: str | None = None) -> int:
     logger.info("Found %d/%d rows with PnL across all CSVs", len(eligible), len(rows))
 
     inserted = 0
+    updated = 0
     skipped_dup = 0
     skipped_bad = 0
 
@@ -201,8 +203,11 @@ def backfill(dry_run: bool = False, date_filter: str | None = None) -> int:
             skipped_bad += 1
             continue
 
-        # Dedup: skip if this (symbol, ts) is already in DB
-        if (symbol, ts) in existing:
+        # Dedup: an existing (symbol, ts) is normally skipped. In --reenrich mode
+        # we instead fall through to backfill the context columns the original
+        # insert left blank (trend_15m / trend_1h / sector_trend).
+        is_existing = (symbol, ts) in existing
+        if is_existing and not reenrich:
             skipped_dup += 1
             continue
 
@@ -217,9 +222,40 @@ def backfill(dry_run: bool = False, date_filter: str | None = None) -> int:
             reasoning    = row.get("reasoning", "")
             market_reg   = row.get("market_regime", "").strip().lower()
             sector_reg   = row.get("sector_regime", "").strip()
+            # Context columns the original backfill never wrote. mtf_* are
+            # UPPERCASE (match EnhancedIntradayBot._tf_trend). sector_trend is the
+            # trend token after '=' in "SECTOR=TREND", lowercased to match the
+            # live path (sector_data.trend is lowercase). matrix_score /
+            # matrix_breakdown / candle_against / analog_wr are absent from the
+            # CSV, so they stay at their column defaults.
+            trend_15m    = row.get("mtf_15m", "").strip()
+            trend_1h     = row.get("mtf_1h", "").strip()
+            sector_trend = (sector_reg.split("=", 1)[1].strip().lower()
+                            if "=" in sector_reg else "")
+            # kronos_* are not in the current CSVs — write NULL (honest "unknown")
+            # rather than a hardcoded 0 that analysis would read as "conflicted".
+            kronos_dir   = row.get("kronos_direction", "").strip()
+            _kal         = row.get("kronos_aligned", "").strip()
+            _kpr         = row.get("kronos_pred_return", "").strip()
+            kronos_aligned     = int(float(_kal)) if _kal else None
+            kronos_pred_return = float(_kpr) if _kpr else None
         except (ValueError, KeyError) as exc:
             logger.debug("Skip row %s %s — bad value: %s", symbol, ts_raw, exc)
             skipped_bad += 1
+            continue
+
+        # --reenrich: existing row — update only the derivable context columns,
+        # never pnl/outcome/entry (the ground truth), and skip the indicator work.
+        if is_existing:
+            if dry_run:
+                print(f"  [DRY-REENRICH] {symbol:12s} {ts_raw[:16]}  "
+                      f"15m={trend_15m} 1h={trend_1h} sector={sector_trend or 'NULL'}")
+            else:
+                conn.execute(
+                    "UPDATE setups SET trend_15m=?, trend_1h=?, sector_trend=? "
+                    "WHERE symbol=? AND ts=?",
+                    (trend_15m, trend_1h, sector_trend, symbol, ts))
+            updated += 1
             continue
 
         # pnl_pct: prefer (exit-entry)/entry, fall back to pnl/(entry*qty)
@@ -265,16 +301,19 @@ def backfill(dry_run: bool = False, date_filter: str | None = None) -> int:
                 conn.execute("""
                     INSERT INTO setups
                         (ts, symbol, rsi, adx, volume_ratio, mfi, atr_pct,
-                         kronos_aligned, kronos_direction,
+                         kronos_aligned, kronos_direction, kronos_pred_return,
                          nifty_trend, market_regime,
-                         signal_type, confidence, pnl, pnl_pct, outcome)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 0, '', ?, ?, ?, ?, ?, ?, ?)
+                         signal_type, confidence, pnl, pnl_pct, outcome,
+                         trend_15m, trend_1h, sector_trend)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     ts, symbol,
                     rsi, adx, volume_ratio, mfi, atr_pct,
+                    kronos_aligned, kronos_dir, kronos_pred_return,
                     market_reg, sector_reg,
                     direction, confidence,
                     pnl, round(pnl_pct, 4), outcome,
+                    trend_15m, trend_1h, sector_trend,
                 ))
                 existing.add((symbol, ts))  # prevent duplicate within this run
                 logger.info("Inserted: %s %s %s pnl=%.2f outcome=%s src=%s",
@@ -290,8 +329,8 @@ def backfill(dry_run: bool = False, date_filter: str | None = None) -> int:
         conn.close()
 
     logger.info(
-        "Done. inserted=%d  skipped_dup=%d  skipped_bad=%d",
-        inserted, skipped_dup, skipped_bad,
+        "Done. inserted=%d  updated=%d  skipped_dup=%d  skipped_bad=%d",
+        inserted, updated, skipped_dup, skipped_bad,
     )
     return inserted
 
@@ -302,10 +341,14 @@ if __name__ == "__main__":
                         help="Show rows that would be inserted without writing")
     parser.add_argument("--date", default=None,
                         help="Only process a specific date (e.g. 2026-06-10)")
+    parser.add_argument("--reenrich", action="store_true",
+                        help="Also update existing rows' context columns "
+                             "(trend_15m/trend_1h/sector_trend) from the CSVs")
     args = parser.parse_args()
 
-    n = backfill(dry_run=args.dry_run, date_filter=args.date)
+    n = backfill(dry_run=args.dry_run, date_filter=args.date, reenrich=args.reenrich)
     if args.dry_run:
-        print(f"\nDry run complete — {n} rows would be inserted.")
+        print(f"\nDry run complete — {n} rows would be inserted"
+              f"{' (existing rows re-enriched separately above)' if args.reenrich else ''}.")
     else:
         print(f"\nBackfill complete — {n} new rows inserted into {DB_PATH}.")
