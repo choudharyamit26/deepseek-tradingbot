@@ -565,15 +565,17 @@ class EnhancedIntradayBot(IntradayStockBot):
         if not indicators_3m:
             return
 
-        # ── Stock-specific ATR check (daily ATR% vs daily p20 floor) ───────
+        # ── Stock tradeability check (daily ATR% vs absolute floor) ────────
+        # Build the daily-ATR profile once per symbol; block only genuinely
+        # untradeable names. See ATR_ABS_FLOOR_PCT for why this is absolute
+        # rather than the old per-stock p20 (relative) floor.
         if symbol not in self._atr_thresholds:
             asyncio.create_task(self._build_atr_profile(symbol, security_id))
         else:
-            threshold = self._atr_thresholds.get(symbol)
             daily_atr = self._atr_current.get(symbol)
-            if threshold is not None and daily_atr is not None and daily_atr > 0 and daily_atr < threshold:
+            if daily_atr is not None and 0 < daily_atr < self.ATR_ABS_FLOOR_PCT:
                 self.filter_stats["atr_blocked"] += 1
-                logger.info("%s -- daily ATR %.3f%% below stock floor %.3f%%, skipping", symbol, daily_atr, threshold)
+                logger.info("%s -- daily ATR %.3f%% below absolute floor %.2f%%, skipping", symbol, daily_atr, self.ATR_ABS_FLOOR_PCT)
                 return
 
         # Off the event loop: get_regime makes blocking HTTP calls on cache miss

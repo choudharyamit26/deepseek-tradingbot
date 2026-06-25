@@ -159,6 +159,19 @@ class IntradayStockBot:
     # (→ sma_20 fell back to close → trend always NEUTRAL). Must be >= 20.
     MIN_BARS_1H = 20
 
+    # Absolute daily-ATR% tradeability floor: names whose daily range is below
+    # this lack the room for an intraday momentum setup. Replaces the old
+    # self-referential p20 floor (20th-percentile of each stock's *own* recent
+    # daily ATR), which — being relative — blocked the majority of a perfectly
+    # tradeable universe whenever volatility mean-reverted market-wide.
+    # 2026-06-25 audit: 73/100 names blocked while sitting at 1.58–3.42% daily
+    # ATR (mean 2.41%, zero below 1.0%). Win-rate analysis (analog_history.db,
+    # n=124) shows ATR has no negative relationship with outcome — median-split
+    # WR 48.4% (low) vs 45.2% (high) — so re-admitting high-ATR names is
+    # win-rate-safe, while this absolute floor still excludes genuinely dead
+    # (<1%) names the relative gate let through.
+    ATR_ABS_FLOOR_PCT = 1.0
+
     # ── IMPROVEMENT #9 & #10: Fixed VWAP + Added ADX/MFI ──────────────────────
     def calculate_technical_indicators(self, df):
         return calculate_technical_indicators(df, min_bars=self.MIN_BARS)
@@ -360,15 +373,17 @@ class IntradayStockBot:
         if not indicators_3m:
             return
 
-        # ── Stock-specific ATR check (daily ATR% vs daily p20 floor) ───────
+        # ── Stock tradeability check (daily ATR% vs absolute floor) ────────
+        # Build the daily-ATR profile once per symbol; block only genuinely
+        # untradeable names. See ATR_ABS_FLOOR_PCT for why this is absolute
+        # rather than the old per-stock p20 (relative) floor.
         if symbol not in self._atr_thresholds:
             asyncio.create_task(self._build_atr_profile(symbol, security_id))
         else:
-            threshold = self._atr_thresholds.get(symbol)
             daily_atr = self._atr_current.get(symbol)
-            if threshold is not None and daily_atr is not None and daily_atr > 0 and daily_atr < threshold:
+            if daily_atr is not None and 0 < daily_atr < self.ATR_ABS_FLOOR_PCT:
                 self.filter_stats["atr_blocked"] += 1
-                logger.info("%s -- daily ATR %.3f%% below stock floor %.3f%%, skipping", symbol, daily_atr, threshold)
+                logger.info("%s -- daily ATR %.3f%% below absolute floor %.2f%%, skipping", symbol, daily_atr, self.ATR_ABS_FLOOR_PCT)
                 return
 
         # ── Fetch regime data early (needed for prefilter) ─────────────────────

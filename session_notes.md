@@ -998,6 +998,32 @@ Every `HARD-GATED: counter-trend` log line read `intraday=+0.00%, session=neutra
 
 ---
 
+### Section AJ — 2026-06-25 (ATR floor recalibrated: relative p20 → absolute floor)
+
+#### AJ.1 — Symptom
+Only **1 signal** for the entire 06-25 session (vs 14 on 06-24). Log audit of `enhanced_bot_2026-06-25.log` (109 scan cycles × 100 stocks) showed the dominant line by far — **4,138 occurrences across 73 distinct symbols** — was `<SYM> -- daily ATR X% below stock floor Y%, skipping`. The ATR floor alone was knocking out ~38 of 100 names every cycle.
+
+#### AJ.2 — Cross-day confirmation (not a one-day anomaly)
+Two separate suppressors, on different timelines:
+- **ATR floor — chronic, since ~06-08.** The day it activated, daily signal volume collapsed from 24–91/day (early June) to single digits (4–15) and never recovered. It drops 30–50% of the universe *every cycle, every day*.
+- **Sector-neutral regime gate — intermittent, since 06-19** (the directional-edge-map hard-gates). Clean controlled pair: **06-24** (sector neutral 5× → 14 signals) vs **06-25** (sector neutral 112× → 1 signal) at near-identical ATR pressure (3862 vs 4138 skips). The sector gate is working as designed; the ATR floor was the miscalibrated one.
+
+#### AJ.3 — Root cause: the floor was *relative*, not absolute
+`_build_atr_profile` (base class) set each stock's floor to `valid.quantile(0.20)` — the **20th percentile of that stock's own last 25 daily ATR% readings** — and blocked when today's daily ATR fell below it. So it answered "is this stock quieter than its own recent self?", not "is there enough range to trade?". Consequences:
+- By construction ~20% of names fail on a normal day; in a market-wide calm the failures correlate and spike to **73%** (exactly 06-25).
+- The p20 lags the regime (built from a stale ~5-week window) → mass blocking when volatility mean-reverts down.
+- **The blocked names were not dead:** mean daily ATR **2.41%**, min 1.58%, max 3.42%; **61/73 had ATR ≥ 2.0%**, **0 below 1.0%**. ADANIPOWER blocked at 3.41% (floor 3.61%), COFORGE at 3.42% (floor 3.81%) — among the *most* volatile names in the universe.
+
+#### AJ.4 — Win-rate safety check (done before changing anything)
+`analog_history.db` (n=124 real outcomes, 58 WIN / 66 LOSS). Its `atr_pct` is the **intraday (3m) ATR** (range 0.09–2.08%), not the daily ATR the floor uses, but it still answers the risk: ATR has **no negative relationship with outcome**. Bucketed WR: 0–1.0% → 45.4% (n=97), 1.0–1.5% → 50.0% (n=26). Median-split: below-median 48.4% vs at/above-median 45.2% (flat within noise). So re-admitting high-ATR names cannot reasonably worsen win-rate.
+
+#### AJ.5 — Fix (applied, committed)
+Replaced the relative p20 block with an **absolute** daily-ATR tradeability floor. New base-class constant `ATR_ABS_FLOOR_PCT = 1.0` in `stock_trading_bot.py` (inherited by `EnhancedIntradayBot`); both call sites (`stock_trading_bot._analyze_stock` and `kronos_integrated_bot/enhanced_bot.py`) now skip only when `0 < daily_atr < ATR_ABS_FLOOR_PCT`. `_build_atr_profile` is unchanged (still populates `_atr_current`); `_atr_thresholds` is kept purely as the "profile built" marker. The change is asymmetric in our favor: it **re-admits** proven-tradeable high-vol names *and* **newly blocks** genuinely dead (<1%) names the relative gate was letting through.
+- **Verification:** both files pass `py_compile`; replay of 06-25's blocked set → **all 73 re-admitted, 0 still blocked** (none were below 1.0% that day). The sector-neutral gate is untouched, so neutral-sector days will still be naturally thin (by design, not a bug).
+- **Follow-up option (not done):** make `ATR_ABS_FLOOR_PCT` config-driven rather than a hardcoded constant.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.
