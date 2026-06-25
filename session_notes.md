@@ -979,6 +979,25 @@ Morning-decay (AH.3) maps to `market_open_skip_minutes`. PARAM_BOUNDS `(0, 60, 1
 
 ---
 
+### Section AI — 2026-06-25 (Live index regime silently zeroed → false counter-trend SELL gating)
+
+#### AI.1 — Symptom
+Every `HARD-GATED: counter-trend` log line read `intraday=+0.00%, session=neutral` across the **whole** session (10:25→11:22), for every symbol. Those `intraday`/`session` fields are the **Nifty's** values (shared across all stocks per cycle, not per-stock) — so one broken Nifty number gated every counter-trend SELL. With `session` stuck at `neutral`, the intraday override that lifts the gate on a sharply-red session (`nifty_session_trend == "bearish"`) could **never** fire. (`sector=bearish` in those logs is the sector's *daily SMA* trend, not its intraday — a red herring.)
+
+#### AI.2 — Root cause (verified live, not guessed)
+- `IDX_I` **is** the correct/supported segment (`dhanhq.INDEX = 'IDX_I'`); `quote_data` returns valid index LTPs (confirmed live: NIFTY `last_price` + `ohlc.close` + `net_change`). The "IDX_I unsupported by the quote API" hypothesis was **disproven**.
+- The off-by-one suspicion was also wrong: `historical_daily_data` excludes today's bar, so `close.iloc[-1]` genuinely is the prior close.
+- Actual chain: the live **index** LTP fetch (`regime_filter._fetch_live_index_prices_uncached`) hit a throttled `/marketfeed/quote` (~1 req/s, called per-stock while scanning). A throttle returns `status:"failure"` — **not an exception** — so the `except` never fired (zero warnings logged all session), the `if status=="success"` was simply false, and the empty result was negatively cached as `0.0`. `_calc_regime` then took its `live_price <= 0` else-branch → `intraday_chg_pct = 0`, `session_trend = "neutral"`. The cached `0.0` re-poisoned every stock for the full `LIVE_PRICE_TTL` window. Standalone `get_regime("TECHM")` computed correctly (`intraday=0.71, session=bullish`) — confirming it was the running process's throttle path, not the math.
+
+#### AI.3 — Fixes (3, all verified)
+1. **Log non-success responses** (`regime_filter._fetch_live_index_prices_uncached`): added an `else` logging `status`+`remarks`. This failure mode was previously invisible.
+2. **Stop cache poisoning** (`regime_filter._fetch_live_index_prices`): split the cache into a per-id *last-attempt* timestamp (throttles refetch to once per `LIVE_PRICE_TTL` **even on failure** → no per-stock REST amplification) and a *last-good price* store carried forward up to `LIVE_PRICE_MAX_STALE` (600s). A single throttled quote can no longer blank the index regime.
+3. **Read indices from the MarketFeed push cache** (no REST, no rate limit): `dhan_integration` routes `exchange_segment == 0` (IDX_I) ticks into a **separate** `index_quotes_cache` (so index IDs can't collide with equity IDs) and exposes `get_index_ltps_from_feed()`; `_fetch_live_index_prices_uncached` now tries the feed first and only REST-fetches the remainder; `stock_trading_bot.run()` subscribes Nifty + all sector indices on the `MarketFeed.IDX` segment when the feed starts.
+
+**Verification**: live `get_regime("TECHM")` → `intraday=0.7, session=bullish`; simulated throttle (quote_data → failure) keeps intraday `0.7/bullish` (carried forward, not zeroed) and emits the new warning; `getattr` guard keeps stub tests compatible; full suite **56 passed**.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.

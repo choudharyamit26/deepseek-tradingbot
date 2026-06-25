@@ -141,6 +141,9 @@ class DhanStockTradingBot:
         }
         self.live_quotes_cache = {}  # key -> (timestamp, qdata)
         self.live_quotes_cache_ttl = 10  # seconds
+        # Index (IDX_I) push ticks are kept in a SEPARATE cache so index
+        # security IDs (13, 25, 29, ...) can never collide with NSE equity IDs.
+        self.index_quotes_cache = {}  # sid_str -> (timestamp, qdata)
         # Optional candle persistence: when set to a directory, every fetched
         # OHLCV frame is also written to <dir>/<date>/<sid>_<interval>.csv so
         # replay/backtests don't need to re-hit the API.
@@ -211,7 +214,12 @@ class DhanStockTradingBot:
                 }
             else:
                 qdata = {"last_price": _f(data.get("LTP")), "high_price": 0.0, "low_price": 0.0, "volume": 0}
-            self.live_quotes_cache[sid] = (time.time(), qdata)
+            # exchange_segment 0 == IDX_I (indices) -> route to the index cache so
+            # index IDs don't overwrite an equity with the same numeric ID.
+            if data.get("exchange_segment") == 0:
+                self.index_quotes_cache[sid] = (time.time(), qdata)
+            else:
+                self.live_quotes_cache[sid] = (time.time(), qdata)
 
         def _on_error(feed, exc):
             logger.error("MarketFeed error: %s", exc)
@@ -256,6 +264,24 @@ class DhanStockTradingBot:
 
     def is_feed_active(self) -> bool:
         return self._feed is not None and self._feed_thread is not None and self._feed_thread.is_alive()
+
+    def get_index_ltps_from_feed(self, security_ids: list, max_stale: float = 180.0) -> dict:
+        """Return {sid_str: ltp} for index IDs present and fresh in the push-feed
+        cache. Empty dict when the feed is inactive or an index hasn't ticked yet
+        — the caller then falls back to the REST quote endpoint.
+        """
+        if not self.is_feed_active():
+            return {}
+        out = {}
+        now = time.time()
+        for sid in security_ids:
+            sid_str = str(sid)
+            entry = self.index_quotes_cache.get(sid_str)
+            if entry and now - entry[0] < max_stale:
+                ltp = entry[1].get("last_price", 0) or 0
+                if ltp > 0:
+                    out[sid_str] = ltp
+        return out
 
     # ── Circuit breaker ──────────────────────────────────────────────────────
 

@@ -155,13 +155,15 @@ class RegimeFilter:
         # get_regime() is called once per stock per scan; without caching the
         # same Nifty/sector daily history was refetched ~100x per cycle.
         self._daily_cache: dict[str, tuple[float, pd.DataFrame]] = {}
-        self._live_price_cache: dict[str, tuple[float, float]] = {}
+        self._live_price_cache: dict[str, tuple[float, float]] = {}  # sid -> (ts, last good ltp)
+        self._live_price_attempt: dict[str, float] = {}             # sid -> last fetch attempt ts
         self._cache_lock = threading.Lock()
 
     REGIME_LOOKBACK_TRADING_DAYS = 15  # ~3 weeks calendar for intraday regime
     REGIME_SMA_WINDOW = 10  # 10-day SMA (~2 trading weeks)
     DAILY_CACHE_TTL = 300   # daily index bars barely change intraday
-    LIVE_PRICE_TTL = 60     # index LTP for trend-vs-SMA comparison
+    LIVE_PRICE_TTL = 60     # min seconds between index LTP fetch attempts
+    LIVE_PRICE_MAX_STALE = 600  # carry forward last good index LTP up to 10 min on fetch gaps
 
     def _fetch_daily(self, security_id: str) -> pd.DataFrame:
         now = time.time()
@@ -198,45 +200,86 @@ class RegimeFilter:
         return df
 
     def _fetch_live_index_prices(self, security_ids: list[str]) -> dict[str, float]:
-        """Fetch live index LTPs via IDX_I segment, cached. Returns {security_id: ltp}.
+        """Fetch live index LTPs, cached. Returns {security_id: ltp} (>0 only).
 
-        Indices absent from the quote response are negatively cached (price 0)
-        so a permanently-missing index doesn't force a refetch on every call.
+        A failed/empty fetch must NOT zero out a known-good price. Previously a
+        single throttled quote was cached as 0.0, blanking the index regime for
+        a whole TTL window — every stock scanned that minute then read
+        intraday=0%/neutral, silently keeping the counter-trend SELL gate on.
+        Instead we throttle the *attempt* to once per LIVE_PRICE_TTL (even when
+        it fails) and carry forward the last good price up to LIVE_PRICE_MAX_STALE.
         """
         now = time.time()
         with self._cache_lock:
-            entries = {sid: self._live_price_cache.get(sid) for sid in security_ids}
-        if all(e is not None and now - e[0] < self.LIVE_PRICE_TTL for e in entries.values()):
-            return {sid: e[1] for sid, e in entries.items() if e[1] > 0}
-        fresh = self._fetch_live_index_prices_uncached(security_ids)
+            last_attempt = max(
+                (self._live_price_attempt.get(sid, 0.0) for sid in security_ids),
+                default=0.0,
+            )
+        if now - last_attempt >= self.LIVE_PRICE_TTL:
+            fresh = self._fetch_live_index_prices_uncached(security_ids)
+            with self._cache_lock:
+                for sid in security_ids:
+                    self._live_price_attempt[sid] = now
+                    ltp = fresh.get(sid, 0.0)
+                    if ltp > 0:
+                        self._live_price_cache[sid] = (now, ltp)
+        result = {}
         with self._cache_lock:
             for sid in security_ids:
-                self._live_price_cache[sid] = (now, fresh.get(sid, 0.0))
-        return fresh
+                prev = self._live_price_cache.get(sid)
+                if prev and prev[1] > 0 and now - prev[0] < self.LIVE_PRICE_MAX_STALE:
+                    result[sid] = prev[1]
+        return result
 
     def _fetch_live_index_prices_uncached(self, security_ids: list[str]) -> dict[str, float]:
+        # Prefer the push-feed cache (no REST call, no rate-limit exposure) when
+        # the bot runs a MarketFeed with the indices subscribed. The REST quote
+        # endpoint is ~1 req/s and gets throttled under per-stock scanning, which
+        # is what silently zeroed the index regime in the first place.
+        result: dict[str, float] = {}
+        feed_fn = getattr(self.dhan, "get_index_ltps_from_feed", None)
+        if callable(feed_fn):
+            try:
+                for sid, ltp in feed_fn(security_ids).items():
+                    if ltp > 0:
+                        result[str(sid)] = ltp
+            except Exception as e:
+                logger.debug("Feed index LTP read failed: %s", e)
+
+        missing = [sid for sid in security_ids if sid not in result]
+        if not missing:
+            return result
+
         int_ids = []
-        for sid in security_ids:
+        for sid in missing:
             try:
                 int_ids.append(int(sid))
             except (ValueError, TypeError):
                 continue
         if not int_ids:
-            return {}
+            return result
         try:
             resp = self.dhan.dhan.quote_data(securities={"IDX_I": int_ids})
             if isinstance(resp, dict) and resp.get("status") == "success":
                 idx_data = resp.get("data", {}).get("data", {}).get("IDX_I", {})
-                result = {}
-                for sid in security_ids:
-                    if sid in idx_data:
-                        ltp = idx_data[sid].get("last_price", 0)
+                for sid in missing:
+                    node = idx_data.get(sid)
+                    if node:
+                        ltp = node.get("last_price", 0)
                         if ltp > 0:
                             result[sid] = ltp
-                return result
+            else:
+                # A non-success response is NOT an exception, so it used to slip
+                # through silently. Log it — this is the throttle/rate-limit path.
+                logger.warning(
+                    "Live index quote non-success (status=%s remarks=%s); "
+                    "index regime served from cache/feed if available",
+                    resp.get("status") if isinstance(resp, dict) else type(resp).__name__,
+                    resp.get("remarks") if isinstance(resp, dict) else "",
+                )
         except Exception as e:
             logger.warning("Failed to fetch live index prices: %s", e)
-        return {}
+        return result
 
     def _calc_regime(self, df: pd.DataFrame, live_price: float = 0) -> dict:
         if df.empty or len(df) < 5:

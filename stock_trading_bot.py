@@ -799,6 +799,18 @@ class IntradayStockBot:
         _feed_sids = [self.dhan.security_ids[s] for s in self.watchlist if s in self.dhan.security_ids]
         if _feed_sids:
             self.dhan.start_live_feed(_feed_sids)
+            # Also subscribe Nifty + all sector indices (IDX_I segment) so the
+            # regime filter reads live index LTPs from push ticks instead of the
+            # rate-limited REST quote endpoint (which silently throttled and
+            # zeroed the index regime -> false counter-trend SELL gating).
+            try:
+                from regime_filter import SECTOR_NAMES
+                from dhanhq import MarketFeed
+                _index_sids = [int(s) for s in SECTOR_NAMES.keys()]
+                if _index_sids:
+                    self.dhan.subscribe_live(_index_sids, exchange=MarketFeed.IDX)
+            except Exception as exc:
+                logger.warning("Could not subscribe index feed: %s", exc)
 
         while True:
             try:
