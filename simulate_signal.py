@@ -9,7 +9,9 @@ Stages printed:
   [2] Technical indicators (3m / 15m / 60m)
   [3] Pre-filter gate
   [4] Analog RAG query
-  [5] DeepSeek AI signal
+  [5] DeepSeek AI signal (direction only; confidence advisory)
+  [5b] Matrix-authoritative confidence (the binding number)
+  [5c] Decision context persisted at entry (DB + signal CSV)
   [6] Post-signal gates (MTF, RSI veto, reversal)
   [7] Risk: position sizing
   [8] Final decision (ENTER / SKIP)
@@ -252,11 +254,17 @@ async def simulate():
         "nifty": {"trend": "bearish", "intraday_chg_pct": 0.0, "session_trend": "neutral"},
         "sector": {"trend": "neutral"},
     }
+    # Kronos is NOT run in this lightweight sim, so kronos_conf=None and the
+    # graduated Kronos alignment bonus (kronos_matrix_bonus_max, default 4) does
+    # not fire here. Passed explicitly to mirror the production signature.
+    KRONOS_BONUS_MAX = 4
     matrix_score, matrix_breakdown = EnhancedIntradayBot._compute_score_matrix(
-        ind_3m, regime_lc, ind_15m, ind_60m, None
+        ind_3m, regime_lc, ind_15m, ind_60m, kronos_conf=None,
+        kronos_align_bonus_max=KRONOS_BONUS_MAX,
     )
     print(f"\n  Matrix score : {matrix_score}")
     print(f"  Breakdown    : {matrix_breakdown}")
+    print(f"  (Kronos bonus max={KRONOS_BONUS_MAX}, but Kronos not run in sim -> no Kronos term)")
 
     confidence = matrix_score
     if sig_type in ("BUY", "SELL"):
@@ -281,6 +289,29 @@ async def simulate():
         confidence = max(0, min(100, confidence))
 
     print(f"\n  FINAL confidence (matrix-authoritative): {confidence}")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    sep("[5c]  DECISION CONTEXT PERSISTED AT ENTRY  (AG.7 — DB + signal CSV)")
+    # ─────────────────────────────────────────────────────────────────────────
+    # These are the fields enhanced_bot now snapshots at entry and writes via
+    # store_setup() (analog_history.db) and log_signal() (signals_*.csv), so a
+    # later backtest_matrix.py run can reconstruct the FULL matrix-authoritative
+    # confidence (not just the 3m-only part).
+    ctx_trend_15m = EnhancedIntradayBot._tf_trend(ind_15m, "ema_9")
+    ctx_trend_1h = EnhancedIntradayBot._tf_trend(ind_60m, "sma_20")
+    if sig_type in ("BUY", "SELL"):
+        ctx_candle = EnhancedIntradayBot._candles_against(recent_bars, sig_type)
+        ctx_analog_wr = rag.analog_stats(ind_3m, n=5).get("win_rate")
+    else:
+        ctx_candle, ctx_analog_wr = False, None
+    print(f"\n  analog_history.db row:")
+    print(f"    matrix_score={matrix_score}  matrix_breakdown='{matrix_breakdown}'")
+    print(f"    trend_15m={ctx_trend_15m}  trend_1h={ctx_trend_1h}  "
+          f"sector_trend={regime_lc['sector']['trend']}")
+    print(f"    candle_against={int(ctx_candle)}  "
+          f"analog_wr={f'{ctx_analog_wr:.0f}' if ctx_analog_wr is not None else 'NULL'}")
+    print(f"    kronos_direction=NULL  kronos_pred_return=NULL  kronos_aligned=NULL  (Kronos not run in sim)")
+    print(f"  signals_*.csv: kronos_direction/kronos_pred_return/kronos_aligned -> blank (Kronos not run)")
 
     # ─────────────────────────────────────────────────────────────────────────
     sep("[6]  POST-SIGNAL GATES")
