@@ -1,0 +1,15 @@
+2026-06-27 08:23:46  enhanced_main         INFO      Enhanced bot logging to /root/deepseek-tradingbot/trading_logs/enhanced_bot_2026-06-27.log
+2026-06-27 08:23:46  enhanced_main         INFO      Loaded strategy vkronos-v19
+2026-06-27 08:23:46  kronos_integrated_bot.kronos_integration  INFO      Loading Kronos model: NeoQuasar/Kronos-base
+2026-06-27 08:23:56  kronos_integrated_bot.kronos_integration  INFO      Kronos loaded on cpu
+2026-06-27 08:23:56  risk_manager          INFO      Fetched balance from Dhan API: 1286.52
+2026-06-27 08:23:56  kronos_integrated_bot.enhanced_bot  INFO      AnalogRAG ready: 124 stored setups
+2026-06-27 08:23:58  enhanced_main         INFO      KRONOS-ENHANCED Bot Started  [DRY-RUN]
+Watchlist: 100 stocks
+Kronos: NeoQuasar/Kronos-base | pred_len=10 | T=0.5
+Strategy: vkronos-v19
+2026-06-27 08:23:58  stock_trading_bot     INFO      Starting Intraday Stock Trading Bot
+2026-06-27 08:23:58  stock_trading_bot     INFO      Entry window: 9:30 AM - 15:00 PM IST | Max 2 signals/stock/day | Scan every 180s
+2026-06-27 08:23:58  dhan_integration      INFO      MarketFeed started: 100 instruments subscribed
+2026-06-27 08:23:58  stock_trading_bot     INFO      Outside market hours -- sleeping 180s
+2026-06-27 08:23:58  kronos_integrated_bot.enhanced_guardian  INFO      Kronos-enhanced exit guardian started (live position sync enabled)
