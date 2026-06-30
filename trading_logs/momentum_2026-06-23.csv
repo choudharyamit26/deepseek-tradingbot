@@ -1,0 +1,1 @@
+row_type,timestamp,symbol,direction,quantity,entry_price,stop_price,target_price,stop_pct,target_pct,or_high,or_low,volume_ratio,rsi,exit_price,exit_time,pnl,status,order_id,reasoning

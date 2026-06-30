@@ -1,0 +1,3 @@
+row_type,timestamp,symbol,direction,quantity,entry_price,stop_price,target_price,stop_pct,target_pct,or_high,or_low,volume_ratio,rsi,exit_price,exit_time,pnl,status,order_id,reasoning
+ENTRY,2026-06-24 12:06:26,NHPC,BUY,3,79.05,77.86425,80.82862499999999,1.5,2.25,78.38,77.52,1.97,76.6,,,,DRY-RUN,,ORB BUY: close 79.05 > OR high 78.38+buf | vol 2.0x | RSI 76.6
+EXIT,2026-06-24 13:07:40,NHPC,BUY,3,79.05,77.86425,80.82862499999999,,,,,,,79.05,13:07:28,,TIME-EXIT,,

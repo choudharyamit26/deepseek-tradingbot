@@ -13,7 +13,7 @@ params:
   kronos_confidence_weight: 0.35
   kronos_enabled: true
   kronos_exit_threshold: -0.008
-  kronos_matrix_bonus_max: 4    # max matrix bonus for an aligned Kronos forecast (scaled by magnitude); 0 disables
+  kronos_matrix_bonus_max: 4
   kronos_min_predicted_move: 0.003
   kronos_penalty_conflict: 0.5
   kronos_pred_len: 10
@@ -33,7 +33,7 @@ params:
   min_prefilter_atr_pct: 0.3
   min_prefilter_volume_ratio: 0.3
   min_rr_ratio: 1.9000000000000001
-  min_volume_ratio_trending: 0.3
+  min_volume_ratio_trending: 0.4
   partial_profit_pct: 0.0
   position_confidence_scalar: 1.0
   risk_per_trade_pct: 2.0
@@ -42,4 +42,4 @@ params:
   same_direction_cooldown: 1800
   trailing_sl_activation_pct: 1.0
   trailing_sl_distance_atr: 1.5
-version: kronos-v19
+version: kronos-v20

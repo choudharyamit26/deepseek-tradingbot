@@ -1,0 +1,97 @@
+09:14:44  INFO      momentum_main  Initialising Dhan connection …
+09:14:44  INFO      momentum_bot.bot  ============================================================
+09:14:44  INFO      momentum_bot.bot  MomentumBot starting  [DRY-RUN]
+09:14:44  INFO      momentum_bot.bot  ============================================================
+09:14:44  INFO      momentum_bot.bot  Waiting 915s for OR to seal at 09:30 …
+09:30:00  INFO      momentum_bot.bot  --- Opening Range Scan ---
+09:33:20  INFO      momentum_bot.bot  Opening ranges fetched: 121 / 151 stocks
+09:33:20  INFO      momentum_bot.scanner  SECTOR IT              trend mismatch: OR=BULL(0.49%) vs 5d=BEAR(-3.01%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR BANKING         trend mismatch: OR=BULL(0.75%) vs 5d=BEAR(-0.22%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR FINANCIALS      neutral zone (avg_move=+0.19% inside ±0.20%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR METALS          neutral zone (avg_move=+0.04% inside ±0.20%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR AUTO            neutral zone (avg_move=+0.04% inside ±0.20%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR CONSUMER_DISC   neutral zone (avg_move=+0.15% inside ±0.20%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR CEMENT_INFRA    neutral zone (avg_move=+0.19% inside ±0.20%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR DEFENCE         neutral zone (avg_move=-0.13% inside ±0.20%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR CAPGOODS        trend mismatch: OR=BEAR(-0.30%) vs 5d=BULL(1.02%) → skip
+09:33:20  INFO      momentum_bot.scanner  SECTOR CHEMICAL        neutral zone (avg_move=-0.06% inside ±0.20%) → skip
+09:33:20  INFO      momentum_bot.bot  Sector ranking (top 5):
+09:33:20  INFO      momentum_bot.bot    PHARMA          dir=BULL  score=1.211  avg_move=+0.52%  stocks=10
+09:33:20  INFO      momentum_bot.bot    ENERGY          dir=BULL  score=0.617  avg_move=+0.31%  stocks=15
+09:33:20  INFO      momentum_bot.scanner  WATCH  PPLPHARMA     sector=PHARMA          dir=BUY  OR=170.26-175.88  move=+1.71%  5d=+3.19%  vol=19.8x
+09:33:20  INFO      momentum_bot.scanner  WATCH  DRREDDY       sector=PHARMA          dir=BUY  OR=1306.20-1336.50  move=+1.82%  5d=+1.91%  vol=9.9x
+09:33:20  INFO      momentum_bot.scanner  WATCH  POWERGRID     sector=ENERGY          dir=BUY  OR=292.30-295.25  move=+0.61%  5d=+0.00%  vol=1297735.0x
+09:33:20  INFO      momentum_bot.scanner  WATCH  NHPC          sector=ENERGY          dir=BUY  OR=77.52-78.38  move=+0.62%  5d=+0.00%  vol=1242790.0x
+09:33:20  INFO      momentum_bot.bot  Watchlist (4 stocks): PPLPHARMA, DRREDDY, POWERGRID, NHPC
+09:33:20  INFO      momentum_bot.bot  Trading loop starts. Watchlist: PPLPHARMA, DRREDDY, POWERGRID, NHPC
+09:33:25  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.2x below 1.5x
+09:36:39  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.2x below 1.5x
+09:39:50  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.5x below 1.5x
+09:43:02  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.1x below 1.5x
+09:59:09  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 1.0x below 1.5x
+10:02:20  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.6x below 1.5x
+10:05:34  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.9x below 1.5x
+10:12:07  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.0x below 1.5x
+10:15:19  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.1x below 1.5x
+10:18:30  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.1x below 1.5x
+10:21:31  ERROR     root  Exception in DhanHQConnection.POST: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+10:21:46  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.1x below 1.5x
+10:24:57  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.2x below 1.5x
+10:28:01  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.1x below 1.5x
+10:43:30  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.2x below 1.5x
+10:46:29  INFO      momentum_main  Initialising Dhan connection …
+10:46:30  INFO      momentum_bot.bot  ============================================================
+10:46:30  INFO      momentum_bot.bot  MomentumBot starting  [DRY-RUN]
+10:46:30  INFO      momentum_bot.bot  ============================================================
+10:46:30  INFO      momentum_bot.bot  Already past OR_END_TIME (09:30) — scanning immediately
+10:46:30  INFO      momentum_bot.bot  --- Opening Range Scan ---
+10:46:32  INFO      momentum_main  Interrupted by user — stopping
+10:46:34  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.2x below 1.5x
+10:52:42  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.3x below 1.5x
+10:55:44  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.6x below 1.5x
+10:55:46  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.3x below 1.5x
+10:58:48  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.4x below 1.5x
+10:58:50  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.3x below 1.5x
+11:08:01  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.7x below 1.5x
+11:11:05  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.4x below 1.5x
+11:14:16  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.4x below 1.5x
+11:20:25  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 1.0x below 1.5x
+11:23:29  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.5x below 1.5x
+11:26:33  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.7x below 1.5x
+11:29:37  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.8x below 1.5x
+11:32:40  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.8x below 1.5x
+11:35:45  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 1.0x below 1.5x
+11:38:49  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.5x below 1.5x
+11:41:52  INFO      momentum_bot.signals  SIGNAL  NHPC          BUY  entry=78.56  stop=77.52(1.32%)  target=80.12(1.99%)  vol=2.4x  RSI=56.4
+11:41:52  WARNING   momentum_bot.executor  NHPC  calculated quantity < 1 — skipping
+11:44:56  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.7x below 1.5x
+11:48:00  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.6x below 1.5x
+11:51:04  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.0x below 1.5x
+11:54:11  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.0x below 1.5x
+11:57:15  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.5x below 1.5x
+12:00:19  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.1x below 1.5x
+12:03:22  INFO      momentum_bot.signals  NHPC  BUY skipped — vol 0.2x below 1.5x
+12:06:26  INFO      momentum_bot.signals  SIGNAL  NHPC          BUY  entry=79.05  stop=77.86(1.50%)  target=80.83(2.25%)  vol=2.0x  RSI=76.6
+12:06:26  INFO      momentum_bot.executor  ORDER  NHPC          BUY  qty=3  entry~79.05  stop=77.86  target=80.83  [DRY-RUN]
+12:49:13  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.4x below 1.5x
+12:58:21  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.5x below 1.5x
+13:07:28  INFO      momentum_bot.bot  Per-position time exit firing: NHPC held > 60 min
+13:07:28  WARNING   momentum_bot.executor  TIME-EXIT  NHPC          BUY  qty=3  entry=79.05  exit~79.05  pnl=0.00  held=61min  [DRY-RUN]
+13:07:40  INFO      momentum_bot.executor  LOG-EXIT  NHPC  BUY  exit_time=13:07:28  pnl=n/a  status=TIME-EXIT
+13:13:48  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.6x below 1.5x
+13:16:51  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 1.1x below 1.5x
+13:19:54  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.8x below 1.5x
+13:22:57  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.7x below 1.5x
+13:26:01  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.6x below 1.5x
+13:29:03  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.4x below 1.5x
+13:32:06  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.5x below 1.5x
+13:38:12  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 1.4x below 1.5x
+13:47:21  INFO      momentum_bot.signals  SIGNAL  DRREDDY       BUY  entry=1342.50  stop=1322.36(1.50%)  target=1372.71(2.25%)  vol=4.2x  RSI=71.3
+13:47:21  WARNING   momentum_bot.executor  DRREDDY  calculated quantity < 1 — skipping
+13:50:23  INFO      momentum_bot.signals  SIGNAL  DRREDDY       BUY  entry=1342.80  stop=1322.66(1.50%)  target=1373.01(2.25%)  vol=1.6x  RSI=72.0
+13:50:23  WARNING   momentum_bot.executor  DRREDDY  calculated quantity < 1 — skipping
+13:53:26  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 1.4x below 1.5x
+13:56:29  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.9x below 1.5x
+13:59:32  INFO      momentum_bot.signals  DRREDDY  BUY skipped — vol 0.6x below 1.5x
+14:47:34  INFO      momentum_bot.bot  EXIT_ALL_TIME reached — running time-exit check
+14:47:34  INFO      momentum_bot.bot  MomentumBot finished for today

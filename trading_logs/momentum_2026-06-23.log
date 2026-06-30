@@ -1,0 +1,202 @@
+10:31:40  INFO      momentum_main  Initialising Dhan connection …
+10:31:40  INFO      momentum_bot.bot  ============================================================
+10:31:40  INFO      momentum_bot.bot  MomentumBot starting  [DRY-RUN]
+10:31:40  INFO      momentum_bot.bot  ============================================================
+10:31:40  INFO      momentum_bot.bot  Already past OR_END_TIME (09:30) — scanning immediately
+10:31:40  INFO      momentum_bot.bot  --- Opening Range Scan ---
+10:34:51  INFO      momentum_bot.bot  Opening ranges fetched: 121 / 151 stocks
+10:34:51  INFO      momentum_bot.scanner  SECTOR ENERGY          neutral zone (avg_move=-0.02% inside ±0.20%) → skip
+10:34:51  INFO      momentum_bot.scanner  SECTOR BANKING         trend mismatch: OR=BEAR(-0.20%) vs 5d=BULL(1.28%) → skip
+10:34:51  INFO      momentum_bot.scanner  SECTOR FINANCIALS      neutral zone (avg_move=+0.07% inside ±0.20%) → skip
+10:34:51  INFO      momentum_bot.scanner  SECTOR AUTO            neutral zone (avg_move=-0.10% inside ±0.20%) → skip
+10:34:51  INFO      momentum_bot.scanner  SECTOR CEMENT_INFRA    neutral zone (avg_move=-0.05% inside ±0.20%) → skip
+10:34:51  INFO      momentum_bot.scanner  SECTOR DEFENCE         trend mismatch: OR=BEAR(-0.73%) vs 5d=BULL(5.76%) → skip
+10:34:51  INFO      momentum_bot.scanner  SECTOR CAPGOODS        trend mismatch: OR=BEAR(-0.23%) vs 5d=BULL(3.53%) → skip
+10:34:51  INFO      momentum_bot.scanner  SECTOR CHEMICAL        trend mismatch: OR=BULL(0.69%) vs 5d=BEAR(-0.86%) → skip
+10:34:51  INFO      momentum_bot.scanner  SECTOR FMCG            neutral zone (avg_move=-0.00% inside ±0.20%) → skip
+10:34:51  INFO      momentum_bot.bot  Sector ranking (top 5):
+10:34:51  INFO      momentum_bot.bot    METALS          dir=BEAR  score=1.903  avg_move=-0.66%  stocks=7
+10:34:51  INFO      momentum_bot.bot    PHARMA          dir=BULL  score=1.123  avg_move=+1.38%  stocks=10
+10:34:51  INFO      momentum_bot.bot    CONSUMER_DISC   dir=BULL  score=0.520  avg_move=+0.35%  stocks=10
+10:34:51  INFO      momentum_bot.scanner  WATCH  VEDL          sector=METALS          dir=SELL  OR=284.45-294.50  move=-2.29%  5d=+1.11%  vol=50.6x
+10:34:51  INFO      momentum_bot.scanner  WATCH  HINDZINC      sector=METALS          dir=SELL  OR=554.15-564.05  move=-0.91%  5d=+1.66%  vol=6.1x
+10:34:51  INFO      momentum_bot.scanner  WATCH  DIVISLAB      sector=PHARMA          dir=BUY  OR=6775.00-6866.00  move=+1.12%  5d=+0.00%  vol=48237.0x
+10:34:51  INFO      momentum_bot.scanner  WATCH  PPLPHARMA     sector=PHARMA          dir=BUY  OR=158.99-169.71  move=+6.51%  5d=-5.20%  vol=35.9x
+10:34:51  INFO      momentum_bot.bot  Watchlist (4 stocks): VEDL, HINDZINC, DIVISLAB, PPLPHARMA
+10:34:51  INFO      momentum_bot.bot  Trading loop starts. Watchlist: VEDL, HINDZINC, DIVISLAB, PPLPHARMA
+10:34:52  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+10:34:55  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.5x below 1.5x
+10:37:56  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.9x below 1.5x
+10:37:59  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.8x below 1.5x
+10:41:00  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.3x below 1.5x
+10:41:03  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.6x below 1.5x
+10:44:04  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+10:44:07  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.8x below 1.5x
+10:47:08  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+10:47:11  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.8x below 1.5x
+10:50:12  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+10:50:15  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.7x below 1.5x
+10:53:16  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+10:53:19  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.4x below 1.5x
+10:56:20  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+10:56:23  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.5x below 1.5x
+10:59:24  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+10:59:27  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.8x below 1.5x
+11:02:28  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+11:02:31  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.4x below 1.5x
+11:05:32  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+11:05:34  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.5x below 1.5x
+11:08:35  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+11:08:38  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.9x below 1.5x
+11:11:39  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+11:11:42  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 1.2x below 1.5x
+11:14:43  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.6x below 1.5x
+11:14:46  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 1.0x below 1.5x
+11:17:47  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+11:20:51  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.5x below 1.5x
+11:20:52  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.8x below 1.5x
+11:20:54  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.6x below 1.5x
+11:23:55  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.5x below 1.5x
+11:23:56  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.7x below 1.5x
+11:26:59  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+11:27:02  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.0x below 1.5x
+11:30:03  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.0x below 1.5x
+11:33:08  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.0x below 1.5x
+11:33:09  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+11:36:12  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.0x below 1.5x
+11:36:13  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+11:36:15  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.2x below 1.5x
+11:39:16  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+11:39:17  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+11:39:19  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+11:42:20  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+11:42:21  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.0x below 1.5x
+11:42:23  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.0x below 1.5x
+11:45:24  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+11:45:25  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.4x below 1.5x
+11:45:27  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.2x below 1.5x
+11:48:28  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+11:48:29  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+11:48:31  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.2x below 1.5x
+11:51:32  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+11:51:33  INFO      momentum_bot.signals  SIGNAL  HINDZINC      SELL  entry=550.45  stop=558.71(1.50%)  target=538.06(2.25%)  vol=2.8x  RSI=26.5
+11:51:33  WARNING   momentum_bot.executor  HINDZINC  calculated quantity < 1 — skipping
+11:51:35  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+11:54:35  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.3x below 1.5x
+11:54:36  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.2x below 1.5x
+11:54:38  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+11:57:39  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+11:57:40  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+11:57:46  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.2x below 1.5x
+12:00:47  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+12:00:48  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.6x below 1.5x
+12:00:50  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.3x below 1.5x
+12:03:51  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.9x below 1.5x
+12:03:52  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.5x below 1.5x
+12:03:54  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+12:06:55  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+12:06:56  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.2x below 1.5x
+12:07:01  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+12:10:02  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.3x below 1.5x
+12:10:03  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.3x below 1.5x
+12:10:05  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+12:13:07  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+12:13:08  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.2x below 1.5x
+12:13:10  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+12:16:11  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+12:16:12  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.2x below 1.5x
+12:16:14  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+12:19:15  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+12:19:16  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.3x below 1.5x
+12:19:18  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.1x below 1.5x
+12:22:19  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.3x below 1.5x
+12:22:20  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.2x below 1.5x
+12:22:22  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 1.4x below 1.5x
+12:25:23  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.5x below 1.5x
+12:25:24  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+12:25:26  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.3x below 1.5x
+12:28:27  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.3x below 1.5x
+12:28:28  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.2x below 1.5x
+12:28:30  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.5x below 1.5x
+12:31:31  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+12:31:32  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.2x below 1.5x
+12:31:34  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.2x below 1.5x
+12:34:35  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.3x below 1.5x
+12:34:36  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+12:34:38  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.2x below 1.5x
+12:37:40  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.2x below 1.5x
+12:37:41  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+12:37:43  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.4x below 1.5x
+12:40:44  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.3x below 1.5x
+12:40:45  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+12:40:47  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.3x below 1.5x
+12:43:48  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+12:43:49  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+12:43:51  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.5x below 1.5x
+12:46:52  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.8x below 1.5x
+12:46:53  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.4x below 1.5x
+12:46:55  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.4x below 1.5x
+12:49:56  INFO      momentum_bot.signals  SIGNAL  VEDL          SELL  entry=281.20  stop=285.42(1.50%)  target=274.87(2.25%)  vol=1.6x  RSI=36.1
+12:49:56  WARNING   momentum_bot.executor  VEDL  calculated quantity < 1 — skipping
+12:49:57  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.8x below 1.5x
+12:49:59  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.5x below 1.5x
+12:53:00  INFO      momentum_bot.signals  SIGNAL  VEDL          SELL  entry=281.25  stop=285.47(1.50%)  target=274.92(2.25%)  vol=1.6x  RSI=36.8
+12:53:01  WARNING   momentum_bot.executor  VEDL  calculated quantity < 1 — skipping
+12:53:02  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.4x below 1.5x
+12:53:03  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.8x below 1.5x
+12:56:04  INFO      momentum_bot.signals  SIGNAL  VEDL          SELL  entry=280.50  stop=284.71(1.50%)  target=274.19(2.25%)  vol=1.6x  RSI=30.8
+12:56:05  WARNING   momentum_bot.executor  VEDL  calculated quantity < 1 — skipping
+12:56:06  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 1.2x below 1.5x
+12:59:09  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+12:59:10  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.4x below 1.5x
+13:02:13  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.5x below 1.5x
+13:02:14  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.8x below 1.5x
+13:05:18  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.5x below 1.5x
+13:05:19  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.6x below 1.5x
+13:05:21  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.5x below 1.5x
+13:08:22  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.5x below 1.5x
+13:08:23  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.4x below 1.5x
+13:08:25  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.3x below 1.5x
+13:11:26  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+13:11:27  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.3x below 1.5x
+13:14:30  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+13:14:31  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.5x below 1.5x
+13:17:34  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 1.0x below 1.5x
+13:17:35  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 1.2x below 1.5x
+13:20:38  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 1.0x below 1.5x
+13:20:39  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 1.1x below 1.5x
+13:23:42  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.7x below 1.5x
+13:23:43  INFO      momentum_bot.signals  SIGNAL  HINDZINC      SELL  entry=544.95  stop=553.12(1.50%)  target=532.69(2.25%)  vol=3.5x  RSI=28.9
+13:23:43  WARNING   momentum_bot.executor  HINDZINC  calculated quantity < 1 — skipping
+13:26:46  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.3x below 1.5x
+13:26:47  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.4x below 1.5x
+13:29:50  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.4x below 1.5x
+13:29:51  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 1.0x below 1.5x
+13:32:54  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.5x below 1.5x
+13:32:56  INFO      momentum_bot.signals  SIGNAL  HINDZINC      SELL  entry=545.80  stop=553.99(1.50%)  target=533.52(2.25%)  vol=2.0x  RSI=36.7
+13:32:56  WARNING   momentum_bot.executor  HINDZINC  calculated quantity < 1 — skipping
+13:35:59  INFO      momentum_bot.signals  SIGNAL  VEDL          SELL  entry=280.20  stop=284.40(1.50%)  target=273.90(2.25%)  vol=2.4x  RSI=34.5
+13:36:00  WARNING   momentum_bot.executor  VEDL  calculated quantity < 1 — skipping
+13:36:01  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.0x below 1.5x
+13:39:04  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.0x below 1.5x
+13:39:05  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.0x below 1.5x
+13:42:08  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.0x below 1.5x
+13:42:09  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.2x below 1.5x
+13:45:12  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.0x below 1.5x
+13:45:13  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.0x below 1.5x
+13:45:15  INFO      momentum_bot.signals  PPLPHARMA  BUY skipped — vol 0.0x below 1.5x
+13:48:16  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+13:48:17  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.0x below 1.5x
+13:51:20  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+13:51:21  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.0x below 1.5x
+13:54:24  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+13:54:25  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.1x below 1.5x
+13:57:28  INFO      momentum_bot.signals  VEDL  SELL skipped — vol 0.1x below 1.5x
+13:57:32  INFO      momentum_bot.signals  HINDZINC  SELL skipped — vol 0.0x below 1.5x
+14:42:24  INFO      momentum_main  Interrupted by user — stopping
+14:42:29  INFO      momentum_main  Initialising Dhan connection …
+14:42:29  INFO      momentum_bot.bot  ============================================================
+14:42:29  INFO      momentum_bot.bot  MomentumBot starting  [DRY-RUN]
+14:42:29  INFO      momentum_bot.bot  ============================================================
+14:42:29  INFO      momentum_bot.bot  Already past OR_END_TIME (09:30) — scanning immediately
+14:42:29  INFO      momentum_bot.bot  --- Opening Range Scan ---

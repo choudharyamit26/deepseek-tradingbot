@@ -1,0 +1,1407 @@
+2026-05-18 20:24:04  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:24:04  DRY_TEST          INFO        DRY RUN TEST — Full Pipeline Validation
+2026-05-18 20:24:04  DRY_TEST          INFO        Stocks : 41 from live_vwap_reclaim_v3 STOCK_CONFIGS
+2026-05-18 20:24:04  DRY_TEST          INFO        Date   : 2026-05-18 20:24:04
+2026-05-18 20:24:04  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:24:04  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:25:28  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:25:28  DRY_TEST          INFO        DRY RUN TEST — Full Pipeline Validation
+2026-05-18 20:25:28  DRY_TEST          INFO        Stocks : 41 from live_vwap_reclaim_v3 STOCK_CONFIGS
+2026-05-18 20:25:28  DRY_TEST          INFO        Date   : 2026-05-18 20:25:28
+2026-05-18 20:25:28  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:25:28  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] AUROPHARMA — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] BANKINDIA — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] PNB — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] KAYNES — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] KFINTECH — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] SAMMAANCAP — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] BHEL — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] NAUKRI — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] NBCC — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] POLICYBZR — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] DELHIVERY — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] PPLPHARMA — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] UPL — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] WAAREEENER — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] MCX — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] POLYCAB — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] TATATECH — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] VMM — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] M&M — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] ABCAPITAL — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] MOTHERSON — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] HINDZINC — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] COLPAL — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] NESTLEIND — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] BAJFINANCE — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] BPCL — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] AMBUJACEM — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] HUDCO — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] RVNL — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] YESBANK — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] SAIL — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] BOSCHLTD — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] PGEL — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] INFY — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] NHPC — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] TORNTPOWER — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] DIXON — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] DABUR — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] MANAPPURAM — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] HDFCAMC — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          WARNING     [API ERR] HDFCLIFE — 'dhanhq' object has no attribute 'get_historical_data'
+2026-05-18 20:25:28  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:25:28  DRY_TEST          INFO        RESULTS
+2026-05-18 20:25:28  DRY_TEST          INFO        Total stocks       : 41
+2026-05-18 20:25:28  DRY_TEST          INFO        With data          : 0
+2026-05-18 20:25:28  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 20:25:28  DRY_TEST          INFO        API errors         : 41
+2026-05-18 20:25:28  DRY_TEST          INFO        Time elapsed       : 0.0s
+2026-05-18 20:25:28  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 20:25:28  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:27:27  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:27:27  DRY_TEST          INFO        DRY RUN TEST — Full Pipeline Validation
+2026-05-18 20:27:27  DRY_TEST          INFO        Stocks : 41 from live_vwap_reclaim_v3 STOCK_CONFIGS
+2026-05-18 20:27:27  DRY_TEST          INFO        Date   : 2026-05-18 20:27:27
+2026-05-18 20:27:27  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:27:27  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:27:28  DRY_TEST          INFO        [SKIP] AUROPHARMA — only 0 bars (need 20)
+2026-05-18 20:27:28  DRY_TEST          INFO        [SKIP] BANKINDIA — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] PNB — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] KAYNES — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] KFINTECH — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] SAMMAANCAP — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] BHEL — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] NAUKRI — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] NBCC — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] POLICYBZR — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] DELHIVERY — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] PPLPHARMA — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] UPL — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] WAAREEENER — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] MCX — only 0 bars (need 20)
+2026-05-18 20:27:29  DRY_TEST          INFO        [SKIP] POLYCAB — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] TATATECH — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] VMM — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] M&M — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] ABCAPITAL — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] MOTHERSON — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] HINDZINC — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] COLPAL — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] NESTLEIND — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] BAJFINANCE — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] BPCL — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] AMBUJACEM — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] HUDCO — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] RVNL — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] YESBANK — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] SAIL — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] BOSCHLTD — only 0 bars (need 20)
+2026-05-18 20:27:30  DRY_TEST          INFO        [SKIP] PGEL — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO        [SKIP] INFY — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO        [SKIP] NHPC — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO        [SKIP] TORNTPOWER — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO        [SKIP] DIXON — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO        [SKIP] DABUR — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO        [SKIP] MANAPPURAM — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO        [SKIP] HDFCAMC — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO        [SKIP] HDFCLIFE — only 0 bars (need 20)
+2026-05-18 20:27:31  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:27:31  DRY_TEST          INFO        RESULTS
+2026-05-18 20:27:31  DRY_TEST          INFO        Total stocks       : 41
+2026-05-18 20:27:31  DRY_TEST          INFO        With data          : 0
+2026-05-18 20:27:31  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 20:27:31  DRY_TEST          INFO        API errors         : 0
+2026-05-18 20:27:31  DRY_TEST          INFO        Time elapsed       : 4.1s
+2026-05-18 20:27:31  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 20:27:31  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:28:42  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:28:42  DRY_TEST          INFO        DRY RUN TEST — Full Pipeline Validation
+2026-05-18 20:28:42  DRY_TEST          INFO        Stocks : 41 from live_vwap_reclaim_v3 STOCK_CONFIGS
+2026-05-18 20:28:42  DRY_TEST          INFO        Date   : 2026-05-18 20:28:42
+2026-05-18 20:28:42  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:28:42  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:28:43  DRY_TEST          INFO        [DATA] AUROPHARMA — 125 bars (1491.60–1525.00)
+2026-05-18 20:28:56  DRY_TEST          INFO        [DATA] BANKINDIA — 125 bars (137.49–141.00)
+2026-05-18 20:29:11  DRY_TEST          INFO        [DATA] PNB — 125 bars (98.50–101.00)
+2026-05-18 20:29:33  DRY_TEST          INFO        [DATA] KAYNES — 125 bars (3100.00–3270.00)
+2026-05-18 20:30:54  DRY_TEST          INFO        [DATA] KFINTECH — 125 bars (784.95–817.00)
+2026-05-18 20:31:18  DRY_TEST          INFO        [DATA] SAMMAANCAP — 125 bars (138.41–142.35)
+2026-05-18 20:31:38  DRY_TEST          INFO        [DATA] BHEL — 125 bars (386.10–396.30)
+2026-05-18 20:32:00  DRY_TEST          INFO        [DATA] NAUKRI — 125 bars (914.80–934.10)
+2026-05-18 20:32:23  DRY_TEST          INFO        [DATA] NBCC — 125 bars (89.83–92.70)
+2026-05-18 20:33:01  DRY_TEST          INFO        [DATA] POLICYBZR — 125 bars (1674.00–1752.70)
+2026-05-18 20:33:30  DRY_TEST          INFO        [DATA] DELHIVERY — 125 bars (446.10–472.95)
+2026-05-18 20:35:29  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:35:29  DRY_TEST          INFO        DRY RUN TEST — Full Pipeline Validation
+2026-05-18 20:35:29  DRY_TEST          INFO        Stocks : 41 from live_vwap_reclaim_v3 STOCK_CONFIGS
+2026-05-18 20:35:29  DRY_TEST          INFO        Date   : 2026-05-18 20:35:29
+2026-05-18 20:35:29  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:35:29  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:35:29  DRY_TEST          INFO        [DATA] AUROPHARMA — 125 bars (1491.60–1525.00)
+2026-05-18 20:35:40  DRY_TEST          INFO        [DATA] BANKINDIA — 125 bars (137.49–141.00)
+2026-05-18 20:35:50  DRY_TEST          INFO        [DATA] PNB — 125 bars (98.50–101.00)
+2026-05-18 20:36:01  DRY_TEST          INFO        [DATA] KAYNES — 125 bars (3100.00–3270.00)
+2026-05-18 20:36:12  DRY_TEST          INFO        [DATA] KFINTECH — 125 bars (784.95–817.00)
+2026-05-18 20:36:23  DRY_TEST          INFO        [DATA] SAMMAANCAP — 125 bars (138.41–142.35)
+2026-05-18 20:36:33  DRY_TEST          INFO        [DATA] BHEL — 125 bars (386.10–396.30)
+2026-05-18 20:36:44  DRY_TEST          INFO        [DATA] NAUKRI — 125 bars (914.80–934.10)
+2026-05-18 20:36:55  DRY_TEST          INFO        [DATA] NBCC — 125 bars (89.83–92.70)
+2026-05-18 20:37:06  DRY_TEST          INFO        [DATA] POLICYBZR — 125 bars (1674.00–1752.70)
+2026-05-18 20:37:18  DRY_TEST          INFO        [DATA] DELHIVERY — 125 bars (446.10–472.95)
+2026-05-18 20:37:29  DRY_TEST          INFO        [DATA] PPLPHARMA — 125 bars (170.30–176.27)
+2026-05-18 20:37:40  DRY_TEST          INFO        [DATA] UPL — 125 bars (618.30–640.00)
+2026-05-18 20:37:50  DRY_TEST          INFO        [DATA] WAAREEENER — 125 bars (2961.30–3037.90)
+2026-05-18 20:39:15  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:39:15  DRY_TEST          INFO        DRY RUN TEST — Full Pipeline Validation
+2026-05-18 20:39:15  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 20:39:15  DRY_TEST          INFO        Date   : 2026-05-18 20:39:15
+2026-05-18 20:39:15  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:39:15  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 20:39:15  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:39:16  DRY_TEST          INFO        [DATA] INFY — 125 bars (1118.00–1146.10)
+2026-05-18 20:39:27  DRY_TEST          INFO        [DATA] RELIANCE — 125 bars (1318.70–1342.00)
+2026-05-18 20:39:37  DRY_TEST          INFO        [DATA] TCS — 125 bars (2252.20–2292.90)
+2026-05-18 20:39:48  DRY_TEST          INFO        [DATA] HDFCBANK — 125 bars (751.35–774.10)
+2026-05-18 20:39:59  DRY_TEST          INFO        [DATA] SBIN — 125 bars (933.90–954.90)
+2026-05-18 20:40:10  DRY_TEST          INFO        [DATA] BAJFINANCE — 125 bars (890.70–925.00)
+2026-05-18 20:40:20  DRY_TEST          INFO        [DATA] M&M — 125 bars (3050.00–3111.70)
+2026-05-18 20:40:30  DRY_TEST          INFO        [DATA] TATATECH — 125 bars (609.00–633.00)
+2026-05-18 20:40:41  DRY_TEST          INFO        [DATA] KAYNES — 125 bars (3100.00–3270.00)
+2026-05-18 20:40:52  DRY_TEST          INFO        [DATA] YESBANK — 125 bars (21.32–21.95)
+2026-05-18 20:41:52  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:41:52  DRY_TEST          INFO        DRY RUN TEST — Full Pipeline Validation
+2026-05-18 20:41:52  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 20:41:52  DRY_TEST          INFO        Date   : 2026-05-18 20:41:52
+2026-05-18 20:41:52  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:41:52  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 20:41:52  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:41:53  DRY_TEST          INFO        [DATA] INFY — 125 bars (1118.00–1146.10)
+2026-05-18 20:42:05  DRY_TEST          INFO        [SIGNAL] INFY → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:42:05  DRY_TEST          INFO        [NO TRADE] INFY — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:42:05  DRY_TEST          INFO        [DATA] RELIANCE — 125 bars (1318.70–1342.00)
+2026-05-18 20:42:16  DRY_TEST          INFO        [SIGNAL] RELIANCE → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:42:16  DRY_TEST          INFO        [NO TRADE] RELIANCE — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:42:16  DRY_TEST          INFO        [DATA] TCS — 125 bars (2252.20–2292.90)
+2026-05-18 20:42:27  DRY_TEST          INFO        [SIGNAL] TCS → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:42:27  DRY_TEST          INFO        [NO TRADE] TCS — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:42:28  DRY_TEST          INFO        [DATA] HDFCBANK — 125 bars (751.35–774.10)
+2026-05-18 20:42:39  DRY_TEST          INFO        [SIGNAL] HDFCBANK → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:42:39  DRY_TEST          INFO        [NO TRADE] HDFCBANK — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:42:39  DRY_TEST          INFO        [DATA] SBIN — 125 bars (933.90–954.90)
+2026-05-18 20:42:51  DRY_TEST          INFO        [SIGNAL] SBIN → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:42:51  DRY_TEST          INFO        [NO TRADE] SBIN — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:42:51  DRY_TEST          INFO        [DATA] BAJFINANCE — 125 bars (890.70–925.00)
+2026-05-18 20:43:03  DRY_TEST          INFO        [SIGNAL] BAJFINANCE → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:43:03  DRY_TEST          INFO        [NO TRADE] BAJFINANCE — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:43:03  DRY_TEST          INFO        [DATA] M&M — 125 bars (3050.00–3111.70)
+2026-05-18 20:43:14  DRY_TEST          INFO        [SIGNAL] M&M → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:43:14  DRY_TEST          INFO        [NO TRADE] M&M — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:43:14  DRY_TEST          INFO        [DATA] TATATECH — 125 bars (609.00–633.00)
+2026-05-18 20:43:26  DRY_TEST          INFO        [SIGNAL] TATATECH → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:43:26  DRY_TEST          INFO        [NO TRADE] TATATECH — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:43:26  DRY_TEST          INFO        [DATA] KAYNES — 125 bars (3100.00–3270.00)
+2026-05-18 20:43:38  DRY_TEST          INFO        [SIGNAL] KAYNES → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:43:38  DRY_TEST          INFO        [NO TRADE] KAYNES — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:43:38  DRY_TEST          INFO        [DATA] YESBANK — 125 bars (21.32–21.95)
+2026-05-18 20:43:48  DRY_TEST          INFO        [SIGNAL] YESBANK → HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:43:48  DRY_TEST          INFO        [NO TRADE] YESBANK — signal=HOLD confidence=0 (min=65)
+2026-05-18 20:43:48  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:43:48  DRY_TEST          INFO        RESULTS
+2026-05-18 20:43:48  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-18 20:43:48  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 20:43:48  DRY_TEST          INFO        Time elapsed       : 115.3s
+2026-05-18 20:43:48  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 20:43:48  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:45:13  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:45:13  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-18 20:45:13  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 20:45:13  DRY_TEST          INFO        Date   : 2026-05-18 20:45:13
+2026-05-18 20:45:13  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:45:13  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 20:45:13  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:45:15  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1118.00-1146.10)
+2026-05-18 20:45:20  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:45:20  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:45:20  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.70-1342.00)
+2026-05-18 20:45:25  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=API Error: Unterminated string starting at: line 3 column 5 (char 28))
+2026-05-18 20:45:25  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:45:25  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2252.20-2292.90)
+2026-05-18 20:45:30  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=API Error: Unterminated string starting at: line 4 column 18 (char 63))
+2026-05-18 20:45:30  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:45:30  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (751.35-774.10)
+2026-05-18 20:45:33  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=30, reason=Price near SMA/EMA, RSI neutral, volume below average, no clear breakout or brea)
+2026-05-18 20:45:33  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=30 (min=65)
+2026-05-18 20:45:33  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (933.90-954.90)
+2026-05-18 20:45:37  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=40, reason=Neutral RSI, price near moving averages, no volume spike, low volatility. No cle)
+2026-05-18 20:45:37  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=40 (min=65)
+2026-05-18 20:45:37  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (890.70-925.00)
+2026-05-18 20:45:43  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:45:43  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:45:43  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3050.00-3111.70)
+2026-05-18 20:45:47  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=45, reason=RSI neutral, no volume spike, price near VWAP. No strong directional bias.)
+2026-05-18 20:45:47  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=45 (min=65)
+2026-05-18 20:45:47  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (609.00-633.00)
+2026-05-18 20:45:52  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:45:52  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:45:52  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3100.00-3270.00)
+2026-05-18 20:45:58  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:45:58  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:45:58  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.32-21.95)
+2026-05-18 20:46:04  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=API Error: Expecting value: line 1 column 1 (char 0))
+2026-05-18 20:46:04  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:46:04  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:46:04  DRY_TEST          INFO        RESULTS
+2026-05-18 20:46:04  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-18 20:46:04  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 20:46:04  DRY_TEST          INFO        Time elapsed       : 49.9s
+2026-05-18 20:46:04  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 20:46:04  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:46:35  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:46:35  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-18 20:46:35  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 20:46:35  DRY_TEST          INFO        Date   : 2026-05-18 20:46:35
+2026-05-18 20:46:35  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:46:35  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 20:46:35  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:46:36  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1118.00-1146.10)
+2026-05-18 20:46:38  DRY_TEST          INFO        [SIGNAL] INFY -> BUY (confidence=70, reason=Price above SMA and EMA, MACD bullish, RSI not overbought, volume above average,)
+2026-05-18 20:46:39  DRY_TEST          INFO        >>> INFY BUY x17 @ 1145.60 | SL=1128.42 | Target=1179.97 | Telegram sent
+2026-05-18 20:46:39  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.70-1342.00)
+2026-05-18 20:46:41  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Price near VWAP and SMA, RSI neutral (54.52), no volume spike, low volatility (A)
+2026-05-18 20:46:41  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:46:41  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2252.20-2292.90)
+2026-05-18 20:46:42  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price near resistance, RSI neutral, no volume spike, low volatility.)
+2026-05-18 20:46:42  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:46:42  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (751.35-774.10)
+2026-05-18 20:46:44  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Price near SMA and EMA, RSI neutral (51), no volume spike, low volatility (ATR 1)
+2026-05-18 20:46:44  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:46:44  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (933.90-954.90)
+2026-05-18 20:46:47  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Price near SMA and VWAP, RSI neutral, MACD bearish but weak, volume below averag)
+2026-05-18 20:46:47  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:46:47  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (890.70-925.00)
+2026-05-18 20:46:49  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> BUY (confidence=70, reason=Price above VWAP and SMA/EMA, RSI bullish but not overbought, MACD positive, vol)
+2026-05-18 20:46:50  DRY_TEST          INFO        >>> BAJFINANCE BUY x21 @ 922.00 | SL=908.17 | Target=949.66 | Telegram sent
+2026-05-18 20:46:50  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3050.00-3111.70)
+2026-05-18 20:46:52  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=55, reason=Price near VWAP and SMA, RSI neutral, no volume spike, low volatility. No clear )
+2026-05-18 20:46:52  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=55 (min=65)
+2026-05-18 20:46:52  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (609.00-633.00)
+2026-05-18 20:46:54  DRY_TEST          INFO        [SIGNAL] TATATECH -> BUY (confidence=70, reason=Price above VWAP and SMAs, RSI bullish but not overbought, MACD positive, volume)
+2026-05-18 20:46:55  DRY_TEST          INFO        >>> TATATECH BUY x31 @ 630.00 | SL=620.55 | Target=648.90 | Telegram sent
+2026-05-18 20:46:55  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3100.00-3270.00)
+2026-05-18 20:46:57  DRY_TEST          INFO        [SIGNAL] KAYNES -> BUY (confidence=80, reason=RSI at 17 indicates oversold conditions, price near support and below VWAP, volu)
+2026-05-18 20:46:58  DRY_TEST          INFO        >>> KAYNES BUY x6 @ 3102.00 | SL=3055.47 | Target=3195.06 | Telegram sent
+2026-05-18 20:46:58  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.32-21.95)
+2026-05-18 20:47:00  DRY_TEST          INFO        [SIGNAL] YESBANK -> BUY (confidence=70, reason=Price above VWAP and SMA, EMA bullish crossover, volume spike, RSI neutral, MACD)
+2026-05-18 20:47:01  DRY_TEST          INFO        >>> YESBANK BUY x916 @ 21.82 | SL=21.49 | Target=22.47 | Telegram sent
+2026-05-18 20:47:01  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:47:01  DRY_TEST          INFO        RESULTS
+2026-05-18 20:47:01  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-18 20:47:01  DRY_TEST          INFO        Signals generated  : 5
+2026-05-18 20:47:01  DRY_TEST          INFO        Time elapsed       : 25.1s
+2026-05-18 20:47:01  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 20:47:01  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:49:36  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:49:36  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-18 20:49:36  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 20:49:36  DRY_TEST          INFO        Date   : 2026-05-18 20:49:36
+2026-05-18 20:49:36  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:49:36  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 20:49:36  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:49:37  risk_manager      INFO      Fetched balance from Dhan API: 11.18
+2026-05-18 20:49:38  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1118.00-1146.10)
+2026-05-18 20:49:40  DRY_TEST          INFO        [SIGNAL] INFY -> BUY (confidence=70, reason=Price above SMA and EMA, RSI neutral but not overbought, MACD bullish, volume ab)
+2026-05-18 20:49:40  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.70-1342.00)
+2026-05-18 20:49:41  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Price near VWAP and SMA, RSI neutral, no volume spike, low volatility. No clear )
+2026-05-18 20:49:41  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:49:41  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2252.20-2292.90)
+2026-05-18 20:49:43  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price near resistance, RSI neutral, no volume spike, low volatility. No clear en)
+2026-05-18 20:49:43  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:49:43  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (751.35-774.10)
+2026-05-18 20:49:45  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=50, reason=Price near SMA/EMA, RSI neutral, no volume spike, low volatility. No clear direc)
+2026-05-18 20:49:45  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=50 (min=65)
+2026-05-18 20:49:45  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (933.90-954.90)
+2026-05-18 20:49:47  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Price near SMA and VWAP, RSI neutral, no volume spike, low volatility, no clear )
+2026-05-18 20:49:47  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:49:47  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (890.70-925.00)
+2026-05-18 20:49:49  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> BUY (confidence=72, reason=Price above VWAP and SMA/EMA, RSI bullish but not overbought, MACD positive, vol)
+2026-05-18 20:49:49  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3050.00-3111.70)
+2026-05-18 20:49:50  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=RSI near 50, no clear trend; volume below average; price near VWAP and SMA; low )
+2026-05-18 20:49:50  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:49:51  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (609.00-633.00)
+2026-05-18 20:49:53  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=RSI at 63.34 not extreme, price near resistance 633, volume spike moderate, no c)
+2026-05-18 20:49:53  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:49:53  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3100.00-3270.00)
+2026-05-18 20:49:54  DRY_TEST          INFO        [SIGNAL] KAYNES -> BUY (confidence=75, reason=RSI at 17 indicates oversold conditions, price near support and below VWAP, volu)
+2026-05-18 20:49:55  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.32-21.95)
+2026-05-18 20:49:57  DRY_TEST          INFO        [SIGNAL] YESBANK -> BUY (confidence=72, reason=Price above VWAP and SMA, EMA bullish crossover, volume spike, RSI neutral with )
+2026-05-18 20:49:57  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:49:57  DRY_TEST          INFO        RESULTS
+2026-05-18 20:49:57  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-18 20:49:57  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 20:49:57  DRY_TEST          INFO        Time elapsed       : 19.1s
+2026-05-18 20:49:57  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 20:49:57  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:58:15  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:58:15  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-18 20:58:15  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 20:58:15  DRY_TEST          INFO        Date   : 2026-05-18 20:58:15
+2026-05-18 20:58:15  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 20:58:15  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 20:58:15  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:58:15  risk_manager      INFO      Fetched balance from Dhan API: 3011.18
+2026-05-18 20:58:16  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1118.00-1146.10)
+2026-05-18 20:58:16  DRY_TEST          INFO        [REGIME] INFY -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 20:58:18  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI not extreme, volume below average, no clear br)
+2026-05-18 20:58:18  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:58:18  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.70-1342.00)
+2026-05-18 20:58:18  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.57%, current=11250.7, SMA20=11547.64
+2026-05-18 20:58:20  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=45, reason=RSI neutral, price near SMA/EMA, no volume spike, bearish market and sector regi)
+2026-05-18 20:58:20  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=45 (min=65)
+2026-05-18 20:58:20  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2252.20-2292.90)
+2026-05-18 20:58:20  DRY_TEST          INFO        [REGIME] TCS -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 20:58:22  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, no volume spike, low volatility. No c)
+2026-05-18 20:58:22  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:58:22  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (751.35-774.10)
+2026-05-18 20:58:23  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 20:58:24  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=RSI neutral, price near SMA/EMA, no volume spike, bearish market and sector regi)
+2026-05-18 20:58:24  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:58:25  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (933.90-954.90)
+2026-05-18 20:58:25  DRY_TEST          INFO        [REGIME] SBIN -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 20:58:27  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, price near SMA/EMA, no volume spike, )
+2026-05-18 20:58:27  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:58:27  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (890.70-925.00)
+2026-05-18 20:58:27  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-1.76%, current=27684.2, SMA20=28179.68
+2026-05-18 20:58:29  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=60, reason=RSI at 64.86 not overbought, price above VWAP and SMA/EMA, but Nifty and sector )
+2026-05-18 20:58:29  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=60 (min=65)
+2026-05-18 20:58:29  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3050.00-3111.70)
+2026-05-18 20:58:29  DRY_TEST          INFO        [REGIME] M&M -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=neutral, volatility=normal, strength=-0.76%, current=26070.7, SMA20=26269.84
+2026-05-18 20:58:31  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=RSI neutral, no volume spike, Nifty bearish, price near VWAP and SMA, no clear d)
+2026-05-18 20:58:31  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:58:31  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (609.00-633.00)
+2026-05-18 20:58:31  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 20:58:34  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI not extreme, volume spike but price near resis)
+2026-05-18 20:58:34  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 20:58:34  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3100.00-3270.00)
+2026-05-18 20:58:34  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=neutral, volatility=normal, strength=0.51%, current=14168.9, SMA20=14096.6
+2026-05-18 20:58:36  DRY_TEST          INFO        [SIGNAL] KAYNES -> BUY (confidence=70, reason=RSI at 17 indicates oversold conditions, price near support and below VWAP, volu)
+2026-05-18 20:58:36  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.32-21.95)
+2026-05-18 20:58:37  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 20:58:39  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=55, reason=Price near resistance and RSI neutral; Nifty and sector bearish, so avoid long. )
+2026-05-18 20:58:39  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=55 (min=65)
+2026-05-18 20:58:39  DRY_TEST          INFO      ========================================================================
+2026-05-18 20:58:39  DRY_TEST          INFO        RESULTS
+2026-05-18 20:58:39  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-18 20:58:39  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 20:58:39  DRY_TEST          INFO        Time elapsed       : 22.7s
+2026-05-18 20:58:39  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 20:58:39  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:05:26  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:05:26  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-18 21:05:26  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 21:05:26  DRY_TEST          INFO        Date   : 2026-05-18 21:05:26
+2026-05-18 21:05:26  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 21:05:26  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 21:05:26  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:05:27  risk_manager      INFO      Fetched balance from Dhan API: 3011.18
+2026-05-18 21:05:28  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1118.00-1146.10)
+2026-05-18 21:05:28  DRY_TEST          INFO        [REGIME] INFY -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:05:30  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=55, reason=Stock is above SMA and EMA, RSI not extreme, but Nifty and sector are bearish wi)
+2026-05-18 21:05:30  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=55 (min=65)
+2026-05-18 21:05:30  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.70-1342.00)
+2026-05-18 21:05:30  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.57%, current=11250.7, SMA20=11547.64
+2026-05-18 21:05:32  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, no volume spike, price near SMA/EMA, )
+2026-05-18 21:05:32  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:05:32  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2252.20-2292.90)
+2026-05-18 21:05:32  DRY_TEST          INFO        [REGIME] TCS -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:05:34  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, no volume spike, low volatility. No c)
+2026-05-18 21:05:34  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:05:34  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (751.35-774.10)
+2026-05-18 21:05:34  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:05:36  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Price near SMA and EMA, RSI neutral, no volume spike, Nifty and sector bearish. )
+2026-05-18 21:05:36  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:05:36  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (933.90-954.90)
+2026-05-18 21:05:36  DRY_TEST          INFO        [REGIME] SBIN -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:05:38  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=RSI neutral, price near SMA/EMA, no volume spike, bearish market and sector tren)
+2026-05-18 21:05:38  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:05:38  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (890.70-925.00)
+2026-05-18 21:05:38  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-1.76%, current=27684.2, SMA20=28179.68
+2026-05-18 21:05:39  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI not extreme, price near resistance, no clear e)
+2026-05-18 21:05:39  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:05:39  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3050.00-3111.70)
+2026-05-18 21:05:40  DRY_TEST          INFO        [REGIME] M&M -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=neutral, volatility=normal, strength=-0.76%, current=26070.7, SMA20=26269.84
+2026-05-18 21:05:41  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=RSI near 50, no clear trend, volume below average, Nifty bearish, sector neutral)
+2026-05-18 21:05:41  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:05:41  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (609.00-633.00)
+2026-05-18 21:05:41  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:05:43  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI not extreme, no clear breakout above resistanc)
+2026-05-18 21:05:43  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:05:43  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3100.00-3270.00)
+2026-05-18 21:05:43  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=neutral, volatility=normal, strength=0.51%, current=14168.9, SMA20=14096.6
+2026-05-18 21:05:45  DRY_TEST          INFO        [SIGNAL] KAYNES -> BUY (confidence=70, reason=RSI at 17 indicates oversold condition, price near support and below VWAP, volum)
+2026-05-18 21:05:45  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.32-21.95)
+2026-05-18 21:05:45  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:05:47  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=60, reason=Price near resistance and RSI neutral; Nifty and sector bearish, limiting upside)
+2026-05-18 21:05:47  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=60 (min=65)
+2026-05-18 21:05:47  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:05:47  DRY_TEST          INFO        RESULTS
+2026-05-18 21:05:47  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-18 21:05:47  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 21:05:47  DRY_TEST          INFO        Time elapsed       : 19.6s
+2026-05-18 21:05:47  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 21:05:47  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:10:43  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:10:43  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-18 21:10:43  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 21:10:43  DRY_TEST          INFO        Date   : 2026-05-18 21:10:43
+2026-05-18 21:10:43  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 21:10:43  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 21:10:43  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:10:43  risk_manager      INFO      Fetched balance from Dhan API: 3011.18
+2026-05-18 21:10:44  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1118.00-1146.10)
+2026-05-18 21:10:44  DRY_TEST          INFO        [REGIME] INFY -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:10:46  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI not extreme, no clear breakout above resistanc)
+2026-05-18 21:10:46  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:10:46  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.70-1342.00)
+2026-05-18 21:10:46  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.57%, current=11250.7, SMA20=11547.64
+2026-05-18 21:10:47  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, no volume spike, low volatility. No c)
+2026-05-18 21:10:47  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:10:48  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2252.20-2292.90)
+2026-05-18 21:10:48  DRY_TEST          INFO        [REGIME] TCS -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:10:50  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, no volume spike, price near resistanc)
+2026-05-18 21:10:50  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:10:50  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (751.35-774.10)
+2026-05-18 21:10:50  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:10:51  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Price near SMA and EMA, RSI neutral, no volume spike, bearish market and sector )
+2026-05-18 21:10:51  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:10:51  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (933.90-954.90)
+2026-05-18 21:10:51  DRY_TEST          INFO        [REGIME] SBIN -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:10:53  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, price near SMA/EMA, no volume spike, )
+2026-05-18 21:10:53  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:10:53  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (890.70-925.00)
+2026-05-18 21:10:53  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-1.76%, current=27684.2, SMA20=28179.68
+2026-05-18 21:10:55  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI not extreme, price near resistance, no clear e)
+2026-05-18 21:10:55  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:10:55  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3050.00-3111.70)
+2026-05-18 21:10:55  DRY_TEST          INFO        [REGIME] M&M -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=neutral, volatility=normal, strength=-0.76%, current=26070.7, SMA20=26269.84
+2026-05-18 21:10:56  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=RSI neutral, no volume spike, Nifty bearish, sector neutral. Low conviction.)
+2026-05-18 21:10:56  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:10:56  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (609.00-633.00)
+2026-05-18 21:10:57  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:10:58  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI not extreme, volume spike not decisive, price )
+2026-05-18 21:10:58  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:10:58  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3100.00-3270.00)
+2026-05-18 21:10:59  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=neutral, volatility=normal, strength=0.51%, current=14168.9, SMA20=14096.6
+2026-05-18 21:11:01  DRY_TEST          INFO        [SIGNAL] KAYNES -> BUY (confidence=75, reason=RSI at 17 indicates deeply oversold conditions, price near support with volume s)
+2026-05-18 21:11:01  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.32-21.95)
+2026-05-18 21:11:01  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:11:03  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=55, reason=Price near resistance and RSI neutral; Nifty and sector bearish, limiting upside)
+2026-05-18 21:11:03  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=55 (min=65)
+2026-05-18 21:11:03  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:11:03  DRY_TEST          INFO        RESULTS
+2026-05-18 21:11:03  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-18 21:11:03  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 21:11:03  DRY_TEST          INFO        Time elapsed       : 18.8s
+2026-05-18 21:11:03  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 21:11:03  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:17:42  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:17:42  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-18 21:17:42  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-18 21:17:42  DRY_TEST          INFO        Date   : 2026-05-18 21:17:42
+2026-05-18 21:17:42  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-18 21:17:42  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-18 21:17:42  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:17:42  risk_manager      INFO      Fetched balance from Dhan API: 3011.18
+2026-05-18 21:17:44  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1118.00-1146.10)
+2026-05-18 21:17:44  DRY_TEST          INFO        [REGIME] INFY -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:17:46  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI not extreme, no clear volume spike, price near)
+2026-05-18 21:17:46  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:17:46  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.70-1342.00)
+2026-05-18 21:17:46  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.57%, current=11250.7, SMA20=11547.64
+2026-05-18 21:17:47  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, no volume spike, price near SMA/EMA, )
+2026-05-18 21:17:47  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:17:48  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2252.20-2292.90)
+2026-05-18 21:17:48  DRY_TEST          INFO        [REGIME] TCS -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:17:49  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, no volume spike, low volatility. No c)
+2026-05-18 21:17:49  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:17:49  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (751.35-774.10)
+2026-05-18 21:17:49  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:17:51  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Nifty and sector are bearish, RSI neutral, no volume spike, price near SMA/EMA, )
+2026-05-18 21:17:51  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:17:51  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (933.90-954.90)
+2026-05-18 21:17:51  DRY_TEST          INFO        [REGIME] SBIN -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:17:52  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=RSI neutral, price near SMA/EMA, no volume spike, bearish market and sector tren)
+2026-05-18 21:17:52  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:17:52  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (890.70-925.00)
+2026-05-18 21:17:53  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-1.76%, current=27684.2, SMA20=28179.68
+2026-05-18 21:17:55  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=60, reason=RSI at 64.86 not overbought, price above SMA/EMA but Nifty and sector bearish, v)
+2026-05-18 21:17:55  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=60 (min=65)
+2026-05-18 21:17:55  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3050.00-3111.70)
+2026-05-18 21:17:55  DRY_TEST          INFO        [REGIME] M&M -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=neutral, volatility=normal, strength=-0.76%, current=26070.7, SMA20=26269.84
+2026-05-18 21:17:56  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=RSI neutral, no volume spike, Nifty bearish trend, sector neutral. Low convictio)
+2026-05-18 21:17:56  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=65)
+2026-05-18 21:17:57  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (609.00-633.00)
+2026-05-18 21:17:57  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=high, strength=-3.69%, current=27716.9, SMA20=28779.74
+2026-05-18 21:17:59  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=55, reason=RSI not extreme, MACD bullish but price near resistance, Nifty and sector bearis)
+2026-05-18 21:17:59  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=55 (min=65)
+2026-05-18 21:17:59  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3100.00-3270.00)
+2026-05-18 21:17:59  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=neutral, volatility=normal, strength=0.51%, current=14168.9, SMA20=14096.6
+2026-05-18 21:18:00  DRY_TEST          INFO        [SIGNAL] KAYNES -> BUY (confidence=70, reason=RSI at 17 indicates oversold condition, price near support and below VWAP, volum)
+2026-05-18 21:18:01  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.32-21.95)
+2026-05-18 21:18:01  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=50: trend=bearish, volatility=normal, strength=-1.24%, current=23643.5, SMA20=23939.23, sector=: trend=bearish, volatility=normal, strength=-2.24%, current=53710.35, SMA20=54938.43
+2026-05-18 21:18:02  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=55, reason=Price near resistance, RSI neutral, Nifty and sector bearish, volume spike not d)
+2026-05-18 21:18:02  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=55 (min=65)
+2026-05-18 21:18:02  DRY_TEST          INFO      ========================================================================
+2026-05-18 21:18:02  DRY_TEST          INFO        RESULTS
+2026-05-18 21:18:02  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-18 21:18:02  DRY_TEST          INFO        Signals generated  : 0
+2026-05-18 21:18:02  DRY_TEST          INFO        Time elapsed       : 18.9s
+2026-05-18 21:18:02  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-18.csv
+2026-05-18 21:18:02  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:13:24  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:13:24  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-19 17:13:24  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-19 17:13:24  DRY_TEST          INFO        Date   : 2026-05-19 17:13:24
+2026-05-19 17:13:24  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-19 17:13:24  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-19 17:13:24  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:13:25  risk_manager      INFO      Fetched balance from Dhan API: 2984.60
+2026-05-19 17:13:26  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1162.00-1198.40)
+2026-05-19 17:13:26  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:13:29  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price is above VWAP but RSI is neutral (48.84) and volume ratio is 0.66 (below 1)
+2026-05-19 17:13:29  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:13:29  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.40-1344.00)
+2026-05-19 17:13:29  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY OIL & GAS: trend=bearish, volatility=normal, strength=-2.64%, current=11162.5, SMA10=11465.33, sector=none
+2026-05-19 17:13:32  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Price is below VWAP (-0.701%) and RSI is 33.41 (not oversold but low), but volum)
+2026-05-19 17:13:32  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:13:32  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2297.10-2377.60)
+2026-05-19 17:13:32  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:13:35  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price is below VWAP (-0.79%) and RSI is neutral (47.98), but volume ratio is onl)
+2026-05-19 17:13:35  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:13:35  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (760.25-770.80)
+2026-05-19 17:13:35  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:13:38  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Price is below VWAP and RSI is neutral, but volume ratio is below 1.2 (0.78) and)
+2026-05-19 17:13:38  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:13:39  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (939.50-956.60)
+2026-05-19 17:13:39  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:13:41  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Price is below VWAP and RSI is 37.45, but volume ratio is 0.55 (below 1.2) and l)
+2026-05-19 17:13:41  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:13:41  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (920.10-930.00)
+2026-05-19 17:13:41  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY FINANCIAL SERVICES: trend=bearish, volatility=normal, strength=-1.4%, current=27661.85, SMA10=28053.66, sector=none
+2026-05-19 17:13:43  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=ADX is 17.77, below 18, indicating a ranging market. RSI is 70.11, near overboug)
+2026-05-19 17:13:43  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:13:43  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3075.00-3158.80)
+2026-05-19 17:13:44  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY AUTO: trend=bearish, volatility=normal, strength=-2.99%, current=25624.3, SMA10=26414.46, sector=none
+2026-05-19 17:13:51  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=Price is below VWAP and RSI is oversold (27.91), but volume ratio is only 0.62 ()
+2026-05-19 17:13:51  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:13:51  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (629.40-672.00)
+2026-05-19 17:13:52  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:13:54  DRY_TEST          INFO        [SIGNAL] TATATECH -> BUY (confidence=78, reason=Price is above VWAP with positive distance, RSI is neutral at 58.68, and ADX is )
+2026-05-19 17:13:55  DRY_TEST          INFO        >>> TATATECH BUY x2 @ 669.50 | SL=659.46 | Target=689.59 | Telegram sent
+2026-05-19 17:13:55  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3072.00-3167.30)
+2026-05-19 17:13:56  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY MIDCAP 100: trend=neutral, volatility=normal, strength=-0.44%, current=14165.65, SMA10=14228.58, sector=none
+2026-05-19 17:13:58  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=Price is below VWAP and RSI is 42, but volume ratio is only 1.09 (below 1.2) and)
+2026-05-19 17:13:58  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:13:58  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.72-22.13)
+2026-05-19 17:13:59  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:14:01  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=ADX is below 18, indicating a ranging market with no clear trend. Price is below)
+2026-05-19 17:14:01  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:14:01  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:14:01  DRY_TEST          INFO        RESULTS
+2026-05-19 17:14:01  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-19 17:14:01  DRY_TEST          INFO        Signals generated  : 1
+2026-05-19 17:14:01  DRY_TEST          INFO        Time elapsed       : 34.8s
+2026-05-19 17:14:01  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-19.csv
+2026-05-19 17:14:01  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:19:56  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:19:56  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-19 17:19:56  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-19 17:19:56  DRY_TEST          INFO        Date   : 2026-05-19 17:19:56
+2026-05-19 17:19:56  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-19 17:19:56  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-19 17:19:56  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:19:57  risk_manager      INFO      Fetched balance from Dhan API: 2984.60
+2026-05-19 17:19:58  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1162.00-1198.40)
+2026-05-19 17:19:59  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:20:04  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=60, reason=Price is above VWAP but RSI is neutral and volume ratio is only 0.66, well below)
+2026-05-19 17:20:04  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=60 (min=75)
+2026-05-19 17:20:04  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.40-1344.00)
+2026-05-19 17:20:05  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY OIL & GAS: trend=bearish, volatility=normal, strength=-2.64%, current=11162.5, SMA10=11465.33, sector=none
+2026-05-19 17:20:11  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Price is below VWAP and RSI is not oversold, but volume ratio is only 0.55 (belo)
+2026-05-19 17:20:11  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:20:11  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2297.10-2377.60)
+2026-05-19 17:20:11  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:20:19  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price is below VWAP (-0.79%), violating BUY rule. SELL requires RSI > 30 (47.98 )
+2026-05-19 17:20:19  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:20:19  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (760.25-770.80)
+2026-05-19 17:20:19  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:20:26  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Price is below VWAP, but volume ratio is only 0.78 (below 1.2), failing volume c)
+2026-05-19 17:20:26  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:20:26  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (939.50-956.60)
+2026-05-19 17:20:27  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:20:34  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Price is below VWAP (-0.094%) and RSI is not oversold (37.45), but volume ratio )
+2026-05-19 17:20:34  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:20:34  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (920.10-930.00)
+2026-05-19 17:20:34  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY FINANCIAL SERVICES: trend=bearish, volatility=normal, strength=-1.4%, current=27661.85, SMA10=28053.66, sector=none
+2026-05-19 17:20:39  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=60, reason=ADX is 17.77 (below 18), indicating a ranging market. MFI is 83.91, suggesting p)
+2026-05-19 17:20:39  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=60 (min=75)
+2026-05-19 17:20:39  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3075.00-3158.80)
+2026-05-19 17:20:40  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY AUTO: trend=bearish, volatility=normal, strength=-2.99%, current=25624.3, SMA10=26414.46, sector=none
+2026-05-19 17:20:45  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=Price is below VWAP and RSI is oversold (27.91), but SELL rules require RSI > 30)
+2026-05-19 17:20:45  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:20:45  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (629.40-672.00)
+2026-05-19 17:20:46  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:20:52  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=60, reason=Price is above VWAP and RSI is neutral, but volume ratio is only 1.14 (below 1.2)
+2026-05-19 17:20:52  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=60 (min=75)
+2026-05-19 17:20:52  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3072.00-3167.30)
+2026-05-19 17:20:52  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY MIDCAP 100: trend=neutral, volatility=normal, strength=-0.44%, current=14165.65, SMA10=14228.58, sector=none
+2026-05-19 17:20:59  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=Price is below VWAP (-1.16%), but RSI is not oversold (42.06) and volume ratio i)
+2026-05-19 17:20:59  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:21:00  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.72-22.13)
+2026-05-19 17:21:00  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:21:05  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=ADX is 15.43 (below 18), indicating a ranging market. Price is below VWAP and RS)
+2026-05-19 17:21:05  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:21:05  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:21:05  DRY_TEST          INFO        RESULTS
+2026-05-19 17:21:05  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-19 17:21:05  DRY_TEST          INFO        Signals generated  : 0
+2026-05-19 17:21:05  DRY_TEST          INFO        Time elapsed       : 66.6s
+2026-05-19 17:21:05  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-19.csv
+2026-05-19 17:21:05  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:22:07  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:22:07  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-19 17:22:07  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-19 17:22:07  DRY_TEST          INFO        Date   : 2026-05-19 17:22:07
+2026-05-19 17:22:07  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-19 17:22:07  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-19 17:22:07  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:22:07  risk_manager      INFO      Fetched balance from Dhan API: 2984.60
+2026-05-19 17:22:08  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1162.00-1198.40)
+2026-05-19 17:22:09  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:22:14  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=60, reason=Price is above VWAP but RSI is neutral, volume is declining (volume ratio 0.66),)
+2026-05-19 17:22:14  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=60 (min=75)
+2026-05-19 17:22:14  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1318.40-1344.00)
+2026-05-19 17:22:14  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY OIL & GAS: trend=bearish, volatility=normal, strength=-2.64%, current=11162.5, SMA10=11465.33, sector=none
+2026-05-19 17:22:20  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Price is below VWAP (-0.701%), RSI is not oversold (33.41 > 30), volume ratio is)
+2026-05-19 17:22:20  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:22:20  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2297.10-2377.60)
+2026-05-19 17:22:21  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:22:27  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price is below VWAP (-0.79%), violating BUY rule. SELL is blocked because RSI is)
+2026-05-19 17:22:27  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:22:27  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (760.25-770.80)
+2026-05-19 17:22:27  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:22:34  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Price is below VWAP (-0.407%), violating BUY rule. SELL requires price below VWA)
+2026-05-19 17:22:34  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:22:34  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (939.50-956.60)
+2026-05-19 17:22:34  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:22:41  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=65, reason=Price is slightly below VWAP but volume ratio is only 0.55 (below 1.2), failing )
+2026-05-19 17:22:41  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=65 (min=75)
+2026-05-19 17:22:41  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (920.10-930.00)
+2026-05-19 17:22:41  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY FINANCIAL SERVICES: trend=bearish, volatility=normal, strength=-1.4%, current=27661.85, SMA10=28053.66, sector=none
+2026-05-19 17:22:47  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=60, reason=ADX is 17.77 (<18), indicating a ranging market. RSI is 70.11 (overbought) and M)
+2026-05-19 17:22:47  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=60 (min=75)
+2026-05-19 17:22:47  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3075.00-3158.80)
+2026-05-19 17:22:48  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY AUTO: trend=bearish, volatility=normal, strength=-2.99%, current=25624.3, SMA10=26414.46, sector=none
+2026-05-19 17:22:54  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=Price is below VWAP and RSI is oversold (27.91), but SELL requires RSI > 30. ADX)
+2026-05-19 17:22:54  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:22:54  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (629.40-672.00)
+2026-05-19 17:22:54  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY IT: trend=bearish, volatility=high, strength=-0.65%, current=28389.8, SMA10=28576.1, sector=none
+2026-05-19 17:23:00  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=60, reason=Nifty and Nifty IT are bearish, blocking BUY. Price above VWAP but volume ratio )
+2026-05-19 17:23:00  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=60 (min=75)
+2026-05-19 17:23:00  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3072.00-3167.30)
+2026-05-19 17:23:00  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+NIFTY MIDCAP 100: trend=neutral, volatility=normal, strength=-0.44%, current=14165.65, SMA10=14228.58, sector=none
+2026-05-19 17:23:05  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=Price is below VWAP, violating BUY rule. RSI is neutral, but volume ratio is onl)
+2026-05-19 17:23:05  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:23:05  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (21.72-22.13)
+2026-05-19 17:23:06  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-0.82%, current=23649.95, SMA10=23845.76
+BANK NIFTY: trend=bearish, volatility=normal, strength=-1.72%, current=53537.0, SMA10=54471.36, sector=none
+2026-05-19 17:23:10  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=ADX is 15.43 (below 18), indicating a ranging market. Price is below VWAP and RS)
+2026-05-19 17:23:10  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-19 17:23:10  DRY_TEST          INFO      ========================================================================
+2026-05-19 17:23:10  DRY_TEST          INFO        RESULTS
+2026-05-19 17:23:10  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-19 17:23:10  DRY_TEST          INFO        Signals generated  : 0
+2026-05-19 17:23:10  DRY_TEST          INFO        Time elapsed       : 62.2s
+2026-05-19 17:23:10  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-19.csv
+2026-05-19 17:23:10  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:35:30  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:35:30  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-22 12:35:30  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-22 12:35:30  DRY_TEST          INFO        Date   : 2026-05-22 12:35:30
+2026-05-22 12:35:30  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-22 12:35:30  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-22 12:35:30  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:35:31  risk_manager      INFO      Fetched balance from Dhan API: 2356.10
+2026-05-22 12:35:32  DRY_TEST          INFO        [DATA] INFY  --  67 bars (1172.50-1191.80)
+2026-05-22 12:35:32  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY IT: trend=bullish, volatility=high, strength=1.52%, current=29021.1, SMA10=28585.65, sector=none
+2026-05-22 12:35:38  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price is below VWAP and 20 SMA, RSI is neutral, but volume is declining and belo)
+2026-05-22 12:35:38  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:35:39  DRY_TEST          INFO        [DATA] RELIANCE  --  67 bars (1349.10-1360.90)
+2026-05-22 12:35:39  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY OIL & GAS: trend=neutral, volatility=normal, strength=0.29%, current=11377.55, SMA10=11344.12, sector=none
+2026-05-22 12:35:47  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=65, reason=Price is slightly above VWAP but volume ratio is only 0.76 (below 1.2), failing )
+2026-05-22 12:35:47  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=65 (min=75)
+2026-05-22 12:35:47  DRY_TEST          INFO        [DATA] TCS  --  67 bars (2308.10-2340.00)
+2026-05-22 12:35:48  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY IT: trend=bullish, volatility=high, strength=1.52%, current=29021.1, SMA10=28585.65, sector=none
+2026-05-22 12:35:54  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price is below VWAP (-0.31%), RSI is not oversold (40.01), and volume ratio is o)
+2026-05-22 12:35:54  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:35:55  DRY_TEST          INFO        [DATA] HDFCBANK  --  67 bars (759.15-775.00)
+2026-05-22 12:35:55  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.77%, current=53439.4, SMA10=53854.88, sector=none
+2026-05-22 12:36:00  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=ADX is 17.25, below 18, indicating a ranging market. Price is below VWAP but vol)
+2026-05-22 12:36:00  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:36:01  DRY_TEST          INFO        [DATA] SBIN  --  67 bars (950.90-958.60)
+2026-05-22 12:36:01  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.77%, current=53439.4, SMA10=53854.88, sector=none
+2026-05-22 12:36:07  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Price below VWAP, RSI not oversold, but volume ratio is only 0.56 (below 1.2) an)
+2026-05-22 12:36:07  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:36:07  DRY_TEST          INFO        [DATA] BAJFINANCE  --  68 bars (908.10-923.95)
+2026-05-22 12:36:07  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY FINANCIAL SERVICES: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:36:12  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=ADX is 17.55 (below 18), indicating a ranging market. Volume ratio is 0.01 (far )
+2026-05-22 12:36:12  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:36:13  dhan_integration  WARNING   API error for 2031 (int=3, attempt=0): {'error_code': 'DH-904', 'error_type': 'Rate_Limit', 'error_message': 'Too many requests on server from single user breaching rate limits. Try throttling API calls.'}
+2026-05-22 12:36:15  dhan_integration  WARNING   API error for 2031 (int=3, attempt=1): {'error_code': 'DH-904', 'error_type': 'Rate_Limit', 'error_message': 'Too many requests on server from single user breaching rate limits. Try throttling API calls.'}
+2026-05-22 12:36:16  dhan_integration  WARNING   API error for 2031 (int=3, attempt=2): {'error_code': 'DH-904', 'error_type': 'Rate_Limit', 'error_message': 'Too many requests on server from single user breaching rate limits. Try throttling API calls.'}
+2026-05-22 12:36:17  dhan_integration  WARNING   API error for 2031 (int=1, attempt=0): {'error_code': 'DH-904', 'error_type': 'Rate_Limit', 'error_message': 'Too many requests on server from single user breaching rate limits. Try throttling API calls.'}
+2026-05-22 12:36:19  dhan_integration  WARNING   API error for 2031 (int=1, attempt=1): {'error_code': 'DH-904', 'error_type': 'Rate_Limit', 'error_message': 'Too many requests on server from single user breaching rate limits. Try throttling API calls.'}
+2026-05-22 12:36:21  DRY_TEST          INFO        [DATA] M&M  --  193 bars (3079.80-3157.70)
+2026-05-22 12:36:21  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0
+NIFTY AUTO: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:36:26  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=Volume ratio is 0.08, far below the required 1.2 for confirmation. ADX is 21.66,)
+2026-05-22 12:36:26  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:36:27  DRY_TEST          INFO        [DATA] TATATECH  --  68 bars (656.35-667.30)
+2026-05-22 12:36:27  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0
+NIFTY IT: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:36:33  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Price is below VWAP (-0.076%) and volume ratio is extremely low (0.04), failing )
+2026-05-22 12:36:33  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:36:34  DRY_TEST          INFO        [DATA] KAYNES  --  68 bars (3191.00-3294.50)
+2026-05-22 12:36:34  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY MIDCAP 100: trend=bullish, volatility=normal, strength=0.72%, current=14351.9, SMA10=14249.15, sector=none
+2026-05-22 12:36:41  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=65, reason=RSI is overbought at 71.15 and MFI is elevated at 77.36, suggesting exhaustion d)
+2026-05-22 12:36:41  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=65 (min=75)
+2026-05-22 12:36:42  DRY_TEST          INFO        [DATA] YESBANK  --  68 bars (21.42-21.72)
+2026-05-22 12:36:42  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0
+BANK NIFTY: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:36:47  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=Volume ratio is 0.06, far below the required 1.2 for confirmation. ADX is 23.57,)
+2026-05-22 12:36:47  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:36:47  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:36:47  DRY_TEST          INFO        RESULTS
+2026-05-22 12:36:47  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-22 12:36:47  DRY_TEST          INFO        Signals generated  : 0
+2026-05-22 12:36:47  DRY_TEST          INFO        Time elapsed       : 75.6s
+2026-05-22 12:36:47  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-22.csv
+2026-05-22 12:36:47  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:50:41  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:50:41  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-22 12:50:41  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-22 12:50:41  DRY_TEST          INFO        Date   : 2026-05-22 12:50:41
+2026-05-22 12:50:41  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-22 12:50:41  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-22 12:50:41  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:50:42  risk_manager      INFO      Fetched balance from Dhan API: 2356.10
+2026-05-22 12:50:43  DRY_TEST          INFO        [DATA] INFY  --  72 bars (1172.50-1191.80)
+2026-05-22 12:50:44  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY IT: trend=bullish, volatility=high, strength=1.52%, current=29021.1, SMA10=28585.65, sector=none
+2026-05-22 12:50:50  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price is near VWAP with minimal distance (0.01%), RSI neutral at 45.97, ADX 22.2)
+2026-05-22 12:50:50  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:50:51  DRY_TEST          INFO        [DATA] RELIANCE  --  72 bars (1349.10-1366.00)
+2026-05-22 12:50:51  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY OIL & GAS: trend=neutral, volatility=normal, strength=0.29%, current=11377.55, SMA10=11344.12, sector=none
+2026-05-22 12:50:57  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=RSI is overbought (74.39) and MFI is extremely high (86.17), indicating exhausti)
+2026-05-22 12:50:57  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:50:57  DRY_TEST          INFO        [DATA] TCS  --  72 bars (2308.10-2340.00)
+2026-05-22 12:50:58  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY IT: trend=bullish, volatility=high, strength=1.52%, current=29021.1, SMA10=28585.65, sector=none
+2026-05-22 12:51:06  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=60, reason=Price is slightly below VWAP (-0.166%), RSI is neutral (50.97), volume ratio is )
+2026-05-22 12:51:06  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=60 (min=75)
+2026-05-22 12:51:06  DRY_TEST          INFO        [DATA] HDFCBANK  --  73 bars (759.15-775.00)
+2026-05-22 12:51:06  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.77%, current=53439.4, SMA10=53854.88, sector=none
+2026-05-22 12:51:12  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=ADX is 17.67, below 18, indicating a ranging market. Additionally, volume ratio )
+2026-05-22 12:51:12  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:51:12  DRY_TEST          INFO        [DATA] SBIN  --  73 bars (950.90-958.60)
+2026-05-22 12:51:12  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0
+BANK NIFTY: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:51:18  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Price is below VWAP, but ADX is barely above 18 and volume ratio is only 0.4, fa)
+2026-05-22 12:51:18  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:51:19  DRY_TEST          INFO        [DATA] BAJFINANCE  --  73 bars (908.10-923.95)
+2026-05-22 12:51:19  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0
+NIFTY FINANCIAL SERVICES: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:51:24  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=ADX is 17.46, below 18, indicating a ranging market. Volume spike is only 0.05, )
+2026-05-22 12:51:24  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:51:25  DRY_TEST          INFO        [DATA] M&M  --  73 bars (3085.90-3130.70)
+2026-05-22 12:51:25  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY AUTO: trend=bearish, volatility=normal, strength=-0.58%, current=25986.25, SMA10=26138.89, sector=none
+2026-05-22 12:51:32  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=RSI is overbought at 75.03, violating the BUY rule (RSI must be < 70). Volume ra)
+2026-05-22 12:51:32  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:51:32  dhan_integration  WARNING   API error for 20293 (int=3, attempt=0, rate_limit=True): {'error_code': 'DH-904', 'error_type': 'Rate_Limit', 'error_message': 'Too many requests on server from single user breaching rate limits. Try throttling API calls.'}
+2026-05-22 12:51:32  dhan_integration  WARNING   Rate limit hit. Backing off for 3s...
+2026-05-22 12:51:36  DRY_TEST          INFO        [DATA] TATATECH  --  73 bars (656.35-668.70)
+2026-05-22 12:51:36  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0
+NIFTY IT: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:51:42  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=RSI is overbought at 76.99, violating BUY rule. Volume ratio is 0.05, far below )
+2026-05-22 12:51:42  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:51:43  dhan_integration  WARNING   API error for 12092 (int=3, attempt=0, rate_limit=True): {'error_code': 'DH-904', 'error_type': 'Rate_Limit', 'error_message': 'Too many requests on server from single user breaching rate limits. Try throttling API calls.'}
+2026-05-22 12:51:43  dhan_integration  WARNING   Rate limit hit. Backing off for 3s...
+2026-05-22 12:51:46  DRY_TEST          INFO        [DATA] KAYNES  --  73 bars (3191.00-3308.60)
+2026-05-22 12:51:46  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY MIDCAP 100: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:51:51  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=Volume ratio is 0.13, far below the required 1.2 for confirmation. ADX is 34.47 )
+2026-05-22 12:51:51  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:51:52  DRY_TEST          INFO        [DATA] YESBANK  --  73 bars (21.42-21.93)
+2026-05-22 12:51:52  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0
+BANK NIFTY: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-22 12:51:58  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=RSI is overbought at 74.74, violating BUY rule (RSI < 70). Volume ratio is 0.7, )
+2026-05-22 12:51:58  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:51:58  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:51:58  DRY_TEST          INFO        RESULTS
+2026-05-22 12:51:58  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-22 12:51:58  DRY_TEST          INFO        Signals generated  : 0
+2026-05-22 12:51:58  DRY_TEST          INFO        Time elapsed       : 75.1s
+2026-05-22 12:51:58  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-22.csv
+2026-05-22 12:51:58  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:55:01  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:55:01  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-22 12:55:01  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-22 12:55:01  DRY_TEST          INFO        Date   : 2026-05-22 12:55:01
+2026-05-22 12:55:01  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-22 12:55:01  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-22 12:55:01  DRY_TEST          INFO      ========================================================================
+2026-05-22 12:55:01  risk_manager      INFO      Fetched balance from Dhan API: 2356.10
+2026-05-22 12:55:03  DRY_TEST          INFO        [DATA] INFY  --  74 bars (1172.50-1191.80)
+2026-05-22 12:55:03  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY IT: trend=bullish, volatility=high, strength=1.52%, current=29021.1, SMA10=28585.65, sector=none
+2026-05-22 12:55:10  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price is near VWAP with no clear directional bias. Volume is extremely low (volu)
+2026-05-22 12:55:10  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:55:10  DRY_TEST          INFO        [DATA] RELIANCE  --  74 bars (1349.10-1366.00)
+2026-05-22 12:55:10  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY OIL & GAS: trend=neutral, volatility=normal, strength=0.29%, current=11377.55, SMA10=11344.12, sector=none
+2026-05-22 12:55:16  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=RSI is overbought at 71.9, violating BUY rule. Volume ratio is 0.21, far below 1)
+2026-05-22 12:55:16  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:55:16  DRY_TEST          INFO        [DATA] TCS  --  74 bars (2308.10-2340.00)
+2026-05-22 12:55:17  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY IT: trend=bullish, volatility=high, strength=1.52%, current=29021.1, SMA10=28585.65, sector=none
+2026-05-22 12:55:23  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price is below VWAP (-0.113%), violating BUY rule. SELL requires price below VWA)
+2026-05-22 12:55:23  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:55:23  DRY_TEST          INFO        [DATA] HDFCBANK  --  74 bars (759.15-775.00)
+2026-05-22 12:55:23  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.77%, current=53439.4, SMA10=53854.88, sector=none
+2026-05-22 12:55:30  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=65, reason=Price is slightly above VWAP and RSI is neutral, but volume ratio is only 0.56 ()
+2026-05-22 12:55:30  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=65 (min=75)
+2026-05-22 12:55:30  DRY_TEST          INFO        [DATA] SBIN  --  74 bars (950.90-958.60)
+2026-05-22 12:55:31  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.77%, current=53439.4, SMA10=53854.88, sector=none
+2026-05-22 12:55:37  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=Price is below VWAP, but ADX is only 18.02 (barely trending) and volume ratio is)
+2026-05-22 12:55:37  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:55:37  DRY_TEST          INFO        [DATA] BAJFINANCE  --  74 bars (908.10-923.95)
+2026-05-22 12:55:37  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY FINANCIAL SERVICES: trend=bearish, volatility=normal, strength=-0.64%, current=27572.9, SMA10=27749.78, sector=none
+2026-05-22 12:55:44  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=ADX is borderline at 18.3, barely above the 18 threshold, indicating weak trend.)
+2026-05-22 12:55:44  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:55:44  DRY_TEST          INFO        [DATA] M&M  --  74 bars (3085.90-3131.70)
+2026-05-22 12:55:44  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY AUTO: trend=bearish, volatility=normal, strength=-0.58%, current=25986.25, SMA10=26138.89, sector=none
+2026-05-22 12:55:51  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=65, reason=RSI is overbought at 77.09, violating the BUY rule (RSI < 70). Volume ratio is o)
+2026-05-22 12:55:51  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=65 (min=75)
+2026-05-22 12:55:52  DRY_TEST          INFO        [DATA] TATATECH  --  74 bars (656.35-668.70)
+2026-05-22 12:55:52  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY IT: trend=bullish, volatility=high, strength=1.52%, current=29021.1, SMA10=28585.65, sector=none
+2026-05-22 12:55:58  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Price is above VWAP but volume ratio is only 0.49, well below the required 1.2. )
+2026-05-22 12:55:58  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=75)
+2026-05-22 12:55:59  DRY_TEST          INFO        [DATA] KAYNES  --  74 bars (3191.00-3308.60)
+2026-05-22 12:55:59  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=-0.06%, current=23654.7, SMA10=23669.89
+NIFTY MIDCAP 100: trend=bullish, volatility=normal, strength=0.72%, current=14351.9, SMA10=14249.15, sector=none
+2026-05-24 12:34:27  DRY_TEST          INFO      ========================================================================
+2026-05-24 12:34:27  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-24 12:34:27  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-24 12:34:27  DRY_TEST          INFO        Date   : 2026-05-24 12:34:27
+2026-05-24 12:34:27  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-24 12:34:27  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-24 12:34:27  DRY_TEST          INFO      ========================================================================
+2026-05-24 12:34:27  risk_manager      INFO      Fetched balance from Dhan API: 0.00
+2026-05-24 12:34:29  dhan_integration  WARNING   API error for 1594 (int=3, attempt=0, rate_limit=False): {'error_code': 'DH-901', 'error_type': 'Invalid_Authentication', 'error_message': 'Client ID or user generated access token is invalid or expired.'}
+2026-05-24 12:34:31  dhan_integration  WARNING   API error for 1594 (int=3, attempt=1, rate_limit=False): {'error_code': 'DH-901', 'error_type': 'Invalid_Authentication', 'error_message': 'Client ID or user generated access token is invalid or expired.'}
+2026-05-24 12:34:33  dhan_integration  WARNING   API error for 1594 (int=3, attempt=2, rate_limit=False): {'error_code': 'DH-901', 'error_type': 'Invalid_Authentication', 'error_message': 'Client ID or user generated access token is invalid or expired.'}
+2026-05-24 12:34:33  dhan_integration  WARNING   API error for 1594 (int=1, attempt=0, rate_limit=False): {'error_code': 'DH-901', 'error_type': 'Invalid_Authentication', 'error_message': 'Client ID or user generated access token is invalid or expired.'}
+2026-05-24 12:34:35  dhan_integration  WARNING   API error for 1594 (int=1, attempt=1, rate_limit=False): {'error_code': 'DH-901', 'error_type': 'Invalid_Authentication', 'error_message': 'Client ID or user generated access token is invalid or expired.'}
+2026-05-24 12:34:37  dhan_integration  WARNING   API error for 1594 (int=1, attempt=2, rate_limit=False): {'error_code': 'DH-901', 'error_type': 'Invalid_Authentication', 'error_message': 'Client ID or user generated access token is invalid or expired.'}
+2026-05-24 12:34:37  dhan_integration  WARNING   API error for 1594 (int=1, attempt=0, rate_limit=False): {'error_code': 'DH-901', 'error_type': 'Invalid_Authentication', 'error_message': 'Client ID or user generated access token is invalid or expired.'}
+2026-05-25 23:25:39  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:25:39  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-25 23:25:39  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-25 23:25:39  DRY_TEST          INFO        Date   : 2026-05-25 23:25:39
+2026-05-25 23:25:39  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-25 23:25:39  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-25 23:25:39  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:25:40  risk_manager      INFO      Fetched balance from Dhan API: 2366.83
+2026-05-25 23:25:41  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1166.10-1185.00)
+2026-05-25 23:25:42  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:25:46  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price is below VWAP (-0.388%), RSI is not oversold (40.86 > 30), volume ratio is)
+2026-05-25 23:25:46  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:25:47  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1357.00-1371.10)
+2026-05-25 23:25:47  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY OIL & GAS: trend=neutral, volatility=normal, strength=0.45%, current=11372.3, SMA10=11321.46, sector=none
+2026-05-25 23:25:51  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=60, reason=Price is slightly above VWAP but volume is very low (volume ratio 0.6, well belo)
+2026-05-25 23:25:51  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=60 (min=75)
+2026-05-25 23:25:51  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2293.00-2326.10)
+2026-05-25 23:25:52  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:25:55  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=60, reason=Price is slightly above VWAP but RSI is neutral, volume is below average (no con)
+2026-05-25 23:25:55  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=60 (min=75)
+2026-05-25 23:25:56  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (775.20-787.85)
+2026-05-25 23:25:56  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:26:01  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=65, reason=Price is above VWAP and RSI is not overbought, but volume ratio is only 1.24 (ba)
+2026-05-25 23:26:01  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=65 (min=75)
+2026-05-25 23:26:02  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (957.50-972.50)
+2026-05-25 23:26:02  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:26:06  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=RSI is extremely overbought at 85.81 and MFI at 89.64 indicates exhaustion, bloc)
+2026-05-25 23:26:06  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:26:06  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (924.45-944.00)
+2026-05-25 23:26:06  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY FINANCIAL SERVICES: trend=bullish, volatility=normal, strength=0.7%, current=27884.25, SMA10=27690.32, sector=none
+2026-05-25 23:26:12  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=65, reason=Price is above VWAP and RSI is not overbought, but volume ratio is only 1.64 (be)
+2026-05-25 23:26:12  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=65 (min=75)
+2026-05-25 23:26:12  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3111.40-3173.70)
+2026-05-25 23:26:12  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY AUTO: trend=neutral, volatility=normal, strength=0.01%, current=26017.1, SMA10=26014.62, sector=none
+2026-05-25 23:26:15  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=65, reason=Price is slightly below VWAP (-0.02%), violating BUY rule. ADX is strong (34.4) )
+2026-05-25 23:26:15  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=65 (min=75)
+2026-05-25 23:26:16  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (664.10-678.15)
+2026-05-25 23:26:16  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:26:20  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Price is above VWAP and ADX is strong, but volume ratio is only 1.19 (below 1.2 )
+2026-05-25 23:26:20  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:26:20  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3301.00-3410.00)
+2026-05-25 23:26:21  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY MIDCAP 100: trend=bullish, volatility=normal, strength=1.01%, current=14381.55, SMA10=14238.13, sector=none
+2026-05-25 23:26:25  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=65, reason=Price is above VWAP and ADX is strong, but volume ratio is only 1.38 (barely abo)
+2026-05-25 23:26:25  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=65 (min=75)
+2026-05-25 23:26:26  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (22.01-22.40)
+2026-05-25 23:26:26  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:26:28  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=Volume ratio is 0.73, below the required 1.2 for confirmation. Despite strong AD)
+2026-05-25 23:26:28  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:26:28  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:26:28  DRY_TEST          INFO        RESULTS
+2026-05-25 23:26:28  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-25 23:26:28  DRY_TEST          INFO        Signals generated  : 0
+2026-05-25 23:26:28  DRY_TEST          INFO        Time elapsed       : 47.7s
+2026-05-25 23:26:28  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-25.csv
+2026-05-25 23:26:28  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:27:54  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:27:54  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-25 23:27:54  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-25 23:27:54  DRY_TEST          INFO        Date   : 2026-05-25 23:27:54
+2026-05-25 23:27:54  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-25 23:27:54  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-25 23:27:54  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:27:55  risk_manager      INFO      Fetched balance from Dhan API: 2366.83
+2026-05-25 23:27:56  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1166.10-1185.00)
+2026-05-25 23:27:57  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:28:01  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price is below VWAP (-0.388%), violating mandatory BUY rule. ADX is 33.58 (trend)
+2026-05-25 23:28:01  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:28:02  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1357.00-1371.10)
+2026-05-25 23:28:02  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY OIL & GAS: trend=neutral, volatility=normal, strength=0.45%, current=11372.3, SMA10=11321.46, sector=none
+2026-05-25 23:28:06  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Price is slightly above VWAP but RSI is neutral, ADX is trending, and volume is )
+2026-05-25 23:28:06  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:28:06  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2293.00-2326.10)
+2026-05-25 23:28:06  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:28:10  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price is slightly above VWAP but RSI is neutral (41.65) and ADX is barely above )
+2026-05-25 23:28:10  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:28:11  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (775.20-787.85)
+2026-05-25 23:28:11  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:28:15  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Price is above VWAP and SMA20, RSI is neutral, ADX indicates a trend, but the se)
+2026-05-25 23:28:15  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:28:16  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (957.50-972.50)
+2026-05-25 23:28:16  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:28:19  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=RSI is overbought at 85.81, violating mandatory BUY rule. MFI at 89.64 indicates)
+2026-05-25 23:28:19  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:28:19  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (924.45-944.00)
+2026-05-25 23:28:19  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY FINANCIAL SERVICES: trend=bullish, volatility=normal, strength=0.7%, current=27884.25, SMA10=27690.32, sector=none
+2026-05-25 23:28:22  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> BUY (confidence=78, reason=Price above VWAP and SMA20, ADX trending at 19.92, RSI not overbought, volume sp)
+2026-05-25 23:28:23  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3111.40-3173.70)
+2026-05-25 23:28:23  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY AUTO: trend=neutral, volatility=normal, strength=0.01%, current=26017.1, SMA10=26014.62, sector=none
+2026-05-25 23:28:26  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=Price is below VWAP (-0.021%), violating mandatory BUY condition. ADX is strong )
+2026-05-25 23:28:26  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:28:27  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (664.10-678.15)
+2026-05-25 23:28:27  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:28:31  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Price is above VWAP and ADX is strong, but the last 5 candles show a flat, chopp)
+2026-05-25 23:28:31  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:28:32  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3301.00-3410.00)
+2026-05-25 23:28:32  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY MIDCAP 100: trend=bullish, volatility=normal, strength=1.01%, current=14381.55, SMA10=14238.13, sector=none
+2026-05-25 23:28:35  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=Price is above VWAP and ADX is strong, but RSI is neutral and volume is low rela)
+2026-05-25 23:28:35  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:28:36  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (22.01-22.40)
+2026-05-25 23:28:36  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:28:39  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=Price is above VWAP and ADX is strong, but volume is insufficient for a breakout)
+2026-05-25 23:28:39  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:29:31  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:29:31  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-25 23:29:31  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-25 23:29:31  DRY_TEST          INFO        Date   : 2026-05-25 23:29:31
+2026-05-25 23:29:31  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-25 23:29:31  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-25 23:29:31  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:29:31  risk_manager      INFO      Fetched balance from Dhan API: 2366.83
+2026-05-25 23:29:33  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1166.10-1185.00)
+2026-05-25 23:29:33  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:29:36  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price below VWAP (-0.388%) violates mandatory BUY rule. ADX is strong (33.58) bu)
+2026-05-25 23:29:36  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:29:37  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1357.00-1371.10)
+2026-05-25 23:29:37  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY OIL & GAS: trend=neutral, volatility=normal, strength=0.45%, current=11372.3, SMA10=11321.46, sector=none
+2026-05-25 23:29:41  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Price is above VWAP and ADX is 25.15 (trending), but RSI is neutral at 53.82 and)
+2026-05-25 23:29:41  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:29:42  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2293.00-2326.10)
+2026-05-25 23:29:42  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:29:45  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=Price is slightly above VWAP but ADX is only 18.77, barely above the 18 threshol)
+2026-05-25 23:29:45  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:29:46  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (775.20-787.85)
+2026-05-25 23:29:46  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:29:50  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=Price is above VWAP and SMA20, RSI is not overbought, ADX is strong at 27.32, an)
+2026-05-25 23:29:50  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:29:50  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (957.50-972.50)
+2026-05-25 23:29:51  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:29:54  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=RSI is overbought at 85.81, violating BUY rule 3 (RSI < 70). MFI at 89.64 indica)
+2026-05-25 23:29:54  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:29:55  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (924.45-944.00)
+2026-05-25 23:29:55  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY FINANCIAL SERVICES: trend=bullish, volatility=normal, strength=0.7%, current=27884.25, SMA10=27690.32, sector=none
+2026-05-25 23:29:59  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> BUY (confidence=82, reason=Price is above VWAP (0.76%), RSI is 63.5 (not overbought), ADX is 19.92 (>18, tr)
+2026-05-25 23:30:08  DRY_TEST          INFO        >>> BAJFINANCE BUY x1 @ 941.90 | SL=927.77 | Target=970.16 | Telegram sent
+2026-05-25 23:30:09  DRY_TEST          INFO        [DATA] M&M  --  125 bars (3111.40-3173.70)
+2026-05-25 23:30:09  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY AUTO: trend=neutral, volatility=normal, strength=0.01%, current=26017.1, SMA10=26014.62, sector=none
+2026-05-25 23:30:14  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=Price is below VWAP (-0.021%), violating mandatory BUY condition. ADX is strong )
+2026-05-25 23:30:14  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:30:14  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (664.10-678.15)
+2026-05-25 23:30:15  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY IT: trend=bullish, volatility=normal, strength=1.31%, current=28912.45, SMA10=28537.48, sector=none
+2026-05-25 23:30:19  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Price is above VWAP and ADX is strong, but the last 5 candles show a flat, chopp)
+2026-05-25 23:30:19  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:30:19  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3301.00-3410.00)
+2026-05-25 23:30:20  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+NIFTY MIDCAP 100: trend=bullish, volatility=normal, strength=1.01%, current=14381.55, SMA10=14238.13, sector=none
+2026-05-25 23:30:23  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=Price is above VWAP and ADX is strong, but RSI is neutral and volume is low rela)
+2026-05-25 23:30:23  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=75)
+2026-05-25 23:30:24  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (22.01-22.40)
+2026-05-25 23:30:24  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=neutral, volatility=normal, strength=0.4%, current=23719.3, SMA10=23624.2
+BANK NIFTY: trend=bullish, volatility=normal, strength=0.61%, current=54055.35, SMA10=53729.37, sector=none
+2026-05-25 23:30:28  DRY_TEST          INFO        [SIGNAL] YESBANK -> BUY (confidence=82, reason=Price above VWAP (0.54%) and SMA20, ADX strong at 43.34, RSI 64.83 not overbough)
+2026-05-25 23:30:29  DRY_TEST          INFO        >>> YESBANK BUY x53 @ 22.29 | SL=21.96 | Target=22.96 | Telegram sent
+2026-05-25 23:30:29  DRY_TEST          INFO      ========================================================================
+2026-05-25 23:30:29  DRY_TEST          INFO        RESULTS
+2026-05-25 23:30:29  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-25 23:30:29  DRY_TEST          INFO        Signals generated  : 2
+2026-05-25 23:30:29  DRY_TEST          INFO        Time elapsed       : 56.6s
+2026-05-25 23:30:29  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-25.csv
+2026-05-25 23:30:29  DRY_TEST          INFO      ========================================================================
+2026-05-29 10:10:04  DRY_TEST          INFO      ========================================================================
+2026-05-29 10:10:04  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-29 10:10:04  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-29 10:10:04  DRY_TEST          INFO        Date   : 2026-05-29 10:10:04
+2026-05-29 10:10:04  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-29 10:10:04  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-29 10:10:04  DRY_TEST          INFO      ========================================================================
+2026-05-29 10:10:05  risk_manager      INFO      Fetched balance from Dhan API: 2383.02
+2026-05-29 10:10:07  DRY_TEST          INFO        [SKIP] INFY  --  only 19 bars
+2026-05-29 10:10:08  DRY_TEST          INFO        [SKIP] RELIANCE  --  only 19 bars
+2026-05-29 10:10:08  DRY_TEST          INFO        [SKIP] TCS  --  only 19 bars
+2026-05-29 10:10:09  DRY_TEST          INFO        [SKIP] HDFCBANK  --  only 19 bars
+2026-05-29 10:10:09  DRY_TEST          INFO        [SKIP] SBIN  --  only 19 bars
+2026-05-29 10:10:10  DRY_TEST          INFO        [SKIP] BAJFINANCE  --  only 19 bars
+2026-05-29 10:10:11  DRY_TEST          INFO        [SKIP] M&M  --  only 19 bars
+2026-05-29 10:10:11  DRY_TEST          INFO        [SKIP] TATATECH  --  only 19 bars
+2026-05-29 10:10:12  DRY_TEST          INFO        [SKIP] KAYNES  --  only 19 bars
+2026-05-29 10:10:12  DRY_TEST          INFO        [SKIP] YESBANK  --  only 19 bars
+2026-05-29 10:10:12  DRY_TEST          INFO      ========================================================================
+2026-05-29 10:10:12  DRY_TEST          INFO        RESULTS
+2026-05-29 10:10:12  DRY_TEST          INFO        Tested             : 10 stocks
+2026-05-29 10:10:12  DRY_TEST          INFO        Signals generated  : 0
+2026-05-29 10:10:12  DRY_TEST          INFO        Time elapsed       : 5.7s
+2026-05-29 10:10:12  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-05-29.csv
+2026-05-29 10:10:12  DRY_TEST          INFO      ========================================================================
+2026-05-29 10:59:46  DRY_TEST          INFO      ========================================================================
+2026-05-29 10:59:46  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-29 10:59:46  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-29 10:59:46  DRY_TEST          INFO        Date   : 2026-05-29 10:59:46
+2026-05-29 10:59:46  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-29 10:59:46  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-29 10:59:46  DRY_TEST          INFO      ========================================================================
+2026-05-29 10:59:46  risk_manager      INFO      Fetched balance from Dhan API: 1966.96
+2026-05-29 10:59:48  DRY_TEST          INFO        [DATA] INFY  --  35 bars (1180.20-1210.00)
+2026-05-29 10:59:48  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=bullish, volatility=normal, strength=0.67%, current=23907.15, SMA10=23748.66
+NIFTY IT: trend=bullish, volatility=normal, strength=0.8%, current=28906.7, SMA10=28675.88, sector=none
+2026-05-29 10:59:53  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price is slightly below VWAP (-0.037%), violating the mandatory BUY condition. A)
+2026-05-29 10:59:53  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-29 10:59:53  DRY_TEST          INFO        [DATA] RELIANCE  --  35 bars (1340.30-1369.00)
+2026-05-29 10:59:53  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=bullish, volatility=normal, strength=0.67%, current=23907.15, SMA10=23748.66
+NIFTY OIL & GAS: trend=neutral, volatility=normal, strength=0%, current=0, SMA10=0, sector=none
+2026-05-29 13:57:37  DRY_TEST          INFO      ========================================================================
+2026-05-29 13:57:37  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-05-29 13:57:37  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-05-29 13:57:37  DRY_TEST          INFO        Date   : 2026-05-29 13:57:37
+2026-05-29 13:57:37  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-05-29 13:57:37  DRY_TEST          INFO        Telegram : ENABLED
+2026-05-29 13:57:37  DRY_TEST          INFO      ========================================================================
+2026-05-29 13:57:37  risk_manager      INFO      Fetched balance from Dhan API: 1791.84
+2026-05-29 13:57:38  DRY_TEST          INFO        [DATA] INFY  --  95 bars (1180.20-1210.00)
+2026-05-29 13:57:39  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=bullish, volatility=normal, strength=0.67%, current=23907.15, SMA10=23748.66
+NIFTY IT: trend=bullish, volatility=normal, strength=0.8%, current=28906.7, SMA10=28675.88, sector=none
+2026-05-29 13:57:43  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Price is below VWAP (-0.96%), violating mandatory BUY rule. RSI is oversold (21.)
+2026-05-29 13:57:43  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-05-29 13:57:44  DRY_TEST          INFO        [DATA] RELIANCE  --  95 bars (1326.30-1369.00)
+2026-05-29 13:57:44  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=bullish, volatility=normal, strength=0.67%, current=23907.15, SMA10=23748.66
+NIFTY OIL & GAS: trend=bullish, volatility=normal, strength=1.03%, current=11484.15, SMA10=11366.93, sector=none
+2026-06-09 16:42:49  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:42:49  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-06-09 16:42:49  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-06-09 16:42:49  DRY_TEST          INFO        Date   : 2026-06-09 16:42:49
+2026-06-09 16:42:49  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-06-09 16:42:49  DRY_TEST          INFO        Telegram : ENABLED
+2026-06-09 16:42:49  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:42:50  risk_manager      INFO      Fetched balance from Dhan API: 2020.45
+2026-06-09 16:42:52  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1167.30-1193.60)
+2026-06-09 16:42:53  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.29%, current=28653.55, SMA10=29326.49, sector=none
+2026-06-09 16:42:54  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1257.50-1274.20)
+2026-06-09 16:42:54  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY OIL & GAS: trend=bearish, volatility=normal, strength=-2.7%, current=10931.7, SMA10=11235.07, sector=none
+2026-06-09 16:42:55  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2132.80-2174.00)
+2026-06-09 16:42:55  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.29%, current=28653.55, SMA10=29326.49, sector=none
+2026-06-09 16:42:56  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (732.30-743.95)
+2026-06-09 16:42:56  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.34%, current=23242.1, SMA10=23557.83
+BANK NIFTY: trend=bullish, volatility=normal, strength=1.48%, current=55194.5, SMA10=54389.12, sector=none
+2026-06-09 16:42:57  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (983.00-1009.00)
+2026-06-09 16:42:57  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.6%, current=54063.75, SMA10=54389.12, sector=none
+2026-06-09 16:42:58  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (872.10-888.75)
+2026-06-09 16:42:58  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY FINANCIAL SERVICES: trend=bearish, volatility=normal, strength=-2.06%, current=27011.75, SMA10=27580.65, sector=none
+2026-06-09 16:42:59  DRY_TEST          INFO        [DATA] M&M  --  125 bars (2974.00-3015.90)
+2026-06-09 16:42:59  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.34%, current=23242.1, SMA10=23557.83
+NIFTY AUTO: trend=bearish, volatility=normal, strength=-0.74%, current=26025.65, SMA10=26220.25, sector=none
+2026-06-09 16:43:00  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (741.00-784.00)
+2026-06-09 16:43:00  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.34%, current=23242.1, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.76%, current=28516.25, SMA10=29326.49, sector=none
+2026-06-09 16:43:01  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3051.90-3102.60)
+2026-06-09 16:43:01  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY MIDCAP 100: trend=bearish, volatility=normal, strength=-2.38%, current=13994.75, SMA10=14335.92, sector=none
+2026-06-09 16:43:02  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (23.06-23.53)
+2026-06-09 16:43:02  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.6%, current=54063.75, SMA10=54389.12, sector=none
+2026-06-09 16:43:28  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:43:28  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-06-09 16:43:28  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-06-09 16:43:28  DRY_TEST          INFO        Date   : 2026-06-09 16:43:28
+2026-06-09 16:43:28  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-06-09 16:43:28  DRY_TEST          INFO        Telegram : ENABLED
+2026-06-09 16:43:28  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:43:28  risk_manager      INFO      Fetched balance from Dhan API: 2020.45
+2026-06-09 16:43:30  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1167.30-1193.60)
+2026-06-09 16:43:30  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.29%, current=28653.55, SMA10=29326.49, sector=none
+2026-06-09 16:43:31  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1257.50-1274.20)
+2026-06-09 16:43:31  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY OIL & GAS: trend=bearish, volatility=normal, strength=-2.7%, current=10931.7, SMA10=11235.07, sector=none
+2026-06-09 16:43:32  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2132.80-2174.00)
+2026-06-09 16:43:32  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.29%, current=28653.55, SMA10=29326.49, sector=none
+2026-06-09 16:43:36  deepseek_analyzer  INFO      RELIANCE raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'Step 1: Viability check for BUY: price (1269.2) above VWAP (1265.02) -> pass; RSI (71.67) < 70? No, RSI > 70 -> fails mandatory rule. For SELL: price below VWAP? No, price above VWAP -> fails mandatory rule. Both directions fail viability, so HOLD immediately.', 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': 'BUY fails RSI < 70 (RSI=71.67), SELL fails price above VWAP. No valid signal.'}
+2026-06-09 16:43:36  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=Step 1: Viability check for BUY: price (1269.2) above VWAP (1265.02) -> pass; RS)
+2026-06-09 16:43:36  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:43:37  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (732.30-743.95)
+2026-06-09 16:43:38  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.6%, current=54063.75, SMA10=54389.12, sector=none
+2026-06-09 16:43:40  deepseek_analyzer  INFO      HDFCBANK raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'ADX is 13.88, which is below 18, triggering a critical penalty and immediate HOLD. No further evaluation needed.', 'stop_loss_percent': 0.0, 'target_percent': 0.0, 'setup_type': 'NONE', 'penalty_breakdown': 'ADX < 18 -> HOLD'}
+2026-06-09 16:43:40  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=ADX is 13.88, which is below 18, triggering a critical penalty and immediate HOL)
+2026-06-09 16:43:40  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:43:41  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (983.00-1009.00)
+2026-06-09 16:43:41  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.6%, current=54063.75, SMA10=54389.12, sector=none
+2026-06-09 16:43:41  deepseek_analyzer  INFO      INFY raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': "Step 1: Viability check for BUY: Price 1180.3 > VWAP 1175.82 (pass), RSI 66.41 < 70 (pass), ADX 47.93 > 18 (pass). All BUY rules pass. SELL rules not checked as BUY is viable. Step 2: Volume ratio is 0.8 (volume spike vs 20-period avg). Trending market? Price above VWAP and SMA20 (1177.99), ADX 47.93 > 22, so trending. Volume ratio 0.8 >= 0.5, so volume is acceptable. Step 3: Last 5 candles show price moving up from 1180 to 1181.70, with latest candle bearish but overall trend up. Not strongly against signal. Step 4: MTF: 15-min and 1-hour timeframes not provided, but Nifty and sector are bearish. Nifty trend bearish, NIFTY IT trend bearish. This opposes BUY signal. Apply penalty: Nifty regime opposes -6, Sector regime opposes -4. Step 5: Kronos forecast not provided, assume no conflict. Step 6: R:R: ATR 1.62, SL at 1.5x ATR = 2.43, target 3% = 35.41, R:R = 35.41/2.43 = 14.6, well above 2. Step 7: Confidence: Start 95. Penalties: Nifty regime opposes -6, Sector regime opposes -4. Total penalties -10. No bonuses. Confidence = 85. But critical check: Nifty and sector are bearish, and confidence 85 is above 60, but the instruction says: 'If Nifty trend is bearish, be very cautious with BUY signals.' With both Nifty and sector bearish, and high volatility in sector, the signal should be HOLD despite passing technical checks. The reasoning must reflect this. Final decision: HOLD due to bearish market regime.", 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': '-6 Nifty regime opposes, -4 Sector regime opposes = -10 total'}
+2026-06-09 16:43:41  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Step 1: Viability check for BUY: Price 1180.3 > VWAP 1175.82 (pass), RSI 66.41 <)
+2026-06-09 16:43:41  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:43:42  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (872.10-888.75)
+2026-06-09 16:43:42  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY FINANCIAL SERVICES: trend=bearish, volatility=normal, strength=-2.06%, current=27011.75, SMA10=27580.65, sector=none
+2026-06-09 16:43:44  deepseek_analyzer  INFO      BAJFINANCE raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'ADX is 17.35, which is below 18, triggering a critical penalty and immediate HOLD. No further evaluation needed.', 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': 'ADX < 18 -> HOLD'}
+2026-06-09 16:43:44  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=ADX is 17.35, which is below 18, triggering a critical penalty and immediate HOL)
+2026-06-09 16:43:44  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:43:45  DRY_TEST          INFO        [DATA] M&M  --  125 bars (2974.00-3015.90)
+2026-06-09 16:43:46  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY AUTO: trend=bearish, volatility=normal, strength=-2.05%, current=25681.8, SMA10=26220.25, sector=none
+2026-06-09 16:43:47  deepseek_analyzer  INFO      SBIN raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'BUY check: price 1002.7 > VWAP 998.18 (pass), RSI 50.17 < 70 (pass), ADX 29.29 > 18 (pass). SELL check: price > VWAP so fails. Volume ratio 0.6 is below average but >0.5, so not immediate HOLD. However, Nifty and Bank Nifty are bearish, which opposes BUY. Last 5 candles show slight upward movement but latest candle is bearish. MTF: 15-min and 1-hour likely bearish given indices, conflicting with BUY. Kronos forecast not provided, assume neutral. Penalties: Nifty regime opposes (-6), Bank Nifty regime opposes (-4), volume ratio 0.5-0.8 (-8), last candles mixed but not strongly against. Total penalties -18, confidence 95-18=77, but with bearish market and no strong alignment, confidence <60 after considering all factors. Final decision HOLD.', 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': '-6 Nifty bearish, -4 Bank Nifty bearish, -8 volume ratio 0.6 = -18 total'}
+2026-06-09 16:43:47  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=BUY check: price 1002.7 > VWAP 998.18 (pass), RSI 50.17 < 70 (pass), ADX 29.29 >)
+2026-06-09 16:43:47  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:43:48  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (741.00-784.00)
+2026-06-09 16:43:48  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.29%, current=28653.55, SMA10=29326.49, sector=none
+2026-06-09 16:44:01  deepseek_analyzer  INFO      TATATECH raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': "Step 1: Viability check for BUY: price (745.1) below VWAP (750.33) -> fails mandatory rule. For SELL: price below VWAP (pass), RSI (42.66) > 30 (pass), ADX (19.1) > 18 (pass). So SELL is viable. Step 2: Volume: volume_ratio=1.11, which is >0.5, ok. For trending market, ADX=19.1 (<22), so not strong trend; volume >0.5 acceptable. Step 3: Candles: last 5 candles show slight downward movement (-0.08%), with last candle bullish but small body. Not strongly against SELL. Step 4: MTF: 15-min and 1-hour data not provided, but Nifty and sector are bearish, which aligns with SELL. Assume no MTF penalty. Step 5: Kronos: not provided, assume no conflict. Step 6: R:R: ATR=1.77, 1.5x ATR = 2.655, SL% = 2.655/745.1=0.356%, target 2x SL = 0.712%. This is very small, but technically meets minimum. Step 7: Confidence: Start 95. Penalties: ADX borderline (18-22) -> -5. Volume ratio 1.11 is above 1.0, no penalty. Nifty bearish aligns with SELL, no penalty. Sector bearish aligns, no penalty. No other penalties. Final confidence = 95 - 5 = 90. But wait: mandatory check: price below VWAP for SELL is ok. However, ADX is borderline, but still >18, so not HOLD. Confidence 90 > 60, so signal should be SELL. But I must re-evaluate: The reasoning says 'If neither passes all its rules -> HOLD immediately.' SELL passes all three rules. So signal is SELL. But the output says HOLD. I need to correct. Let's recalc: SELL viable. Volume ok. Candles not strongly against. MTF: no data, but market bearish supports SELL. Kronos: no data. R:R: ATR% = 1.77/745.1=0.237%, 1.5x = 0.356%, target 0.712%. This is very low, but technically >0. So confidence: 95 -5 (ADX borderline) = 90. No other penalties. So signal SELL, confidence 90. But the instruction says 'Return ONLY valid JSON' and I must output the decision. However, the user's example output shows HOLD with confidence 0. That might be a mistake. I'll output SELL with confidence 90. But wait: The user said 'You are an expert intraday equity trader...' and the data shows Nifty bearish, sector bearish, price below VWAP, RSI mid, ADX borderline. SELL seems reasonable. I'll output SELL.", 'stop_loss_percent': 0.36, 'target_percent': 0.71, 'setup_type': 'MOMENTUM', 'penalty_breakdown': '-5 ADX borderline = -5 total'}
+2026-06-09 16:44:01  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=Step 1: Viability check for BUY: price (745.1) below VWAP (750.33) -> fails mand)
+2026-06-09 16:44:01  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:44:02  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3051.90-3102.60)
+2026-06-09 16:44:02  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY MIDCAP 100: trend=bearish, volatility=normal, strength=-2.38%, current=13994.75, SMA10=14335.92, sector=none
+2026-06-09 16:44:04  deepseek_analyzer  INFO      KAYNES raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'ADX is 12.57, which is below 18. This is a critical violation, so signal must be HOLD. No further evaluation needed.', 'stop_loss_percent': 0.0, 'target_percent': 0.0, 'setup_type': 'NONE', 'penalty_breakdown': 'ADX < 18 -> HOLD'}
+2026-06-09 16:44:04  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=ADX is 12.57, which is below 18. This is a critical violation, so signal must be)
+2026-06-09 16:44:04  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:44:05  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (23.06-23.53)
+2026-06-09 16:44:05  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.6%, current=54063.75, SMA10=54389.12, sector=none
+2026-06-09 16:44:08  deepseek_analyzer  WARNING   M&M JSON parse error: Expecting ',' delimiter: line 4 column 1544 (char 1584) | raw: {
+  "signal": "HOLD",
+  "confidence": 0,
+  "reasoning": "Step-by-step: 1. Viability: For BUY, price (2990.1) must be above VWAP (2996.95) -> false. For SELL, price must be below VWAP -> true, RSI (56.
+2026-06-09 16:44:08  deepseek_analyzer  INFO      M&M repaired truncated JSON -> HOLD (conf=0)
+2026-06-09 16:44:08  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=Step-by-step: 1. Viability: For BUY, price (2990.1) must be above VWAP (2996.95))
+2026-06-09 16:44:08  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:44:12  deepseek_analyzer  INFO      YESBANK raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'BUY check: price 23.37 vs VWAP 23.38 -> price below VWAP, fails mandatory rule -> HOLD. SELL check: price below VWAP, RSI 54.51 > 30, ADX 26.37 > 18 -> passes mandatory rules. Volume ratio 0.89 (below average) -> -3 penalty. Last 5 candles: price moving sideways/slightly down, not strongly against SELL. MTF: Nifty and Bank Nifty bearish, supports SELL. Kronos not provided, assume neutral. R:R: ATR 0.05, SL 1.5x ATR = 0.075 (0.32%), target 3% -> R:R ~9.4, good. Confidence: start 95, volume ratio 0.8-1.0 -> -3, final 92. But mandatory BUY rule failed, so HOLD.', 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': 'BUY mandatory fail: price below VWAP -> HOLD'}
+2026-06-09 16:44:12  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=BUY check: price 23.37 vs VWAP 23.38 -> price below VWAP, fails mandatory rule -)
+2026-06-09 16:44:12  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:44:18  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=API Timeout)
+2026-06-09 16:44:18  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:44:18  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:44:18  DRY_TEST          INFO        RESULTS
+2026-06-09 16:44:18  DRY_TEST          INFO        Tested             : 10 stocks
+2026-06-09 16:44:18  DRY_TEST          INFO        Signals generated  : 0
+2026-06-09 16:44:18  DRY_TEST          INFO        Time elapsed       : 49.0s
+2026-06-09 16:44:18  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-06-09.csv
+2026-06-09 16:44:18  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:50:29  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:50:29  DRY_TEST          INFO        DRY RUN TEST  --  Full Pipeline Validation
+2026-06-09 16:50:29  DRY_TEST          INFO        Stocks : 10 (subset for quick test)
+2026-06-09 16:50:29  DRY_TEST          INFO        Date   : 2026-06-09 16:50:29
+2026-06-09 16:50:29  DRY_TEST          INFO        Mode   : DRY-RUN (no real orders)
+2026-06-09 16:50:29  DRY_TEST          INFO        Telegram : ENABLED
+2026-06-09 16:50:29  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:50:34  risk_manager      INFO      Fetched balance from Dhan API: 2020.45
+2026-06-09 16:50:44  DRY_TEST          INFO        [DATA] INFY  --  125 bars (1167.30-1193.60)
+2026-06-09 16:50:45  DRY_TEST          INFO        [REGIME] INFY -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.29%, current=28653.55, SMA10=29326.49, sector=none
+2026-06-09 16:50:46  DRY_TEST          INFO        [DATA] RELIANCE  --  125 bars (1257.50-1274.20)
+2026-06-09 16:50:47  DRY_TEST          INFO        [REGIME] RELIANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY OIL & GAS: trend=bearish, volatility=normal, strength=-2.7%, current=10931.7, SMA10=11235.07, sector=none
+2026-06-09 16:50:48  DRY_TEST          INFO        [DATA] TCS  --  125 bars (2132.80-2174.00)
+2026-06-09 16:50:48  DRY_TEST          INFO        [REGIME] TCS -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.29%, current=28653.55, SMA10=29326.49, sector=none
+2026-06-09 16:50:52  deepseek_analyzer  INFO      RELIANCE raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'BUY check: price 1269.2 > VWAP 1265.02 (pass), RSI 71.67 > 70 (fail, overbought), ADX 49.59 > 18 (pass). RSI > 70 violates mandatory BUY rule, so HOLD. No further evaluation needed.', 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': 'RSI > 70 for BUY -> HOLD'}
+2026-06-09 16:50:52  DRY_TEST          INFO        [SIGNAL] RELIANCE -> HOLD (confidence=0, reason=BUY check: price 1269.2 > VWAP 1265.02 (pass), RSI 71.67 > 70 (fail, overbought))
+2026-06-09 16:50:52  DRY_TEST          INFO        [NO TRADE] RELIANCE  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:50:53  DRY_TEST          INFO        [DATA] HDFCBANK  --  125 bars (732.30-743.95)
+2026-06-09 16:50:54  DRY_TEST          INFO        [REGIME] HDFCBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.6%, current=54063.75, SMA10=54389.12, sector=none
+2026-06-09 16:50:57  deepseek_analyzer  INFO      HDFCBANK raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'ADX is 13.88, which is below 18, triggering a critical penalty and immediate HOLD. No further evaluation needed.', 'stop_loss_percent': 0.0, 'target_percent': 0.0, 'setup_type': 'NONE', 'penalty_breakdown': 'ADX < 18 -> HOLD'}
+2026-06-09 16:50:57  DRY_TEST          INFO        [SIGNAL] HDFCBANK -> HOLD (confidence=0, reason=ADX is 13.88, which is below 18, triggering a critical penalty and immediate HOL)
+2026-06-09 16:50:57  DRY_TEST          INFO        [NO TRADE] HDFCBANK  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:50:58  DRY_TEST          INFO        [DATA] SBIN  --  125 bars (983.00-1009.00)
+2026-06-09 16:50:59  DRY_TEST          INFO        [REGIME] SBIN -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.6%, current=54063.75, SMA10=54389.12, sector=none
+2026-06-09 16:50:59  deepseek_analyzer  INFO      TCS raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': "BUY check: price 2151 > VWAP 2148.06 (pass), RSI 59.69 < 70 (pass), ADX 21.37 > 18 (pass). SELL check: price not below VWAP (fail). So only BUY possible. Volume ratio 1.06 > 0.5 (pass). Last 5 candles: price moved from 2153.20 to 2152.00, slight decline, but latest candle bullish. MTF: 15-min and 1-hour not provided, assume neutral. Kronos not provided, assume neutral. Nifty bearish (-1.85%) and NIFTY IT bearish (-2.29%) with high volatility, opposing BUY signal. Penalties: Nifty regime opposes (-6), sector regime opposes (-4), ADX borderline 21.37 (-5). Total penalties = -15. Start 95 - 15 = 80, but confidence < 60? No, 80 > 60. However, critical check: Nifty bearish and sector bearish with high volatility, strong headwinds. But no critical rule triggers HOLD. Yet, reasoning suggests caution. Final confidence 80, but signal should be HOLD due to bearish market? The protocol says if confidence < 60 -> HOLD. 80 is not < 60. But the instruction says 'avoid BUY in bearish sectors' and 'if Nifty trend is bearish, be very cautious with BUY signals'. This might imply HOLD. I'll set HOLD with confidence 0 as per protocol when no trade. Actually, the output format requires signal HOLD if no trade. I'll output HOLD with confidence 0 and reasoning explaining why.", 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': 'Nifty bearish: -6, Sector bearish: -4, ADX borderline: -5 = -15 total'}
+2026-06-09 16:50:59  DRY_TEST          INFO        [SIGNAL] TCS -> HOLD (confidence=0, reason=BUY check: price 2151 > VWAP 2148.06 (pass), RSI 59.69 < 70 (pass), ADX 21.37 > )
+2026-06-09 16:50:59  DRY_TEST          INFO        [NO TRADE] TCS  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:51:00  DRY_TEST          INFO        [DATA] BAJFINANCE  --  125 bars (872.10-888.75)
+2026-06-09 16:51:01  DRY_TEST          INFO        [REGIME] BAJFINANCE -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY FINANCIAL SERVICES: trend=bearish, volatility=normal, strength=-2.06%, current=27011.75, SMA10=27580.65, sector=none
+2026-06-09 16:51:03  deepseek_analyzer  INFO      BAJFINANCE raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'ADX is 17.35, which is below 18. This is a critical violation, so signal must be HOLD. No further evaluation needed.', 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': 'ADX < 18 -> HOLD'}
+2026-06-09 16:51:03  DRY_TEST          INFO        [SIGNAL] BAJFINANCE -> HOLD (confidence=0, reason=ADX is 17.35, which is below 18. This is a critical violation, so signal must be)
+2026-06-09 16:51:03  DRY_TEST          INFO        [NO TRADE] BAJFINANCE  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:51:04  DRY_TEST          INFO        [DATA] M&M  --  125 bars (2974.00-3015.90)
+2026-06-09 16:51:05  DRY_TEST          INFO        [REGIME] M&M -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY AUTO: trend=bearish, volatility=normal, strength=-2.05%, current=25681.8, SMA10=26220.25, sector=none
+2026-06-09 16:51:08  deepseek_analyzer  INFO      SBIN raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'BUY check: price 1002.7 > VWAP 998.18 (pass), RSI 50.17 < 70 (pass), ADX 29.29 > 18 (pass). SELL check: price > VWAP (fail). So only BUY possible. Volume ratio 0.6 (below average) -> -8 penalty. Last 5 candles show slight upward movement but latest candle bearish, not strong against signal. MTF: Nifty and Bank Nifty bearish, opposing BUY -> -6 (Nifty) and -4 (Bank Nifty) = -10. Kronos not provided, assume neutral. MFI 28.53 not extreme. ADX 29.29 strong, no penalty. R:R: ATR 1.47, SL 1.5% = 15.04, target 3% = 30.08, ratio 2:1 ok. Total penalties: -8 (volume) -10 (MTF) = -18. Confidence = 95 - 18 = 77, but MTF conflict is severe; Nifty bearish and Bank Nifty bearish strongly oppose BUY. Confidence < 60? No, but given strong bearish regime, signal should be HOLD. Final decision HOLD.', 'stop_loss_percent': 1.5, 'target_percent': 3.0, 'setup_type': 'NONE', 'penalty_breakdown': '-8 volume ratio 0.6, -6 Nifty bearish, -4 Bank Nifty bearish = -18 total'}
+2026-06-09 16:51:08  DRY_TEST          INFO        [SIGNAL] SBIN -> HOLD (confidence=0, reason=BUY check: price 1002.7 > VWAP 998.18 (pass), RSI 50.17 < 70 (pass), ADX 29.29 >)
+2026-06-09 16:51:08  DRY_TEST          INFO        [NO TRADE] SBIN  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:51:09  DRY_TEST          INFO        [DATA] TATATECH  --  125 bars (741.00-784.00)
+2026-06-09 16:51:09  DRY_TEST          INFO        [REGIME] TATATECH -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY IT: trend=bearish, volatility=high, strength=-2.29%, current=28653.55, SMA10=29326.49, sector=none
+2026-06-09 16:51:26  deepseek_analyzer  WARNING   INFY JSON parse error: Expecting ',' delimiter: line 4 column 6476 (char 6516) | raw: {
+  "signal": "HOLD",
+  "confidence": 0,
+  "reasoning": "Step 1: Viability check for BUY: Price 1180.3 > VWAP 1175.82 (pass), RSI 66.41 < 70 (pass), ADX 47.93 > 18 (pass). All BUY rules pass. SELL rul
+2026-06-09 16:51:26  deepseek_analyzer  INFO      INFY repaired truncated JSON -> HOLD (conf=0)
+2026-06-09 16:51:26  DRY_TEST          INFO        [SIGNAL] INFY -> HOLD (confidence=0, reason=Step 1: Viability check for BUY: Price 1180.3 > VWAP 1175.82 (pass), RSI 66.41 <)
+2026-06-09 16:51:26  DRY_TEST          INFO        [NO TRADE] INFY  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:51:27  DRY_TEST          INFO        [DATA] KAYNES  --  125 bars (3051.90-3102.60)
+2026-06-09 16:51:28  DRY_TEST          INFO        [REGIME] KAYNES -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+NIFTY MIDCAP 100: trend=bearish, volatility=normal, strength=-2.38%, current=13994.75, SMA10=14335.92, sector=none
+2026-06-09 16:51:31  deepseek_analyzer  INFO      KAYNES raw AI response: {'signal': 'HOLD', 'confidence': 0, 'reasoning': 'ADX is 12.57, which is below 18. This is a critical violation, so signal must be HOLD. No further evaluation needed.', 'stop_loss_percent': 0, 'target_percent': 0, 'setup_type': 'NONE', 'penalty_breakdown': 'ADX < 18 -> HOLD'}
+2026-06-09 16:51:31  DRY_TEST          INFO        [SIGNAL] KAYNES -> HOLD (confidence=0, reason=ADX is 12.57, which is below 18. This is a critical violation, so signal must be)
+2026-06-09 16:51:31  DRY_TEST          INFO        [NO TRADE] KAYNES  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:51:31  DRY_TEST          INFO        [DATA] YESBANK  --  125 bars (23.06-23.53)
+2026-06-09 16:51:32  DRY_TEST          INFO        [REGIME] YESBANK -- nifty=Nifty 50: trend=bearish, volatility=normal, strength=-1.85%, current=23123.0, SMA10=23557.83
+BANK NIFTY: trend=bearish, volatility=normal, strength=-0.6%, current=54063.75, SMA10=54389.12, sector=none
+2026-06-09 16:51:40  deepseek_analyzer  WARNING   M&M JSON parse error: Expecting ',' delimiter: line 4 column 4037 (char 4077) | raw: {
+  "signal": "HOLD",
+  "confidence": 0,
+  "reasoning": "Step 1: Viability check for BUY: price (2990.1) below VWAP (2996.95) -> fails mandatory rule. For SELL: price below VWAP (pass), RSI 56.17 > 30
+2026-06-09 16:51:40  deepseek_analyzer  INFO      M&M repaired truncated JSON -> HOLD (conf=0)
+2026-06-09 16:51:40  DRY_TEST          INFO        [SIGNAL] M&M -> HOLD (confidence=0, reason=Step 1: Viability check for BUY: price (2990.1) below VWAP (2996.95) -> fails ma)
+2026-06-09 16:51:40  DRY_TEST          INFO        [NO TRADE] M&M  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:51:55  DRY_TEST          INFO        [SIGNAL] TATATECH -> HOLD (confidence=0, reason=API Timeout)
+2026-06-09 16:51:55  DRY_TEST          INFO        [NO TRADE] TATATECH  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:52:01  deepseek_analyzer  WARNING   YESBANK JSON parse error: Expecting ',' delimiter: line 4 column 1835 (char 1875) | raw: {
+  "signal": "HOLD",
+  "confidence": 0,
+  "reasoning": "Step 1: Viability check for BUY: price (23.37) vs VWAP (23.38) -> price is slightly below VWAP (23.37 < 23.38), so BUY fails mandatory rule. Fo
+2026-06-09 16:52:01  deepseek_analyzer  INFO      YESBANK repaired truncated JSON -> HOLD (conf=0)
+2026-06-09 16:52:01  DRY_TEST          INFO        [SIGNAL] YESBANK -> HOLD (confidence=0, reason=Step 1: Viability check for BUY: price (23.37) vs VWAP (23.38) -> price is sligh)
+2026-06-09 16:52:01  DRY_TEST          INFO        [NO TRADE] YESBANK  --  signal=HOLD confidence=0 (min=75)
+2026-06-09 16:52:01  DRY_TEST          INFO      ========================================================================
+2026-06-09 16:52:01  DRY_TEST          INFO        RESULTS
+2026-06-09 16:52:01  DRY_TEST          INFO        Tested             : 10 stocks
+2026-06-09 16:52:01  DRY_TEST          INFO        Signals generated  : 0
+2026-06-09 16:52:01  DRY_TEST          INFO        Time elapsed       : 78.3s
+2026-06-09 16:52:01  DRY_TEST          INFO        Signal CSV         : C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\signals_2026-06-09.csv
+2026-06-09 16:52:01  DRY_TEST          INFO      ========================================================================

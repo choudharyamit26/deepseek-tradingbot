@@ -1,0 +1,7 @@
+2026-06-04 16:17:54  root              INFO      Logging to C:\Users\Amit\Desktop\Deepseek-tradingbot\trading_logs\bot_2026-06-04.log
+2026-06-04 16:17:56  risk_manager      INFO      Fetched balance from Dhan API: 2223.81
+2026-06-04 16:17:56  MAIN              INFO      Watchlist: 92 stocks (41 core + 26 FNO + 6 ETFs)
+2026-06-04 16:18:00  stock_trading_bot  INFO      Starting Intraday Stock Trading Bot
+2026-06-04 16:18:00  stock_trading_bot  INFO      Entry window: 9:30 AM - 15:00 PM IST | Max 2 signals/stock/day | Scan every 180s
+2026-06-04 16:18:00  stock_trading_bot  INFO      Outside market hours -- sleeping 180s
+2026-06-04 16:18:00  position_exit_guardian  INFO      Starting Position Exit Guardian (live position sync enabled)...
