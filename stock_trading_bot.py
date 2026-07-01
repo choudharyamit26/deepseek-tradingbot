@@ -668,7 +668,7 @@ class IntradayStockBot:
                 async with self._dhan_sem:
                     order = await asyncio.to_thread(self.dhan.place_equity_order,
                         security_id=security_id, transaction_type=exit_trans,
-                        quantity=trade["quantity"], product_type="INTRA",
+                        quantity=trade["quantity"], product_type="INTRADAY",
                     )
                 if not order:
                     return

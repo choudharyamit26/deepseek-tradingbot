@@ -623,7 +623,7 @@ class DhanStockTradingBot:
         return df
 
     def place_equity_order(self, security_id, transaction_type, quantity,
-                           order_type="MARKET", product_type="INTRA"):
+                           order_type="MARKET", product_type="INTRADAY"):
         return self.dhan.place_order(
             security_id=security_id,
             exchange_segment=self.dhan.NSE,
@@ -634,7 +634,7 @@ class DhanStockTradingBot:
             price=0,
         )
 
-    def reduce_position(self, security_id, transaction_type, quantity, product_type="INTRA"):
+    def reduce_position(self, security_id, transaction_type, quantity, product_type="INTRADAY"):
         """Place a market order to reduce an existing position by `quantity` shares."""
         return self.place_equity_order(security_id, transaction_type, quantity, 
                                        order_type="MARKET", product_type=product_type)
