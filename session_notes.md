@@ -1024,6 +1024,44 @@ Replaced the relative p20 block with an **absolute** daily-ATR tradeability floo
 
 ---
 
+### Section AK — 2026-07-01 (DH-905 exit fix, 1-month live post-mortem, and the 3-part pivot build)
+
+#### AK.1 — DH-905 on every KRONOS-EXIT: `product_type="INTRA"` was never valid
+Every real exit order was silently rejected with `DH-905 Input_Exception`. Root cause: the Dhan SDK constant is `dhan.INTRA = 'INTRADAY'`, but the **exit** path passed the literal string `"INTRA"`, which the API rejects. The **entry** path (`place_super_order`) was already correct (`self.dhan.INTRA.upper()` → `"INTRADAY"`), so only exits were broken. Fixed in 3 places: `place_equity_order` default, `reduce_position` default (both `dhan_integration.py`), and the explicit arg in `stock_trading_bot._exit_position`. (Note: this is distinct from the earlier DH-905 *Invalid IP* — same error code, different cause.)
+
+#### AK.2 — One-month live verdict (136 real fills, analog_history.db, Jun 2–30)
+Net −142.5 (−11.9% summed), 47% WR, **payoff 0.81** (avg win +0.36% / avg loss −0.45%), profit factor 0.71. Key decompositions:
+- **The entire month's loss is one data bug.** 32 trades with **missing `sector_trend`** (almost all Jun 2–3) = −12.56%. The other 104 "mature" trades net **+0.61% gross ≈ breakeven**. Strip the broken opening days and the strategy is gross-flat, not bleeding — but gross-flat is net-negative after ~0.15% roundtrip cost on a 0.41% average move.
+- **Weekly volume decayed 65→24→20→15→12** as the reflection agent gated harder — fewer trades of the same negative-expectancy shape, not edge.
+
+#### AK.3 — The payoff leak is at EXIT, not entry (2:1 plan → 0.81 realized)
+Planned R:R median **2.0** (risk 0.51% / reward 1.27%) collapses to **0.81 realized**: wins avg **+0.29R** (median 0.22R), only **6%** of wins reach ≥1.5R, **47%** of wins scratched <0.7R. Exit-reason split (from `Closed ... [REASON]` log lines, 117 trades): **TRAILING-SL 45% @ 17% WR** (leak), **KRONOS-EXIT 35% @ 49% WR, +4.0%** (the ONLY net-positive exit path — but it harvests winners at **+0.10%** avg vs a 1.27% target), CLOSE-EXIT-15min 10% @ 8% WR. The late-entry theory was **disproven**: the `candle_against` marker is set in only 4/135 trades. The disease is premature/asymmetric exits, not late entries.
+
+#### AK.4 — Entry features do NOT predict outcomes (the decisive finding)
+Across the 104 mature trades, winners and losers are statistically identical at entry on **every** logged dimension — RSI (38.7 vs 39.2), ADX, confidence (85 vs 85), volume_ratio, signal_type (~88% SELL both), kronos_aligned, all trend/sector fields. The one feature that looked discriminative (atr_pct: win 0.337 vs loss 0.272) **failed on bucketing**: WR flat 46–54% across all ATR quartiles, Q3 worst, median-split favored LOW atr. **No entry cut separates winners from losers.** This is the mechanical reason the reflection agent's gating only shrank volume without moving edge — you can't filter your way to an edge on non-predictive inputs. Verdict: pivot the thesis (edge lives in exits + new feature space + bigger moves), keep the infrastructure. **Discipline going forward: prove winner/loser separation in the DB before any new signal earns a live gate.**
+
+#### AK.5 — Pivot WS1: "Let winners run" exits (config-gated, default ON)
+`enhanced_guardian.check_position` reworked so a **runner** (pnl_pct ≥ `KRONOS_RUN_PROFIT_PCT`=0.5%) hit by a **modest** Kronos reversal (urgency < `KRONOS_HARD_EXIT_URGENCY`=90) is no longer market-harvested — `_lock_runner_trail` locks a trailing SL `KRONOS_RUN_TRAIL_ATR`=1.5 ATR behind price, **capped at breakeven so a runner can never revert to a loss**, enforced by the bot monitor's existing TRAILING-SL price check. The loss-cutting path (`if wants_full_exit: kronos_exit`) is **unchanged** — KRONOS-EXIT keeps its +4% edge on flat/losing trades; only winner-harvesting changes. Master switch `KRONOS_LET_WINNERS_RUN` (flip false to restore old behavior). Runner-trail math unit-tested both directions.
+
+#### AK.6 — Pivot WS2: OFI leading feature + the validation gate
+- **Order-Flow Imbalance** added to `indicators.py` `calculate_technical_indicators`: `ofi` = volume-weighted Close-Location-Value imbalance over 10 bars, in [−1,+1] (leading/microstructure — orthogonal to the lagging RSI/ADX/MFI stack that the post-mortem proved non-predictive); `ofi_trend` = 3-bar slope. Persisted via new `ofi`/`ofi_trend` columns (AnalogRAG `_EXTRA_COLUMNS` auto-migration; 136 existing rows preserved as NULL). Threaded through `store_setup` **and** the hand-picked `_entry_indicators` snapshot in `enhanced_bot.py` (that whitelist was the critical wire — without it OFI logs NULL forever). **Logged, not gated** — per the validate-before-trading discipline.
+- **`kronos_integrated_bot/feature_study.py`** (new): the validation gate. `python -m kronos_integrated_bot.feature_study [feature...]` reports rank-AUC (Mann-Whitney), quartile win-rate/return monotonicity, and a **GATE-READY / PROMISING / NOISE** verdict. Reproduced the post-mortem (rsi AUC .501, atr_pct .513, confidence .553 = all NOISE). **Workflow: run dry-run to populate `ofi` → `feature_study` → only gate on OFI if GATE-READY.**
+
+#### AK.7 — Pivot WS3: high-beta universe (+11)
+Added PFC, RECLTD, NATIONALUM, NMDC, HINDCOPPER, IREDA, PAYTM, JIOFIN, GMRAIRPORT, KALYANKJIL, OFSS to `WATCHLIST` + `VWAP_RECLAIM_STOCKS` (IDs verified against the NSE_EQ scrip master) + `TICK_SIZE_MAP` + `regime_filter.STOCK_SECTOR_MAP` (**all sector-mapped** — empty `sector_trend` was June's single biggest loss driver, per AK.2). Goal: 2–4% intraday moves clear the ~0.15% cost that the 0.41%-move old universe couldn't. Watchlist now **111 unique symbols, all resolve** to security-id + sector; consistency-checked, no duplicates.
+
+#### AK.8 — Exit-safety: rejected-order handling + double-exit-order fix
+Surfaced when 2026-07-01's live signals all failed with **DH-905 "Invalid IP"** (a *different* DH-905 than AK.1's "Missing required fields" — this one = the machine's public IP not whitelisted in the Dhan portal; operational, orders placed manually). Two latent bugs in the exit path, both fixed:
+1. **Rejected exit treated as success.** `place_equity_order` returns a *truthy* failure dict on rejection, so `if not order: return` never caught it — the bot logged "Closed", booked phantom PnL, and dropped a still-open position from tracking. Fixed in `stock_trading_bot._exit_position`: require `isinstance(order, dict) and order.get("status")=="success"` (mirrors the entry path); on rejection keep the position, record no PnL, alert. `_exit_position` now **returns bool** (True=actually closed).
+2. **Double-close.** The guardian's `_kronos_exit`/`_intraday_exit` placed order #1 via `reduce_position(...)` **and** then order #2 via `_exit_position(...)` → two full-qty closes per exit (would over-close into an opposite position the moment API exits worked). Fixed: removed the guardian `reduce_position` calls — `_exit_position` is now the **sole** order-placement site. Guardian now does `closed = await _exit_position(...)`; if not closed, it skips the PnL/consec-loss/telegram bookkeeping (no faking an exit that didn't happen). `enhanced_bot._exit_position` returns the parent flag and only writes the RAG setup when `closed` (a rejected order no longer poisons analog_history.db with a phantom outcome).
+- **Proven:** targeted test — one guardian exit → **exactly 1** closing order, **0** reduce_position; rejected exit → position kept, consec-loss untouched. Full suite **56 passed**; all files `py_compile`.
+
+**Verification (whole session):** full suite **56 passed** (added `ofi`/`ofi_trend` to the indicator-contract test); all modified modules `py_compile`; DB migration preserves 136 rows; full entry→DB chain traced (ofi lands in the DB); runner-trail asserted breakeven-capped both directions; exit path asserted single-order + rejection-safe.
+
+**Not done / next:** OFI is logged but **ungated** — needs dry-run data + a GATE-READY verdict from `feature_study` before it touches entries. Recommended hardening (not yet applied): a hard guard to skip entry when `sector_trend` is empty, as defense-in-depth against the June bug for future universe additions.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.

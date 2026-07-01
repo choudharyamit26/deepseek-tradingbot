@@ -44,6 +44,8 @@ class AnalogRAG:
         ("candle_against",   "INTEGER DEFAULT 0"),
         ("analog_wr",        "REAL"),
         ("kronos_pred_return", "REAL"),  # signed forecast return (fraction); +ve=bullish
+        ("ofi",              "REAL"),  # order-flow imbalance at entry, [-1,+1] (leading)
+        ("ofi_trend",        "REAL"),  # 3-bar slope of OFI at entry (pressure building/fading)
     )
 
     def _init_db(self):
@@ -138,6 +140,8 @@ class AnalogRAG:
             int(bool(candle_against)),
             (float(analog_wr) if analog_wr is not None else None),
             kronos_pred_return,
+            (float(indicators.get("ofi")) if indicators.get("ofi") is not None else None),
+            (float(indicators.get("ofi_trend")) if indicators.get("ofi_trend") is not None else None),
         )
         try:
             conn = sqlite3.connect(self.db_path)
@@ -147,9 +151,10 @@ class AnalogRAG:
                      kronos_aligned, kronos_direction, nifty_trend,
                      market_regime, signal_type, confidence, pnl, pnl_pct, outcome,
                      matrix_score, matrix_breakdown, trend_15m, trend_1h,
-                     sector_trend, candle_against, analog_wr, kronos_pred_return)
+                     sector_trend, candle_against, analog_wr, kronos_pred_return,
+                     ofi, ofi_trend)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                        ?, ?, ?, ?, ?, ?, ?, ?)
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, row)
             conn.commit()
             conn.close()

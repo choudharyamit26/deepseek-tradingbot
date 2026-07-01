@@ -48,6 +48,24 @@ def calculate_technical_indicators(df: pd.DataFrame, min_bars: int = 5) -> dict:
     df["resistance"] = df["high"].rolling(window=20).max()
     df["support"] = df["low"].rolling(window=20).min()
 
+    # ── Order-Flow Imbalance (leading / microstructure) ─────────────────────
+    # A pressure proxy the lagging stack (RSI/ADX/MFI/VWAP) does not capture.
+    # Close Location Value: where each bar closes within its range, in [-1,+1]
+    # (+1 = closed on the high = net buying, -1 = closed on the low = net
+    # selling). Weight by volume → signed volume per bar. The rolling sum of
+    # signed volume divided by rolling total volume gives a normalized
+    # accumulation/distribution imbalance in [-1,+1] that leads price because
+    # participants position before the move shows up in close-to-close returns.
+    rng = (df["high"] - df["low"]).clip(lower=1e-9)
+    clv = ((df["close"] - df["low"]) - (df["high"] - df["close"])) / rng  # [-1,+1]
+    signed_vol = clv * df["volume"]
+    ofi_lookback = min(10, len(df))
+    signed_sum = signed_vol.rolling(window=ofi_lookback).sum()
+    vol_sum = df["volume"].rolling(window=ofi_lookback).sum().clip(lower=1e-9)
+    df["ofi"] = (signed_sum / vol_sum).clip(-1, 1)
+    # Short-horizon slope of OFI: is pressure building or fading right now?
+    df["ofi_trend"] = df["ofi"] - df["ofi"].shift(3)
+
     latest = df.iloc[-1]
     close_val = round(latest["close"], 2)
     vwap_val = round(latest["vwap"], 2) if not pd.isna(latest["vwap"]) else close_val
@@ -71,4 +89,6 @@ def calculate_technical_indicators(df: pd.DataFrame, min_bars: int = 5) -> dict:
         "resistance": round(latest["resistance"], 2) if not pd.isna(latest["resistance"]) else latest["high"],
         "adx": round(latest["adx"], 2) if not pd.isna(latest["adx"]) else 20,
         "mfi": round(latest["mfi"], 2) if not pd.isna(latest["mfi"]) else 50,
+        "ofi": round(latest["ofi"], 4) if not pd.isna(latest["ofi"]) else 0.0,
+        "ofi_trend": round(latest["ofi_trend"], 4) if not pd.isna(latest["ofi_trend"]) else 0.0,
     }

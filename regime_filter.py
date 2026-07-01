@@ -146,6 +146,14 @@ STOCK_SECTOR_MAP = {
     "NIFTYBEES": NIFTY_50, "BANKBEES": BANKNIFTY,
     "ITBEES": NIFTY_IT, "GOLDBEES": NIFTY_50,
     "SILVERBEES": NIFTY_50, "JUNIORBEES": NIFTY_50,
+
+    # ── High-beta additions (2026-07-01) — MUST have a sector so sector_trend
+    #    is never empty (empty sector was the biggest loss driver in June). ────
+    "PFC": NIFTY_FINSRV, "RECLTD": NIFTY_FINSRV, "IREDA": NIFTY_FINSRV,
+    "PAYTM": NIFTY_FINSRV, "JIOFIN": NIFTY_FINSRV,
+    "NATIONALUM": NIFTY_METAL, "NMDC": NIFTY_METAL, "HINDCOPPER": NIFTY_METAL,
+    "GMRAIRPORT": NIFTY_INFRA, "KALYANKJIL": NIFTY_CONSR_DURBL,
+    "OFSS": NIFTY_IT,
 }
 
 

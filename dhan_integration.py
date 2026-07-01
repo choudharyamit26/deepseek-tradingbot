@@ -68,6 +68,14 @@ VWAP_RECLAIM_STOCKS: dict[str, str] = {
     "BDL": "541143",       # Bharat Dynamics Limited  [DEFENCE]
     "IRFC": "543257",      # Indian Railway Finance Co  [DEFENCE]
     "TVSMOTOR": "532343",  # TVS Motor Company  [AUTO]
+    # ── High-beta additions (2026-07-01) — routinely move 2-4% intraday so a
+    #    trade's move clears the ~0.15% roundtrip cost (see entry-features
+    #    post-mortem: 0.41% avg move on the old universe was too small). IDs
+    #    verified against NSE_EQ scrip master. ──────────────────────────────────
+    "PFC": "14299", "RECLTD": "15355", "NATIONALUM": "6364",
+    "NMDC": "15332", "HINDCOPPER": "17939", "IREDA": "20261",
+    "PAYTM": "6705", "JIOFIN": "18143", "GMRAIRPORT": "13528",
+    "KALYANKJIL": "2955", "OFSS": "10738", "ADANIENT": "25",
 }
 
 TICK_SIZE_MAP: dict[str, float] = {
@@ -108,6 +116,10 @@ TICK_SIZE_MAP: dict[str, float] = {
     "GOLDBEES": 0.05, "SILVERBEES": 0.05, "JUNIORBEES": 0.05,
     # ── Momentum bot additions ───────────────────────────────────────────────
     "BDL": 0.05, "IRFC": 0.05, "TVSMOTOR": 0.05,
+    # ── High-beta additions (2026-07-01) ─────────────────────────────────────
+    "PFC": 0.05, "RECLTD": 0.05, "NATIONALUM": 0.05, "NMDC": 0.05,
+    "HINDCOPPER": 0.05, "IREDA": 0.05, "PAYTM": 0.05, "JIOFIN": 0.05,
+    "GMRAIRPORT": 0.05, "KALYANKJIL": 0.05, "OFSS": 0.10, "ADANIENT": 0.05,
 }
 
 

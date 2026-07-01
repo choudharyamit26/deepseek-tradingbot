@@ -635,18 +635,27 @@ class IntradayStockBot:
         return pnl, pnl_pct
 
     async def _exit_position(self, symbol, reason="EXIT"):
+        """Place the single closing order and do exit bookkeeping.
+
+        Returns True only if the position was actually closed (or dry-run
+        simulated); False if there was nothing to close or the order was
+        rejected. Callers (the guardian) rely on this to avoid faking PnL /
+        notifications for an exit that did not happen. This method is the SOLE
+        order-placement site for exits — the guardian must NOT also place its
+        own reduce_position order, or every exit fires twice (double-close).
+        """
         async with self._exit_lock:
             if symbol not in self.active_trades:
-                return
+                return False
             trade = self.active_trades.get(symbol)
             if not trade:
-                return
+                return False
 
             exit_trans = (self.dhan.dhan.SELL if trade["transaction_type"] == self.dhan.dhan.BUY
                           else self.dhan.dhan.BUY)
             security_id = self.dhan.security_ids.get(symbol)
             if not security_id:
-                return
+                return False
 
             async with self._dhan_sem:
                 live = await asyncio.to_thread(self.dhan.fetch_live_data, security_id)
@@ -670,8 +679,22 @@ class IntradayStockBot:
                         security_id=security_id, transaction_type=exit_trans,
                         quantity=trade["quantity"], product_type="INTRADAY",
                     )
-                if not order:
-                    return
+                # A rejected exit (e.g. DH-905 Invalid IP) returns a truthy
+                # failure dict, NOT None — so `if not order` never caught it and
+                # the position was wrongly marked Closed + dropped from tracking
+                # while still open at the broker (phantom PnL, lost trail state).
+                # Mirror the entry path: only proceed on an explicit success.
+                ok = isinstance(order, dict) and order.get("status") == "success"
+                if not ok:
+                    remarks = order.get("remarks") if isinstance(order, dict) else order
+                    logger.error(
+                        "%s EXIT ORDER REJECTED [%s] — position KEPT in tracking, "
+                        "no PnL recorded; will retry next cycle: %s",
+                        symbol, reason, remarks,
+                    )
+                    self._notify_telegram(symbol, f"EXIT-FAILED {reason}", "EXIT-FAILED",
+                                          trade["quantity"], exit_price, pnl=pnl, pnl_pct=pnl_pct)
+                    return False
 
             await self.signal_log.log_exit(symbol, exit_price, pnl, reason)
             self.risk.record_pnl(pnl)
@@ -679,6 +702,7 @@ class IntradayStockBot:
                                   exit_price, pnl=pnl, pnl_pct=pnl_pct)
             logger.info("Closed %s: PnL=%.2f (%.2f%%) [%s]", symbol, pnl, pnl_pct, reason)
             del self.active_trades[symbol]
+            return True
 
     async def _close_at_market_end(self):
         """Close all remaining positions at market end."""

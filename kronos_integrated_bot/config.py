@@ -38,6 +38,19 @@ KRONOS_BONUS_ALIGN = 1.10  # multiplier when Kronos agrees with signal
 KRONOS_EXIT_THRESHOLD = -0.008  # predicted return below this → tighten exit
 KRONOS_MIN_PREDICTED_MOVE = 0.003  # minimum predicted move to override SL
 
+# ── "Let winners run" exit policy ─────────────────────────────────────────────
+# 1-month post-mortem: planned R:R 2.0 collapsed to 0.81 realized because
+# KRONOS-EXIT market-closed winners at ~+0.10% avg (only 6% of wins reached
+# target). KRONOS-EXIT's value is CUTTING LOSERS (+4.0% net from flat/losing
+# trades); its harm is decapitating winners. This policy keeps the loss-cutting
+# and lets winners ride: once a trade is in real profit, a *modest* Kronos
+# reversal only tightens a trailing stop instead of full-exiting. Full exit on a
+# winner requires a STRONG reversal (urgency >= hard-exit) or the trail hitting.
+KRONOS_LET_WINNERS_RUN = True       # master switch (flip false to restore old harvest behavior)
+KRONOS_RUN_PROFIT_PCT = 0.5         # profit % above which a trade is "running" — protect, don't harvest
+KRONOS_HARD_EXIT_URGENCY = 90       # even a runner full-exits at/above this Kronos urgency
+KRONOS_RUN_TRAIL_ATR = 1.5          # trail distance (in ATRs) applied when locking a runner's profit
+
 # ── Bot trading params ───────────────────────────────────────────────────────
 FIRST_ENTRY_HOUR, FIRST_ENTRY_MIN = 9, 30
 LAST_ENTRY_HOUR, LAST_ENTRY_MIN = 15, 0
@@ -198,4 +211,19 @@ WATCHLIST = [
     "DIXON",
     "POLYCAB",
     "HAL",
+    # ── High-beta additions (2026-07-01) ─────────────────────────────────
+    # Routinely move 2-4% intraday so the trade's move clears the ~0.15%
+    # roundtrip cost. Old universe averaged only 0.41% move/trade (too small
+    # to beat costs — see entry-features-nondiscriminative post-mortem).
+    "PFC",
+    "RECLTD",
+    "NATIONALUM",
+    "NMDC",
+    "HINDCOPPER",
+    "IREDA",
+    "PAYTM",
+    "JIOFIN",
+    "GMRAIRPORT",
+    "KALYANKJIL",
+    "OFSS",
 ]

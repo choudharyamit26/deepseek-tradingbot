@@ -4,6 +4,7 @@ EXPECTED_KEYS = {
     "close", "high", "low", "rsi", "macd", "macd_signal", "sma_20", "ema_9",
     "bb_percent_b", "atr", "vwap", "vwap_distance_pct", "volume_ratio",
     "support", "resistance", "adx", "mfi",
+    "ofi", "ofi_trend",  # leading microstructure (order-flow imbalance)
 }
 
 
@@ -18,6 +19,7 @@ def test_sane_ranges(ohlcv):
     assert 0 <= ind["mfi"] <= 100
     assert ind["atr"] > 0
     assert ind["support"] <= ind["close"] <= ind["resistance"] * 1.01
+    assert -1.0 <= ind["ofi"] <= 1.0  # order-flow imbalance is normalized
     assert abs(ind["vwap_distance_pct"]) < 50
 
 

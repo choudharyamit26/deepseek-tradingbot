@@ -1115,6 +1115,11 @@ class EnhancedIntradayBot(IntradayStockBot):
                 "volume_ratio": indicators_3m.get("volume_ratio", 1.0),
                 "mfi": indicators_3m.get("mfi", 50),
                 "atr_pct": atr_pct,
+                # Leading microstructure — captured at entry so the feature study
+                # can test whether it separates winners from losers (unlike the
+                # lagging fields above, which the post-mortem proved do not).
+                "ofi": indicators_3m.get("ofi", 0.0),
+                "ofi_trend": indicators_3m.get("ofi_trend", 0.0),
             },
             "_entry_kronos_conf": kronos_conf,
             "_entry_nifty": nifty_regime,
@@ -1208,11 +1213,14 @@ class EnhancedIntradayBot(IntradayStockBot):
     # ── Feature 3: RAG — store trade outcome on exit ─────────────────────────
 
     async def _exit_position(self, symbol, reason="EXIT"):
-        """Override to capture trade outcome into the analog RAG database."""
+        """Override to capture trade outcome into the analog RAG database.
+
+        Returns the parent's success flag (True if the position was actually
+        closed). Only stores the RAG setup on a real close, so a rejected exit
+        order never records a phantom outcome."""
         trade = self.active_trades.get(symbol)
         if not trade:
-            await super()._exit_position(symbol, reason)
-            return
+            return await super()._exit_position(symbol, reason)
 
         # Snapshot indicators stored at entry (before parent deletes the trade)
         entry_indicators = trade.get("_entry_indicators", {})
@@ -1246,10 +1254,12 @@ class EnhancedIntradayBot(IntradayStockBot):
             logger.debug("%s RAG exit price estimate failed: %s", symbol, exc)
 
         # Call parent to do the actual exit (fetches live price again, sends telegram, etc.)
-        await super()._exit_position(symbol, reason)
+        closed = await super()._exit_position(symbol, reason)
 
-        # Store to RAG only when we have a valid PnL estimate
-        if entry_indicators and signal_type in ("BUY", "SELL") and pnl_est is not None:
+        # Store to RAG only when the position was ACTUALLY closed and we have a
+        # valid PnL estimate. A rejected order (closed is False) must not record
+        # an outcome — it would poison the analog DB with a trade that never exited.
+        if closed and entry_indicators and signal_type in ("BUY", "SELL") and pnl_est is not None:
             try:
                 self.rag.store_setup(
                     symbol=symbol,
@@ -1272,3 +1282,5 @@ class EnhancedIntradayBot(IntradayStockBot):
                 logger.debug("RAG stored: %s %s P&L=%.2f (%.2f%%)", symbol, signal_type, pnl_est, pnl_pct_est)
             except Exception as exc:
                 logger.warning("RAG store_setup failed for %s: %s", symbol, exc)
+
+        return closed

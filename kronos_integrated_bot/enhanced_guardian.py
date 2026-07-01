@@ -114,12 +114,33 @@ class KronosExitGuardian(PositionExitGuardian):
                 urgency = exit_signal.get("urgency", 50)
                 pred_return = exit_signal.get("pred_return", 0) * 100
                 logger.info(
-                    "%s Kronos exit: urgency=%d pred_return=%.2f%%",
-                    symbol, urgency, pred_return,
+                    "%s Kronos exit: urgency=%d pred_return=%.2f%% pnl=%.2f%%",
+                    symbol, urgency, pred_return, pnl_pct,
                 )
 
-                if urgency >= self._get_base_exit(symbol, trade, pnl_pct) or \
-                   (urgency >= 40 and pnl_pct < -1.5):
+                wants_full_exit = (
+                    urgency >= self._get_base_exit(symbol, trade, pnl_pct)
+                    or (urgency >= 40 and pnl_pct < -1.5)
+                )
+
+                # ── Let winners run ─────────────────────────────────────────
+                # A position in real profit ("runner") with only a MODEST Kronos
+                # reversal is NOT harvested. We lock a profit-protecting trailing
+                # stop and let it ride toward target. KRONOS-EXIT keeps its edge
+                # on flat/losing trades (below the profit floor) and still
+                # full-exits a runner on a STRONG reversal (urgency >= hard-exit).
+                if (wants_full_exit and cfg.KRONOS_LET_WINNERS_RUN
+                        and pnl_pct >= cfg.KRONOS_RUN_PROFIT_PCT
+                        and urgency < cfg.KRONOS_HARD_EXIT_URGENCY):
+                    locked = self._lock_runner_trail(symbol, trade, current_price)
+                    logger.info(
+                        "%s LET-RUN: winner (pnl=%.2f%%) held on modest reversal "
+                        "(u=%d < hard=%d); trail locked at %.2f",
+                        symbol, pnl_pct, urgency, cfg.KRONOS_HARD_EXIT_URGENCY, locked,
+                    )
+                    return
+
+                if wants_full_exit:
                     await self._kronos_exit(symbol, trade, current_price, f"Kronos u={urgency} r={pred_return:+.2f}%")
                     return
 
@@ -147,17 +168,17 @@ class KronosExitGuardian(PositionExitGuardian):
     async def _intraday_exit(self, symbol, trade, current_price, reason):
         quantity = trade.get("quantity", 0)
         is_buy = trade.get("transaction_type", self.dhan.dhan.BUY) == self.dhan.dhan.BUY
-        trans_type = self.dhan.dhan.SELL if is_buy else self.dhan.dhan.BUY
-        security_id = trade.get("security_id", self.dhan.security_ids.get(symbol, ""))
 
         if self.dry_run:
             logger.info("%s DRY-RUN %s qty=%d reason=%s", symbol, reason, quantity, reason)
-        else:
-            if security_id:
-                result = await asyncio.to_thread(self.dhan.reduce_position, security_id, trans_type, quantity)
-                logger.info("%s %s result: %s", symbol, reason, result)
 
-        await self.bot_instance._exit_position(symbol, reason)
+        # _exit_position is the SOLE order-placement site — it sends the single
+        # closing order. Do NOT also call reduce_position here or every exit
+        # fires twice (double-close into an opposite position).
+        closed = await self.bot_instance._exit_position(symbol, reason)
+        if not closed:
+            # Order rejected (or nothing to close): don't fake PnL / consec-loss.
+            return
 
         pnl = pnl_pct = None
         if trade.get("entry_price", 0) > 0:
@@ -184,6 +205,40 @@ class KronosExitGuardian(PositionExitGuardian):
         self._notify_telegram(symbol, reason, "EXIT", quantity, trade.get("entry_price", 0),
                               pnl=pnl, pnl_pct=pnl_pct, reason=reason)
 
+    def _lock_runner_trail(self, symbol, trade, current_price):
+        """Lock a profit-protecting trailing stop on a winning position instead
+        of market-exiting it. Trails KRONOS_RUN_TRAIL_ATR behind price but never
+        looser than breakeven, so a runner can trail out with profit (or at worst
+        breakeven-minus-costs) while keeping upside open toward target.
+
+        Returns the SL level now in force (for logging). The bot's monitor loop
+        (stock_trading_bot._monitor_one_position) enforces it as a TRAILING-SL.
+        """
+        atr = trade.get("atr_value", 0) or 0
+        entry = trade.get("entry_price", 0)
+        trail = cfg.KRONOS_RUN_TRAIL_ATR * atr
+        is_buy = trade.get("transaction_type", self.dhan.dhan.BUY) == self.dhan.dhan.BUY
+        old_sl = trade.get("sl_price", 0) or 0
+
+        if is_buy:
+            new_sl = current_price - trail
+            new_sl = max(new_sl, entry)              # never worse than breakeven
+            if new_sl >= current_price:              # degenerate (tiny/zero ATR)
+                new_sl = entry
+            tighten = old_sl == 0 or new_sl > old_sl  # long: raise the floor
+        else:
+            new_sl = current_price + trail
+            new_sl = min(new_sl, entry)              # never worse than breakeven
+            if new_sl <= current_price:
+                new_sl = entry
+            tighten = old_sl == 0 or new_sl < old_sl  # short: lower the ceiling
+
+        if tighten and new_sl > 0:
+            self.bot_instance.active_trades[symbol]["trailing_sl"] = new_sl
+            self.bot_instance.active_trades[symbol]["sl_price"] = new_sl
+            return new_sl
+        return old_sl
+
     def _get_base_exit(self, symbol, trade, pnl_pct):
         from datetime import time as dtime
         now = self._now_ist()
@@ -198,19 +253,19 @@ class KronosExitGuardian(PositionExitGuardian):
     async def _kronos_exit(self, symbol, trade, current_price, reason):
         quantity = trade.get("quantity", 0)
         is_buy = trade.get("transaction_type", self.dhan.dhan.BUY) == self.dhan.dhan.BUY
-        trans_type = self.dhan.dhan.SELL if is_buy else self.dhan.dhan.BUY
-        security_id = trade.get("security_id", self.dhan.security_ids.get(symbol, ""))
 
         tag = "KRONOS-EXIT"
 
         if self.dry_run:
             logger.info("%s DRY-RUN %s qty=%d reason=%s", symbol, tag, quantity, reason)
-        else:
-            if security_id:
-                result = await asyncio.to_thread(self.dhan.reduce_position, security_id, trans_type, quantity)
-                logger.info("%s %s result: %s", symbol, tag, result)
 
-        await self.bot_instance._exit_position(symbol, tag)
+        # _exit_position is the SOLE order-placement site — it sends the single
+        # closing order. Do NOT also call reduce_position here or every exit
+        # fires twice (double-close into an opposite position).
+        closed = await self.bot_instance._exit_position(symbol, tag)
+        if not closed:
+            # Order rejected (or nothing to close): don't fake PnL / consec-loss.
+            return
 
         pnl = pnl_pct = None
         if trade.get("entry_price", 0) > 0:
