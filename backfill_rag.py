@@ -239,6 +239,12 @@ def backfill(dry_run: bool = False, date_filter: str | None = None,
             _kpr         = row.get("kronos_pred_return", "").strip()
             kronos_aligned     = int(float(_kal)) if _kal else None
             kronos_pred_return = float(_kpr) if _kpr else None
+            # Leading microstructure — present only in CSVs written after OFI
+            # logging was added; older rows leave these NULL (honest "unknown").
+            _ofi         = row.get("ofi", "").strip()
+            _ofi_trend   = row.get("ofi_trend", "").strip()
+            ofi          = float(_ofi) if _ofi else None
+            ofi_trend    = float(_ofi_trend) if _ofi_trend else None
         except (ValueError, KeyError) as exc:
             logger.debug("Skip row %s %s — bad value: %s", symbol, ts_raw, exc)
             skipped_bad += 1
@@ -249,12 +255,16 @@ def backfill(dry_run: bool = False, date_filter: str | None = None,
         if is_existing:
             if dry_run:
                 print(f"  [DRY-REENRICH] {symbol:12s} {ts_raw[:16]}  "
-                      f"15m={trend_15m} 1h={trend_1h} sector={sector_trend or 'NULL'}")
+                      f"15m={trend_15m} 1h={trend_1h} sector={sector_trend or 'NULL'}"
+                      f" ofi={ofi if ofi is not None else 'NULL'}")
             else:
+                # COALESCE keeps any existing ofi if the CSV row has none, so a
+                # re-enrich never wipes a previously captured value.
                 conn.execute(
-                    "UPDATE setups SET trend_15m=?, trend_1h=?, sector_trend=? "
+                    "UPDATE setups SET trend_15m=?, trend_1h=?, sector_trend=?, "
+                    "ofi=COALESCE(?, ofi), ofi_trend=COALESCE(?, ofi_trend) "
                     "WHERE symbol=? AND ts=?",
-                    (trend_15m, trend_1h, sector_trend, symbol, ts))
+                    (trend_15m, trend_1h, sector_trend, ofi, ofi_trend, symbol, ts))
             updated += 1
             continue
 
@@ -304,8 +314,9 @@ def backfill(dry_run: bool = False, date_filter: str | None = None,
                          kronos_aligned, kronos_direction, kronos_pred_return,
                          nifty_trend, market_regime,
                          signal_type, confidence, pnl, pnl_pct, outcome,
-                         trend_15m, trend_1h, sector_trend)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         trend_15m, trend_1h, sector_trend,
+                         ofi, ofi_trend)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     ts, symbol,
                     rsi, adx, volume_ratio, mfi, atr_pct,
@@ -314,6 +325,7 @@ def backfill(dry_run: bool = False, date_filter: str | None = None,
                     direction, confidence,
                     pnl, round(pnl_pct, 4), outcome,
                     trend_15m, trend_1h, sector_trend,
+                    ofi, ofi_trend,
                 ))
                 existing.add((symbol, ts))  # prevent duplicate within this run
                 logger.info("Inserted: %s %s %s pnl=%.2f outcome=%s src=%s",

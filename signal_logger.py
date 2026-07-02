@@ -15,6 +15,9 @@ _CSV_FIELDS = [
     "market_regime", "sector_regime",
     "mtf_3m", "mtf_15m", "mtf_1h",
     "kronos_direction", "kronos_pred_return", "kronos_aligned",
+    # Leading microstructure (Order-Flow Imbalance), captured at entry so the
+    # feature study can validate it. Appended last to keep existing column order.
+    "ofi", "ofi_trend",
 ]
 
 
@@ -78,6 +81,7 @@ class SignalLogger:
                    mtf_3m: str = "", mtf_15m: str = "", mtf_1h: str = "",
                    kronos_direction: str = "", kronos_pred_return: str = "",
                    kronos_aligned: str = "",
+                   ofi: str = "", ofi_trend: str = "",
                    slot_reserved: bool = False) -> None:
         today = self._ensure_date()
         path = self._csv_path(today)
@@ -107,6 +111,8 @@ class SignalLogger:
             "kronos_direction": kronos_direction,
             "kronos_pred_return": kronos_pred_return,
             "kronos_aligned": kronos_aligned,
+            "ofi": ofi,
+            "ofi_trend": ofi_trend,
         }
 
         def _write_csv():

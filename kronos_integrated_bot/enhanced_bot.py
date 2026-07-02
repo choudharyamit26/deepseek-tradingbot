@@ -1207,6 +1207,11 @@ class EnhancedIntradayBot(IntradayStockBot):
             kronos_direction=(kronos_conf.get("pred_direction", "") if kronos_conf else ""),
             kronos_pred_return=(f"{kronos_conf.get('pred_return', 0) * 100:.3f}" if kronos_conf else ""),
             kronos_aligned=("" if not kronos_conf else ("0" if kronos_conf.get("conflict") else "1")),
+            # Leading microstructure snapshot — logged so backfill_rag.py can
+            # carry it into analog_history.db even when orders are placed
+            # manually (the live store_setup path never runs in that case).
+            ofi=f"{indicators_3m.get('ofi', 0.0):.4f}",
+            ofi_trend=f"{indicators_3m.get('ofi_trend', 0.0):.4f}",
             slot_reserved=not order_failed,  # only count slot if order succeeded
         )
 
