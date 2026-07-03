@@ -35,8 +35,8 @@ logger = logging.getLogger(__name__)
 def _load_security_ids() -> dict:
     try:
         from constant import (FNO_UNIVERSE, ETF_LIQUID,
-                              FILTERED_FNO_UNIVERSE, VWAP_RECLAIM_STOCKS,
-                              NIFTY50_UNIVERSE)
+                              FILTERED_FNO_UNIVERSE, NIFTY50_UNIVERSE)
+        from dhan_integration import VWAP_RECLAIM_STOCKS
         m = {**FNO_UNIVERSE, **ETF_LIQUID,
              **FILTERED_FNO_UNIVERSE, **VWAP_RECLAIM_STOCKS, **NIFTY50_UNIVERSE}
         return {sym: str(sid) for sym, sid in m.items()}
@@ -250,6 +250,18 @@ def backfill(dry_run: bool = False, date_filter: str | None = None,
             skipped_bad += 1
             continue
 
+        # Candle-derived indicators (rsi/adx/volume_ratio/mfi/ofi/ofi_trend) —
+        # computed once here so both the reenrich path and the new-insert path
+        # below can use it. Rows from CSVs written before OFI logging existed
+        # have no ofi/ofi_trend column at all; recomputing from the saved
+        # candle file recovers it retroactively instead of leaving it NULL.
+        ind = _candle_indicators(symbol, ts_raw, security_ids)
+        if ind:
+            if ofi is None and ind.get("ofi") is not None:
+                ofi = float(ind["ofi"])
+            if ofi_trend is None and ind.get("ofi_trend") is not None:
+                ofi_trend = float(ind["ofi_trend"])
+
         # --reenrich: existing row — update only the derivable context columns,
         # never pnl/outcome/entry (the ground truth), and skip the indicator work.
         if is_existing:
@@ -280,7 +292,6 @@ def backfill(dry_run: bool = False, date_filter: str | None = None,
             pnl_pct = 0.0
 
         # Indicator values — try candle file first, then parse reasoning
-        ind = _candle_indicators(symbol, ts_raw, security_ids)
         if ind:
             src = "candle"
             rsi          = float(ind.get("rsi", 50))
