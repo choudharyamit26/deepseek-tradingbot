@@ -1062,6 +1062,37 @@ Surfaced when 2026-07-01's live signals all failed with **DH-905 "Invalid IP"** 
 
 ---
 
+### Section AL — 2026-07-02 (Broker-P&L reconciliation + OFI capture-gap discovery & fix)
+
+#### AL.1 — 07-01 signals CSV reconciled to the broker Closed P&L (ground truth)
+The broker's `Closed-P&L` export is the ground truth for real fills (`analog_history.db`); the bot-logged `pnl` in the signals CSV is an estimate and, on 07-01, disagreed materially. Reconciled `trading_logs/signals_2026-07-01.csv` to the broker per-row, keeping each row internally consistent via `exit = entry − pnl/qty` (SELL) and allocating aggregated broker lines so each per-symbol total matches exactly:
+- **Clean fills** (blank ENTRY-SHORT rows): ADANIGREEN −6.40, ASTRAL −9.00, TATAMOTORS −1.70.
+- **Broker overwrites of already-logged rows**: ZYDUSLIFE −8.80 → **−6.50**; **SIEMENS −3.70 → +3.80 (sign flip — a logged loss was a real win)**; MPHASIS 13:19 +11.35 → **−1.40** (the stored value contradicted its own entry/exit prices).
+- **Aggregated splits**: ICICIPRULI (broker qty5 = −7.95: row A −2.80 kept, row B remainder **−5.15**); MPHASIS (broker qty2 = −4.10: 09:38 **−2.70** + 13:19 −1.40). HINDCOPPER used broker per-share (+0.25) × signal qty2 = **+0.50**.
+- **Left blank** (no broker line → not closed / never filled): DIVISLAB, CUMMINSIND. HCL & NALCO are in the broker file but have no signal rows (separate manual trades) — out of scope.
+
+Then `python backfill_rag.py --date 2026-07-01` inserted **11 rows** (DB now **147**), and `python -m kronos_integrated_bot.run_reflection` returned **`analysis_only`** — correct: only 11 closed trades since the last change (2026-06-30 17:46) vs the 30-trade evidence gate, and the pending `min_volume_ratio_trending` hypothesis is at 11/20 eval trades. Day was all-SELL, 9 losses / 2 tiny wins, −₹37.85.
+
+#### AL.2 — Discovery: OFI capture was broken end-to-end (0 of 147 DB rows populated)
+`python -m kronos_integrated_bot.feature_study` reported `ofi`/`ofi_trend` (and `matrix_score`/`analog_wr`) as **NO-DATA — non-null n=0**. Root cause is the manual-order regime ([[manual-orders-and-real-pnl]]) colliding with the two write paths:
+- OFI reaches the DB **only** via the live `_exit_position → store_setup` path — but orders are placed manually, so that path never runs (the 07-01 backfill had `skipped_dup=0`, proving the bot stored **zero** trades itself).
+- `backfill_rag.py` — the path that *does* create the DB rows from the reconciled CSV — **did not write `ofi`** (the signals CSV had no `ofi` column to read).
+
+Net: under manual orders, live running would populate OFI **never**, so `feature_study` could never judge it — the WS2 validation loop (AK.6) was structurally stalled. (Same study reconfirmed all populated entry features = NOISE, AUC ≈ 0.50; note `volume_ratio`/`mfi` sit at backfill defaults 1.0/50, so those buckets are junk.)
+
+#### AL.3 — Fix: log OFI to the CSV + carry it through backfill (committed)
+Chose the manual-order-proof path (vs relying on dry-run sessions): capture OFI at signal-log time so it survives into the DB on every reconciled day.
+- **`signal_logger.py`**: added `ofi`/`ofi_trend` to `_CSV_FIELDS` and `log_signal()` params + the row dict — **appended last** so existing column order and old CSVs are unaffected (`log_exit`'s full-rewrite tolerates missing keys via `restval`).
+- **`kronos_integrated_bot/enhanced_bot.py`** (`log_signal` call, ~line 1209): now passes `ofi=f"{indicators_3m.get('ofi',0.0):.4f}"` and `ofi_trend` — same source as the `_entry_indicators` snapshot.
+- **`backfill_rag.py`**: parses `ofi`/`ofi_trend` from the CSV (absent → **NULL**, honest-unknown, not 0), adds them to the INSERT, and the `--reenrich` UPDATE uses `ofi = COALESCE(?, ofi)` so a re-enrich never wipes a previously captured value.
+- **Regression test — `tests/test_backfill_rag.py`** (new, 3 tests): CSV→DB carry lands correct floats; legacy CSV lacking the columns → NULL; reenrich with blank OFI preserves the existing value. Header is sourced from `signal_logger._CSV_FIELDS` so the test tracks the real schema.
+
+**Verification:** synthetic CSV→DB round-trip confirmed (`-0.4200` in CSV → `-0.42` in DB, fresh DB auto-migrates the columns); full suite **59 passed** (56 + 3 new).
+
+**Caveat / next:** historical rows (incl. all of 07-01) stay `ofi = NULL` — logged before this change, unrecoverable. The OFI clock starts at the **next** trading session; once ~30 rows accumulate, `feature_study ofi ofi_trend` gives a real GATE-READY/NOISE verdict. A dry-run session would populate OFI immediately via `store_setup` if waiting is undesirable.
+
+---
+
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.
