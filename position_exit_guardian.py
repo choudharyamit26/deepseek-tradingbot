@@ -74,6 +74,10 @@ class PositionExitGuardian:
             else:
                 elapsed = 0
             max_dur = getattr(self.bot_instance, "max_trade_duration_minutes", 0) or 0
+            # Phase-2 runners (two-phase exit) are breakeven-floored — exempt
+            # from the time exit; only their trail or market close ends them.
+            if trade.get("tp2_active"):
+                max_dur = 0
             if max_dur > 0 and elapsed >= max_dur:
                 logger.info("%s time-based exit: held %.0f min (max %d min)", symbol, elapsed, max_dur)
                 await self.bot_instance._exit_position(symbol, f"TIME-EXIT {int(elapsed)}min")

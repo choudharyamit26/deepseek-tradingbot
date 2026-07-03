@@ -661,11 +661,22 @@ class IntradayStockBot:
                 live = await asyncio.to_thread(self.dhan.fetch_live_data, security_id)
             exit_price = live.get("last_price") or trade["entry_price"]
             pnl, pnl_pct = self._calc_pnl(trade, exit_price)
+            # Two-phase exit: fold the banked partial back in so the single CSV
+            # row / risk record carries the WHOLE trade's PnL, with pnl_pct
+            # denominated in the original position size.
+            partial_pnl = trade.get("realized_partial_pnl", 0.0)
+            if partial_pnl:
+                pnl += partial_pnl
+                orig_qty = trade.get("original_quantity", trade["quantity"])
+                if trade["entry_price"] > 0 and orig_qty > 0:
+                    pnl_pct = pnl / (trade["entry_price"] * orig_qty) * 100
 
             if not self.dry_run:
                 # Cleanly close super order pending legs if this was a super order
+                # (skipped when the two-phase partial already cleared them)
                 order_id = trade.get("order_id", "")
-                if order_id and not order_id.startswith(("DRY-", "DHAN-")):
+                if (order_id and not order_id.startswith(("DRY-", "DHAN-"))
+                        and not trade.get("super_legs_cancelled")):
                     try:
                         logger.info("%s - Cancelling Super Order pending legs before exit...", symbol)
                         await asyncio.to_thread(self.dhan.dhan.cancel_super_order, order_id, "TARGET_LEG")

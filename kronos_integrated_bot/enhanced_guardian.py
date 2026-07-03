@@ -28,7 +28,15 @@ class KronosExitGuardian(PositionExitGuardian):
         self.kronos = kronos
 
     async def check_position(self, symbol, trade, current_price, pnl_pct):
+        # ── Two-phase exit: partial + breakeven at threshold, then runner trail ──
+        # Runs before everything else so a threshold crossing is never missed;
+        # it only books partials and tightens stops — never closes the position.
+        if cfg.TWO_PHASE_EXIT_ENABLED:
+            await self._two_phase_tick(symbol, trade, current_price, pnl_pct)
+
         await super().check_position(symbol, trade, current_price, pnl_pct)
+        if symbol not in self.bot_instance.active_trades:
+            return  # base guardian closed it
 
         # ── Trailing SL activation ──────────────────────────────────────────
         # Only activate trailing when profit reaches activation_pct
@@ -55,7 +63,9 @@ class KronosExitGuardian(PositionExitGuardian):
                                     symbol, new_sl, pnl_pct, trail_dist)
 
         # ── Time-based exit ─────────────────────────────────────────────────
-        max_duration = cfg.MAX_TRADE_DURATION_MINUTES
+        # Phase-2 runners are exempt: half is banked and the stop is at
+        # breakeven or better, so time carries no risk — only upside.
+        max_duration = 0 if trade.get("tp2_active") else cfg.MAX_TRADE_DURATION_MINUTES
         if max_duration > 0:
             entry_time = trade.get("entry_time")
             if entry_time:
@@ -238,6 +248,155 @@ class KronosExitGuardian(PositionExitGuardian):
             self.bot_instance.active_trades[symbol]["sl_price"] = new_sl
             return new_sl
         return old_sl
+
+    async def _two_phase_tick(self, symbol, trade, current_price, pnl_pct):
+        """Two-phase exit state machine, one step per guardian poll.
+
+        Phase 1 (pnl below TWO_PHASE_PARTIAL_AT_PCT): do nothing — the existing
+        loss-cutting stack (hard SL, Kronos exits, reversal exits) owns the trade.
+
+        Phase flip (pnl crosses the threshold): book TWO_PHASE_PARTIAL_FRACTION
+        of the position at market, then arm the runner with a breakeven-floored
+        percent trail. A rejected partial order leaves the phase unflipped so it
+        retries next poll. Positions too small to split (qty 1) skip the partial
+        but still get the breakeven lock + trail.
+
+        Phase 2: ratchet the trail behind the high-water mark. Enforcement is
+        the monitor loop's existing TRAILING-SL check; this only sets levels.
+        """
+        entry = trade.get("entry_price", 0) or 0
+        if entry <= 0 or current_price <= 0:
+            return
+
+        if not trade.get("tp2_active"):
+            if pnl_pct < cfg.TWO_PHASE_PARTIAL_AT_PCT:
+                return
+            qty = trade.get("quantity", 0)
+            part = int(qty * cfg.TWO_PHASE_PARTIAL_FRACTION)
+            if 1 <= part < qty and not trade.get("tp2_partial_blocked"):
+                booked = await self._book_partial(symbol, trade, current_price, part)
+                if not booked:
+                    return  # order rejected / legs pending — retry the flip next poll
+            trade["tp2_active"] = True
+            trade["tp2_highwater"] = current_price
+            trade.setdefault("original_quantity", qty)
+            logger.info("%s TWO-PHASE: phase 2 armed at %.2f (pnl=%.2f%%, runner qty=%d)",
+                        symbol, current_price, pnl_pct, trade.get("quantity", 0))
+        else:
+            is_buy = trade.get("transaction_type", self.dhan.dhan.BUY) == self.dhan.dhan.BUY
+            hw = trade.get("tp2_highwater", current_price)
+            trade["tp2_highwater"] = max(hw, current_price) if is_buy else min(hw, current_price)
+
+        self._tp2_update_trail(symbol, trade)
+
+    def _tp2_update_trail(self, symbol, trade):
+        """Set the runner stop to high-water ∓ TWO_PHASE_RUNNER_TRAIL_PCT,
+        never worse than breakeven, tighten-only (coexists with the ATR-based
+        locks, which are also tighten-only — the tighter stop wins)."""
+        entry = trade.get("entry_price", 0)
+        hw = trade.get("tp2_highwater", 0)
+        if entry <= 0 or hw <= 0:
+            return
+        is_buy = trade.get("transaction_type", self.dhan.dhan.BUY) == self.dhan.dhan.BUY
+        trail = cfg.TWO_PHASE_RUNNER_TRAIL_PCT / 100.0
+        old_sl = trade.get("trailing_sl", 0) or 0
+        if is_buy:
+            new_sl = max(entry, hw * (1 - trail))
+            tighten = old_sl == 0 or new_sl > old_sl
+        else:
+            new_sl = min(entry, hw * (1 + trail))
+            tighten = old_sl == 0 or new_sl < old_sl
+        if tighten:
+            trade["trailing_sl"] = new_sl
+            trade["sl_price"] = new_sl
+            logger.info("%s TWO-PHASE: runner trail -> %.2f (hw=%.2f)", symbol, new_sl, hw)
+
+    async def _clear_super_legs(self, symbol, trade):
+        """Cancel a super order's pending TARGET/STOP_LOSS legs before a partial.
+
+        The legs were placed for the FULL entry quantity; reducing the position
+        while they stay working means a later leg trigger over-exits into an
+        opposite position. Per-leg progress is tracked on the trade so a retry
+        only re-attempts the leg that failed. Returns True when no legs remain
+        (also for non-super orders, which have nothing to clear)."""
+        order_id = trade.get("order_id", "")
+        if not order_id or order_id.startswith(("DRY-", "DHAN-")):
+            return True  # plain order / adopted position — no broker legs
+        if trade.get("super_legs_cancelled"):
+            return True
+        done = trade.setdefault("tp2_legs_done", [])
+        for leg in ("TARGET_LEG", "STOP_LOSS_LEG"):
+            if leg in done:
+                continue
+            try:
+                async with self.bot_instance._dhan_sem:
+                    resp = await asyncio.to_thread(
+                        self.dhan.dhan.cancel_super_order, order_id, leg)
+                if isinstance(resp, dict) and resp.get("status") == "failure":
+                    logger.error("%s TWO-PHASE: cancel %s failed: %s",
+                                 symbol, leg, resp.get("remarks"))
+                    return False
+                done.append(leg)
+            except Exception as exc:
+                logger.error("%s TWO-PHASE: cancel %s raised: %s", symbol, leg, exc)
+                return False
+        trade["super_legs_cancelled"] = True  # _exit_position skips its re-cancel
+        logger.info("%s TWO-PHASE: super order legs cleared (%s)", symbol, order_id)
+        return True
+
+    async def _book_partial(self, symbol, trade, current_price, part_qty):
+        """Bank part_qty at market. Accumulates the realized PnL on the trade
+        (folded into the final exit row by _exit_position) instead of calling
+        log_exit, which would consume the trade's single CSV row and orphan the
+        runner's exit. Returns True when the reduction is in effect.
+
+        Super orders: broker-side legs are cleared first (see _clear_super_legs).
+        While legs can't be cleared, the partial is aborted and retried — the
+        position keeps its full broker-side protection meanwhile. After
+        3 failed polls the partial is abandoned for this trade
+        (tp2_partial_blocked) and phase 2 arms without it: breakeven floor and
+        runner trail still apply, and with no reduction placed the intact legs
+        cannot over-exit. Once legs are cleared, the runner is protected by the
+        software trail only (the same model every other post-modification exit
+        path in this codebase uses)."""
+        is_buy = trade.get("transaction_type", self.dhan.dhan.BUY) == self.dhan.dhan.BUY
+        exit_trans = self.dhan.dhan.SELL if is_buy else self.dhan.dhan.BUY
+        security_id = trade.get("security_id") or self.dhan.security_ids.get(symbol)
+
+        if not self.dry_run:
+            if not security_id:
+                return False
+            if not await self._clear_super_legs(symbol, trade):
+                fails = trade.get("tp2_leg_cancel_fails", 0) + 1
+                trade["tp2_leg_cancel_fails"] = fails
+                if fails >= 3:
+                    trade["tp2_partial_blocked"] = True
+                    logger.error(
+                        "%s TWO-PHASE: legs uncancellable after %d polls — "
+                        "arming phase 2 WITHOUT partial (broker legs left intact)",
+                        symbol, fails)
+                return False
+            async with self.bot_instance._dhan_sem:
+                order = await asyncio.to_thread(
+                    self.dhan.reduce_position, security_id, exit_trans, part_qty)
+            ok = isinstance(order, dict) and order.get("status") == "success"
+            if not ok:
+                remarks = order.get("remarks") if isinstance(order, dict) else order
+                logger.error("%s TWO-PHASE partial REJECTED (qty=%d): %s — will retry",
+                             symbol, part_qty, remarks)
+                return False
+
+        entry = trade["entry_price"]
+        pnl_part = (current_price - entry) * part_qty if is_buy else (entry - current_price) * part_qty
+        trade.setdefault("original_quantity", trade.get("quantity", 0))
+        trade["quantity"] = trade.get("quantity", 0) - part_qty
+        trade["realized_partial_pnl"] = trade.get("realized_partial_pnl", 0.0) + pnl_part
+        logger.info("%s TWO-PHASE: banked %d @ %.2f (pnl=%+.2f), runner qty=%d%s",
+                    symbol, part_qty, current_price, pnl_part, trade["quantity"],
+                    " [DRY-RUN]" if self.dry_run else "")
+        self._notify_telegram(symbol, "PARTIAL-EXIT", "EXIT", part_qty, current_price,
+                              pnl=pnl_part, reason=f"two-phase partial @ +{cfg.TWO_PHASE_PARTIAL_AT_PCT}%")
+        return True
 
     def _get_base_exit(self, symbol, trade, pnl_pct):
         from datetime import time as dtime

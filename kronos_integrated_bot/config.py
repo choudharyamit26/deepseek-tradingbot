@@ -51,6 +51,20 @@ KRONOS_RUN_PROFIT_PCT = 0.5         # profit % above which a trade is "running" 
 KRONOS_HARD_EXIT_URGENCY = 90       # even a runner full-exits at/above this Kronos urgency
 KRONOS_RUN_TRAIL_ATR = 1.5          # trail distance (in ATRs) applied when locking a runner's profit
 
+# ── Two-phase exit ────────────────────────────────────────────────────────────
+# Candle-replay counterfactual (2026-07-03, 43 trades): banking half at +0.4%,
+# locking breakeven, and trailing the runner 0.3-0.6% behind its high-water
+# turned the sample from -1.39% to +4.6..+8.1% (WR 44% -> 65-72%) across the
+# whole parameter grid. Phase 1 (below the partial level) keeps the existing
+# loss-cutting stack untouched; phase 2 replaces "harvest the winner" with
+# "bank half, risk nothing, let the rest ride". Runner exits appear as
+# TRAILING-SL; the partial's PnL is folded into the final exit row so the
+# signals CSV stays one-row-per-trade (ground truth for backfill_rag).
+TWO_PHASE_EXIT_ENABLED = True       # master switch for the two-phase exit
+TWO_PHASE_PARTIAL_AT_PCT = 0.4      # profit % where phase 2 begins (partial + breakeven)
+TWO_PHASE_PARTIAL_FRACTION = 0.5    # fraction of the position booked at the partial level
+TWO_PHASE_RUNNER_TRAIL_PCT = 0.5    # runner trail % behind high-water (floored at breakeven)
+
 # ── Bot trading params ───────────────────────────────────────────────────────
 FIRST_ENTRY_HOUR, FIRST_ENTRY_MIN = 9, 30
 LAST_ENTRY_HOUR, LAST_ENTRY_MIN = 15, 0
