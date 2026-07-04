@@ -113,4 +113,4 @@ def test_costs_sane():
 
 
 def test_registry_has_20():
-    assert len(REGISTRY) == 60, [s.name for s in REGISTRY]
+    assert len(REGISTRY) == 68, [s.name for s in REGISTRY]

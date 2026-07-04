@@ -123,8 +123,11 @@ def validate(batch=None):
         reg = [s for s in REGISTRY if "s21" <= s.name < "s41"]
         prefix = "validation_b2"
     elif batch == "3":
-        reg = [s for s in REGISTRY if s.name >= "s41"]
+        reg = [s for s in REGISTRY if "s41" <= s.name < "s61"]
         prefix = "validation_b3"
+    elif batch == "4":
+        reg = [s for s in REGISTRY if s.name >= "s61"]
+        prefix = "validation_b4"
     elif batch == "1":
         reg = [s for s in REGISTRY if s.name < "s21"]
     report.run_all(data, ctx, reg, prefix=prefix)
