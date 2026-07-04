@@ -1096,3 +1096,9 @@ Chose the manual-order-proof path (vs relying on dry-run sessions): capture OFI 
 ## 5. Future Development Ideas
 1. **Refine Partial Exits**: Implement logic to `modify_super_order` (reduce quantity of entry/target legs) instead of just canceling them, so we can safely partial-exit Super Orders.
 2. **Options Integration**: Expand the bot to read Nifty/BankNifty option chains and trade liquid ATM contracts based on the index's AI signal.
+
+## 6. Intraday Strategy Lab (2026-07-04)
+Built `intraday_lab/` (honest engine: next-open fills, SL-first intrabar, full Dhan costs, no-lookahead tests) and ran 60 strategies (3 batches) + 20 opencode-lab classics on 1yr of 5-min data, 20 high-beta names.
+- **Verdict: 0 legitimate survivors of 80.** Gross edge of mechanical 5-min OHLCV signals ~0 vs Rs75-140/trade costs. PF improves monotonically with hold horizon (5m 0.6 -> hold-to-close ~0.9-1.0) but only crosses 1.0 for one strategy.
+- **s22 gap-and-go H2C** (gap>=0.8%, extended at 10:15, hold-to-close, 3-ATR SL): passed the 2024-25 never-seen holdout (PF 1.10, +Rs34k, positive both years) — but does NOT generalize beyond high-beta (breadth test: PF 0.86 on 120 other names). Thin edge (+0.06%/trade), dies at 5bps slippage.
+- **`s22_live_runner.py`**: daily paper/live runner for the 20 validated names; logs to signals CSV + backfills analog_history.db. Run DRY 2-3 months before any live size. Live square-off still needs super-order leg cancellation ported before going live.
