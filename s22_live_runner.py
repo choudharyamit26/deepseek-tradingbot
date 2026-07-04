@@ -85,9 +85,65 @@ def wait_until(h, m):
         time.sleep(15)
 
 
+OVERNIGHT = bool(os.getenv("S22_OVERNIGHT"))   # BTST: CNC gap-up longs, sell next open
+STATE = ROOT / "s22_overnight_state.json"
+
+
+def overnight_main(bot):
+    """Sell yesterday's CNC holdings at the open, buy today's gap-ups at 10:20.
+    Validated: buy 10:20 gap>=0.8% extended, sell NEXT open (PF 1.23 / 1.52)."""
+    import json as _j
+    wait_until(9, 16)
+    held = _j.loads(STATE.read_text()) if STATE.exists() else {}
+    for sym, p in held.items():
+        ltp = bot.fetch_live_data(p["sid"]).get("last_price") or p["entry"]
+        if not DRY:
+            bot.place_equity_order(p["sid"], "SELL", p["qty"], product_type="CNC")
+        fill_exit(sym, ltp, (ltp - p["entry"]) * p["qty"], "BTST-OPEN-EXIT")
+        log.info("%s BTST EXIT @ %.2f pnl=%+.2f", sym, ltp, (ltp - p["entry"]) * p["qty"])
+    if held:
+        backfill_rag.backfill(date_filter=f"{now():%Y-%m-%d}")
+    STATE.write_text("{}")
+    wait_until(10, 20)
+    new = {}
+    for sym in UNIVERSE:
+        sid = bot.security_ids.get(sym)
+        if not sid:
+            continue
+        try:
+            df = bot.get_historical_data(sid, "5minute", min_bars=120)
+            today = df[df.index.normalize() == df.index[-1].normalize()]
+            prev = df[df.index.normalize() < df.index[-1].normalize()]
+            day_open = float(today["open"].iloc[0])
+            gap = (day_open / float(prev["close"].iloc[-1]) - 1) * 100
+            bar = today.between_time("10:15", "10:15")
+            if bar.empty or gap < GAP_MIN or float(bar["close"].iloc[0]) <= day_open:
+                continue
+            ltp = bot.fetch_live_data(sid).get("last_price") or float(bar["close"].iloc[0])
+            qty = max(1, int(CAPITAL // ltp))
+            if not DRY:
+                bot.place_equity_order(sid, "BUY", qty, product_type="CNC")
+            new[sym] = dict(sid=sid, entry=ltp, qty=qty)
+            append_row(timestamp=f"{now():%Y-%m-%d %H:%M:%S}", symbol=sym,
+                       signal_type="ENTRY-LONG", direction="BUY",
+                       entry_price=f"{ltp:.2f}", quantity=qty, confidence=80,
+                       reasoning=f"s22-overnight BTST: gap={gap:+.2f}% extended at "
+                                 f"10:15; CNC hold to next open (PF 1.23/1.52).",
+                       mode="DRY-S22ON" if DRY else "LIVE-S22ON")
+            log.info("%s BTST ENTRY qty=%d gap=%+.2f%%", sym, qty, gap)
+        except Exception as exc:
+            log.warning("%s skipped: %s", sym, exc)
+    STATE.write_text(_j.dumps(new))
+    log.info("overnight positions: %d (sell tomorrow 09:16)", len(new))
+
+
 def main():
     bot = DhanStockTradingBot()
-    log.info("s22 runner %s | capital/trade Rs%.0f", "DRY-RUN" if DRY else "LIVE", CAPITAL)
+    log.info("s22 runner %s%s | capital/trade Rs%.0f",
+             "DRY-RUN" if DRY else "LIVE", " OVERNIGHT" if OVERNIGHT else "", CAPITAL)
+    if OVERNIGHT:
+        overnight_main(bot)
+        return
     wait_until(10, 20)          # 10:15 bar completes at 10:20
 
     positions = {}
