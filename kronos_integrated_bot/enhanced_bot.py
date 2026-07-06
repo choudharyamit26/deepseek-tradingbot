@@ -969,15 +969,6 @@ class EnhancedIntradayBot(IntradayStockBot):
         if symbol in self.active_trades:
             return
 
-        # ── Feature 5: Cash buffer enforcement (20% must remain undeployed) ──
-        deployed_capital = sum(
-            t.get("entry_price", 0) * t.get("quantity", 0)
-            for t in self.active_trades.values()
-        )
-        if not self.risk.check_cash_buffer(deployed_capital):
-            logger.info("%s blocked: cash buffer enforced (deployed=%.2f)", symbol, deployed_capital)
-            return
-
         atr_value = indicators_3m.get("atr", 1) if isinstance(indicators_3m.get("atr"), (int, float)) else 1
         atr_pct = (atr_value / ltp * 100) if ltp > 0 else 1.0
         default_sl_percent = stop_loss_floor_percent(
