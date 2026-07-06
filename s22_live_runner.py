@@ -35,10 +35,34 @@ GAP_MIN = 0.8          # frozen holdout params
 SL_ATR = 3.0
 CAPITAL = float(os.getenv("S22_CAPITAL", "100000"))
 DRY = not os.getenv("S22_LIVE") and os.getenv("DRY_RUN", "true").lower() == "true"
+# first 20 = holdout-validated set; second 20 = high-beta expansion added
+# 2026-07-06, NOT holdout-validated — judge separately in analysis
 UNIVERSE = ["SHRIRAMFIN", "INDIGO", "ADANIENT", "CHOLAFIN", "DIXON", "PAYTM",
             "BAJFINANCE", "ADANIPORTS", "BANDHANBNK", "M&M", "IDEA", "LT",
             "INDUSINDBK", "MUTHOOTFIN", "CANBK", "BPCL", "PNB", "BANKBARODA",
-            "BHEL", "TRENT"]
+            "BHEL", "TRENT",
+            "TATAMOTORS", "TATASTEEL", "JSWSTEEL", "HINDALCO", "VEDL",
+            "JINDALSTEL", "SAIL", "ADANIPOWER", "ADANIGREEN", "TATAPOWER",
+            "SUZLON", "RVNL", "IRFC", "HAL", "BEL", "RECLTD", "PFC", "DLF",
+            "BSE", "ANGELONE"]
+# NSE EQ security ids for universe names absent from the production bot's
+# security_ids map (source: Dhan scrip master, verified 2026-07-06)
+S22_SIDS = {"SHRIRAMFIN": "4306", "INDIGO": "11195", "CHOLAFIN": "685",
+            "DIXON": "21690", "PAYTM": "6705", "BANDHANBNK": "2263",
+            "IDEA": "14366", "MUTHOOTFIN": "23650", "CANBK": "10794",
+            "PNB": "10666", "BANKBARODA": "4668", "BHEL": "438",
+            "TRENT": "1964",
+            "JINDALSTEL": "6733", "SAIL": "2963", "ADANIPOWER": "17388",
+            "ADANIGREEN": "3563", "TATAPOWER": "3426", "SUZLON": "12018",
+            "RVNL": "9552", "IRFC": "2029", "HAL": "2303", "RECLTD": "15355",
+            "PFC": "14299", "DLF": "14732", "BSE": "19585", "ANGELONE": "324"}
+
+
+def get_sid(bot, sym):
+    sid = bot.security_ids.get(sym) or S22_SIDS.get(sym)
+    if not sid:
+        log.warning("%s: no security id, skipped", sym)
+    return sid
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(message)s")
 log = logging.getLogger("s22")
@@ -107,7 +131,7 @@ def overnight_main(bot):
     wait_until(10, 20)
     new = {}
     for sym in UNIVERSE:
-        sid = bot.security_ids.get(sym)
+        sid = get_sid(bot, sym)
         if not sid:
             continue
         try:
@@ -148,7 +172,7 @@ def main():
 
     positions = {}
     for sym in UNIVERSE:
-        sid = bot.security_ids.get(sym)
+        sid = get_sid(bot, sym)
         if not sid:
             continue
         try:
@@ -161,7 +185,10 @@ def main():
             prev_close = float(prev["close"].iloc[-1])
             gap = (day_open / prev_close - 1) * 100
             bar1015 = today.between_time("10:15", "10:15")
-            if bar1015.empty or abs(gap) < GAP_MIN:
+            if bar1015.empty:
+                log.warning("%s: 10:15 bar missing from history, skipped", sym)
+                continue
+            if abs(gap) < GAP_MIN:
                 continue
             c = float(bar1015["close"].iloc[0])
             d = "BUY" if (gap > 0 and c > day_open) else \
@@ -191,6 +218,9 @@ def main():
                      sym, "DRY" if DRY else "LIVE", d, qty, gap, sl_price)
         except Exception as exc:
             log.warning("%s skipped: %s", sym, exc)
+    log.info("scan complete: %d/%d symbols, %d entries",
+             sum(1 for s in UNIVERSE if bot.security_ids.get(s) or S22_SIDS.get(s)),
+             len(UNIVERSE), len(positions))
 
     # manage to square-off
     while positions and now().time() < datetime(2000, 1, 1, 15, 10).time():
