@@ -35,16 +35,16 @@ GAP_MIN = 0.8          # frozen holdout params
 SL_ATR = 3.0
 CAPITAL = float(os.getenv("S22_CAPITAL", "100000"))
 DRY = not os.getenv("S22_LIVE") and os.getenv("DRY_RUN", "true").lower() == "true"
-# first 20 = holdout-validated set; second 20 = high-beta expansion added
-# 2026-07-06, NOT holdout-validated — judge separately in analysis
+# holdout-validated universe. 20-name high-beta expansion tested 2026-07-06
+# and REVERTED: transfer failed (PF 0.82, 5/20 profitable, s22_new20.json).
+# Last 4 names = expansion survivors that passed a pre-registered 2024-25
+# holdout (PF 1.45-2.05, s22_new20_holdout.json); TATAMOTORS untestable
+# post-demerger, dropped.
 UNIVERSE = ["SHRIRAMFIN", "INDIGO", "ADANIENT", "CHOLAFIN", "DIXON", "PAYTM",
             "BAJFINANCE", "ADANIPORTS", "BANDHANBNK", "M&M", "IDEA", "LT",
             "INDUSINDBK", "MUTHOOTFIN", "CANBK", "BPCL", "PNB", "BANKBARODA",
             "BHEL", "TRENT",
-            "TATAMOTORS", "TATASTEEL", "JSWSTEEL", "HINDALCO", "VEDL",
-            "JINDALSTEL", "SAIL", "ADANIPOWER", "ADANIGREEN", "TATAPOWER",
-            "SUZLON", "RVNL", "IRFC", "HAL", "BEL", "RECLTD", "PFC", "DLF",
-            "BSE", "ANGELONE"]
+            "VEDL", "RECLTD", "RVNL", "PFC"]
 # NSE EQ security ids for universe names absent from the production bot's
 # security_ids map (source: Dhan scrip master, verified 2026-07-06)
 S22_SIDS = {"SHRIRAMFIN": "4306", "INDIGO": "11195", "CHOLAFIN": "685",
@@ -52,10 +52,7 @@ S22_SIDS = {"SHRIRAMFIN": "4306", "INDIGO": "11195", "CHOLAFIN": "685",
             "IDEA": "14366", "MUTHOOTFIN": "23650", "CANBK": "10794",
             "PNB": "10666", "BANKBARODA": "4668", "BHEL": "438",
             "TRENT": "1964",
-            "JINDALSTEL": "6733", "SAIL": "2963", "ADANIPOWER": "17388",
-            "ADANIGREEN": "3563", "TATAPOWER": "3426", "SUZLON": "12018",
-            "RVNL": "9552", "IRFC": "2029", "HAL": "2303", "RECLTD": "15355",
-            "PFC": "14299", "DLF": "14732", "BSE": "19585", "ANGELONE": "324"}
+            "RVNL": "9552", "RECLTD": "15355", "PFC": "14299"}
 
 
 def get_sid(bot, sym):
