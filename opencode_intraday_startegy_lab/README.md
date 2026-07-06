@@ -66,7 +66,7 @@ python -m intraday_strategy_lab smoke-test
 
 ## Strategy Count
 
-The registry contains 40 strategies: the original 20 plus a second 20-strategy `b3_*` research batch. List them with:
+The registry contains 55 strategies: the original 20 plus `b3_*` and `b4_*` research batches. List them with:
 
 ```powershell
 python -m intraday_strategy_lab list-strategies

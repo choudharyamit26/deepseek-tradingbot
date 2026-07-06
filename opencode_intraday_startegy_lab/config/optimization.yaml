@@ -1,0 +1,16 @@
+train_ratio: 0.70
+max_evals_per_strategy: 40
+random_seed: 42
+min_trades_in_sample: 20
+objective:
+  total_return_weight: 1.0
+  sharpe_weight: 2.0
+  profit_factor_weight: 2.0
+  drawdown_penalty_weight: 1.5
+  low_trade_penalty: 25.0
+walk_forward:
+  train_sessions: 120
+  test_sessions: 20
+  step_sessions: 20
+  max_folds: 5
+  max_evals_per_strategy: 3

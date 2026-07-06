@@ -1,0 +1,15 @@
+client_id_env: DHAN_CLIENT_ID
+access_token_env: DHAN_ACCESS_TOKEN
+base_url: https://api.dhan.co/v2
+instrument_master_url: https://images.dhan.co/api-data/api-scrip-master.csv
+exchange_segment: NSE_EQ
+instrument: EQUITY
+interval: "5"
+lookback_days: 365
+intraday_chunk_days: 30
+request_sleep_seconds: 0.25
+benchmark:
+  symbol: NIFTY
+  security_id: "13"
+  exchange_segment: IDX_I
+  instrument: INDEX

@@ -1,0 +1,15 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+results/**
+!results/.gitkeep
+
+dhan_historical_data/raw/**
+!dhan_historical_data/raw/.gitkeep
+dhan_historical_data/processed/**
+!dhan_historical_data/processed/.gitkeep
+dhan_historical_data/metadata/**
+!dhan_historical_data/metadata/.gitkeep
