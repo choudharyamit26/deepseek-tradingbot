@@ -25,6 +25,7 @@ load_dotenv(override=True)
 
 from dhan_integration import DhanStockTradingBot
 from signal_logger import _CSV_FIELDS
+from momentum_bot.telegram import send as tg_send
 import backfill_rag
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -63,6 +64,13 @@ def get_sid(bot, sym):
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(message)s")
 log = logging.getLogger("s22")
+
+SESSION_PNL = []   # realized pnl per closed position, for the end-of-day summary
+
+
+def notify(msg):
+    """Telegram alert prefixed with the runner mode; never raises."""
+    tg_send(f"<b>[S22{'-DRY' if DRY else ''}]</b> {msg}")
 
 
 def now():
@@ -120,8 +128,10 @@ def overnight_main(bot):
         ltp = bot.fetch_live_data(p["sid"]).get("last_price") or p["entry"]
         if not DRY:
             bot.place_equity_order(p["sid"], "SELL", p["qty"], product_type="CNC")
-        fill_exit(sym, ltp, (ltp - p["entry"]) * p["qty"], "BTST-OPEN-EXIT")
-        log.info("%s BTST EXIT @ %.2f pnl=%+.2f", sym, ltp, (ltp - p["entry"]) * p["qty"])
+        pnl = (ltp - p["entry"]) * p["qty"]
+        fill_exit(sym, ltp, pnl, "BTST-OPEN-EXIT")
+        log.info("%s BTST EXIT @ %.2f pnl=%+.2f", sym, ltp, pnl)
+        notify(f"BTST EXIT <b>{sym}</b> @ {ltp:.2f}\nPnL: <b>{pnl:+.2f}</b>")
     if held:
         backfill_rag.backfill(date_filter=f"{now():%Y-%m-%d}")
     STATE.write_text("{}")
@@ -152,16 +162,23 @@ def overnight_main(bot):
                                  f"10:15; CNC hold to next open (PF 1.23/1.52).",
                        mode="DRY-S22ON" if DRY else "LIVE-S22ON")
             log.info("%s BTST ENTRY qty=%d gap=%+.2f%%", sym, qty, gap)
+            notify(f"BTST ENTRY <b>{sym}</b>\n"
+                   f"Qty: {qty} @ {ltp:.2f}\n"
+                   f"Gap: {gap:+.2f}% (CNC, sell tomorrow open)")
         except Exception as exc:
             log.warning("%s skipped: %s", sym, exc)
     STATE.write_text(_j.dumps(new))
     log.info("overnight positions: %d (sell tomorrow 09:16)", len(new))
+    notify(f"overnight scan done: {len(new)} positions"
+           + (" — " + ", ".join(new) if new else "") + " (sell tomorrow 09:16)")
 
 
 def main():
     bot = DhanStockTradingBot()
     log.info("s22 runner %s%s | capital/trade Rs%.0f",
              "DRY-RUN" if DRY else "LIVE", " OVERNIGHT" if OVERNIGHT else "", CAPITAL)
+    notify(f"runner started {'DRY-RUN' if DRY else 'LIVE'}"
+           f"{' OVERNIGHT' if OVERNIGHT else ''} | capital/trade Rs{CAPITAL:.0f}")
     if OVERNIGHT:
         overnight_main(bot)
         return
@@ -213,11 +230,17 @@ def main():
                        mode="DRY-S22" if DRY else "LIVE-S22")
             log.info("%s %s ENTRY %s qty=%d gap=%+.2f%% sl=%.2f",
                      sym, "DRY" if DRY else "LIVE", d, qty, gap, sl_price)
+            notify(f"ENTRY {d} <b>{sym}</b>\n"
+                   f"Qty: {qty} @ {ltp:.2f}\n"
+                   f"SL: {sl_price:.2f} (3xATR)\n"
+                   f"Gap: {gap:+.2f}%")
         except Exception as exc:
             log.warning("%s skipped: %s", sym, exc)
     log.info("scan complete: %d/%d symbols, %d entries",
              sum(1 for s in UNIVERSE if bot.security_ids.get(s) or S22_SIDS.get(s)),
              len(UNIVERSE), len(positions))
+    notify(f"scan complete: {len(positions)} entries"
+           + (" — " + ", ".join(positions) if positions else ""))
 
     # manage to square-off
     while positions and now().time() < datetime(2000, 1, 1, 15, 10).time():
@@ -239,6 +262,9 @@ def main():
 
     backfill_rag.backfill(date_filter=f"{now():%Y-%m-%d}")
     log.info("done; signals csv + analog_history.db updated")
+    if SESSION_PNL:
+        notify(f"session done: {len(SESSION_PNL)} closed, "
+               f"total PnL <b>{sum(SESSION_PNL):+.2f}</b>")
 
 
 def _close(bot, sym, p, ltp, tag):
@@ -246,7 +272,9 @@ def _close(bot, sym, p, ltp, tag):
         bot.reduce_position(p["sid"], "SELL" if p["d"] == "BUY" else "BUY", p["qty"])
     pnl = (ltp - p["entry"]) * p["qty"] * (1 if p["d"] == "BUY" else -1)
     fill_exit(sym, ltp, pnl, tag)
+    SESSION_PNL.append(pnl)
     log.info("%s EXIT %s @ %.2f pnl=%+.2f", sym, tag, ltp, pnl)
+    notify(f"EXIT {tag} <b>{sym}</b> @ {ltp:.2f}\nPnL: <b>{pnl:+.2f}</b>")
 
 
 if __name__ == "__main__":
