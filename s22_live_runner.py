@@ -9,6 +9,13 @@ Runs once per session (start before 10:15, e.g. via scheduler). DRY_RUN=true
 trading_logs/signals_YYYY-MM-DD.csv in the standard schema, and backfill_rag
 ingests them into analog_history.db after square-off.
 
+Legs (independent, both may run in one session):
+  S22_INTRADAY  (default 1) gap-and-go with 3xATR SL, square off 15:10
+  S22_OVERNIGHT (default 0) BTST: CNC gap-up longs at 10:20, sell next open 09:16
+With both enabled the session runs 09:16 BTST exit -> 10:20 intraday scan ->
+overnight scan -> manage intraday to 15:10. The same symbol may be entered by
+both legs (CAPITAL each).
+
 Usage:  python s22_live_runner.py            # paper (DRY_RUN honored from .env)
         S22_LIVE=1 python s22_live_runner.py # force live orders
 """
@@ -94,11 +101,19 @@ def append_row(**kw):
         w.writerow(row)
 
 
-def fill_exit(symbol, exit_price, pnl, tag):
-    p = csv_path()
+def fill_exit(symbol, exit_price, pnl, tag, date=None, overnight=False):
+    """Fill the open entry row for `symbol` in the given date's CSV (today if
+    None). `overnight` selects between the two books: S22ON-mode rows are the
+    BTST leg, everything else the intraday leg — without this, a symbol held
+    by both legs would get the wrong row filled."""
+    p = LOGS / f"signals_{date}.csv" if date else csv_path()
+    if not p.exists():
+        log.warning("%s %s: %s missing, exit not recorded in csv", symbol, tag, p.name)
+        return
     rows = list(csv.DictReader(open(p, encoding="utf-8")))
     for r in reversed(rows):
-        if r["symbol"] == symbol and not r["exit_price"]:
+        if (r["symbol"] == symbol and not r["exit_price"]
+                and r.get("mode", "").endswith("S22ON") == overnight):
             r["exit_price"] = f"{exit_price:.2f}"
             r["pnl"] = f"{pnl:.2f}"
             r["signal_type"] = tag
@@ -114,13 +129,17 @@ def wait_until(h, m):
         time.sleep(15)
 
 
-OVERNIGHT = bool(os.getenv("S22_OVERNIGHT"))   # BTST: CNC gap-up longs, sell next open
+def _flag(name, default):
+    return os.getenv(name, default).strip().lower() not in ("", "0", "false", "no")
+
+
+INTRADAY = _flag("S22_INTRADAY", "1")    # gap-and-go, square off 15:10
+OVERNIGHT = _flag("S22_OVERNIGHT", "0")  # BTST: CNC gap-up longs, sell next open
 STATE = ROOT / "s22_overnight_state.json"
 
 
-def overnight_main(bot):
-    """Sell yesterday's CNC holdings at the open, buy today's gap-ups at 10:20.
-    Validated: buy 10:20 gap>=0.8% extended, sell NEXT open (PF 1.23 / 1.52)."""
+def overnight_exit(bot):
+    """Sell yesterday's CNC holdings at the open (09:16)."""
     import json as _j
     wait_until(9, 16)
     held = _j.loads(STATE.read_text()) if STATE.exists() else {}
@@ -129,13 +148,19 @@ def overnight_main(bot):
         if not DRY:
             bot.place_equity_order(p["sid"], "SELL", p["qty"], product_type="CNC")
         pnl = (ltp - p["entry"]) * p["qty"]
-        fill_exit(sym, ltp, pnl, "BTST-OPEN-EXIT")
+        fill_exit(sym, ltp, pnl, "BTST-OPEN-EXIT", date=p.get("date"), overnight=True)
         log.info("%s BTST EXIT @ %.2f pnl=%+.2f", sym, ltp, pnl)
         notify(f"BTST EXIT <b>{sym}</b> @ {ltp:.2f}\nPnL: <b>{pnl:+.2f}</b>")
-    if held:
-        backfill_rag.backfill(date_filter=f"{now():%Y-%m-%d}")
+    # ingest the now-completed rows from each ENTRY date's csv (yesterday's file)
+    for d in {p.get("date") or f"{now():%Y-%m-%d}" for p in held.values()}:
+        backfill_rag.backfill(date_filter=d)
     STATE.write_text("{}")
-    wait_until(10, 20)
+
+
+def overnight_entries(bot):
+    """Buy today's gap-ups CNC at ~10:20, hold to next open.
+    Validated: buy 10:20 gap>=0.8% extended, sell NEXT open (PF 1.23 / 1.52)."""
+    import json as _j
     new = {}
     for sym in UNIVERSE:
         sid = get_sid(bot, sym)
@@ -154,7 +179,7 @@ def overnight_main(bot):
             qty = max(1, int(CAPITAL // ltp))
             if not DRY:
                 bot.place_equity_order(sid, "BUY", qty, product_type="CNC")
-            new[sym] = dict(sid=sid, entry=ltp, qty=qty)
+            new[sym] = dict(sid=sid, entry=ltp, qty=qty, date=f"{now():%Y-%m-%d}")
             append_row(timestamp=f"{now():%Y-%m-%d %H:%M:%S}", symbol=sym,
                        signal_type="ENTRY-LONG", direction="BUY",
                        entry_price=f"{ltp:.2f}", quantity=qty, confidence=80,
@@ -173,17 +198,8 @@ def overnight_main(bot):
            + (" — " + ", ".join(new) if new else "") + " (sell tomorrow 09:16)")
 
 
-def main():
-    bot = DhanStockTradingBot()
-    log.info("s22 runner %s%s | capital/trade Rs%.0f",
-             "DRY-RUN" if DRY else "LIVE", " OVERNIGHT" if OVERNIGHT else "", CAPITAL)
-    notify(f"runner started {'DRY-RUN' if DRY else 'LIVE'}"
-           f"{' OVERNIGHT' if OVERNIGHT else ''} | capital/trade Rs{CAPITAL:.0f}")
-    if OVERNIGHT:
-        overnight_main(bot)
-        return
-    wait_until(10, 20)          # 10:15 bar completes at 10:20
-
+def intraday_entries(bot):
+    """Scan the 10:15 bar for gap-and-go entries; returns the open positions."""
     positions = {}
     for sym in UNIVERSE:
         sid = get_sid(bot, sym)
@@ -241,6 +257,28 @@ def main():
              len(UNIVERSE), len(positions))
     notify(f"scan complete: {len(positions)} entries"
            + (" — " + ", ".join(positions) if positions else ""))
+    return positions
+
+
+def main():
+    bot = DhanStockTradingBot()
+    legs = "+".join(n for n, on in (("INTRADAY", INTRADAY),
+                                    ("OVERNIGHT", OVERNIGHT)) if on)
+    if not legs:
+        log.error("S22_INTRADAY and S22_OVERNIGHT both disabled; nothing to do")
+        return
+    log.info("s22 runner %s [%s] | capital/trade Rs%.0f",
+             "DRY-RUN" if DRY else "LIVE", legs, CAPITAL)
+    notify(f"runner started {'DRY-RUN' if DRY else 'LIVE'} [{legs}] "
+           f"| capital/trade Rs{CAPITAL:.0f}")
+    if OVERNIGHT:
+        overnight_exit(bot)
+    wait_until(10, 20)          # 10:15 bar completes at 10:20
+    positions = intraday_entries(bot) if INTRADAY else {}
+    if OVERNIGHT:
+        overnight_entries(bot)
+    if not INTRADAY:
+        return
 
     # manage to square-off
     while positions and now().time() < datetime(2000, 1, 1, 15, 10).time():
