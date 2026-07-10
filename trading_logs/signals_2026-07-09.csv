@@ -1,4 +1,4 @@
 timestamp,symbol,signal_type,direction,entry_price,exit_price,quantity,stop_loss,trailing_stop,target,confidence,reasoning,pnl,mode,market_regime,sector_regime,mtf_3m,mtf_15m,mtf_1h,kronos_direction,kronos_pred_return,kronos_aligned,ofi,ofi_trend
 2026-07-09 10:20:42,DIXON,ENTRY-LONG,BUY,13570.00,,7,13348.43,,,80,s22 gap-and-go: gap=+1.52% still-extended at 10:15 (close 13573.00 vs open 13153.00); SL=3xATR(73.86); hold-to-close. Holdout-validated PF 1.10.,,LIVE-S22,,,,,,,,,,
 2026-07-09 10:20:52,BAJFINANCE,TRAILING-SL,SELL,999.60,1006.20,100,1010.25,,,80,s22 gap-and-go: gap=-1.11% still-extended at 10:15 (close 999.90 vs open 1000.00); SL=3xATR(3.55); hold-to-close. Holdout-validated PF 1.10.,-8.20,LIVE-S22,,,,,,,,,,
-2026-07-09 10:21:39,DIXON,ENTRY-LONG,BUY,13564.00,,7,,,,80,s22-overnight BTST: gap=+1.52% extended at 10:15; CNC hold to next open (PF 1.23/1.52).,,LIVE-S22ON,,,,,,,,,,
+2026-07-09 10:21:39,DIXON,BTST-OPEN-EXIT,BUY,13564.00,13843.00,7,,,,80,s22-overnight BTST: gap=+1.52% extended at 10:15; CNC hold to next open (PF 1.23/1.52).,1953.00,LIVE-S22ON,,,,,,,,,,
