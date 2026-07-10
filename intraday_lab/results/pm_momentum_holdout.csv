@@ -1,0 +1,3 @@
+m_thr,clv,exit,side,trades,days,net_mean_%,daily_mean_%,t_daily,pf,win_rate,total_R,rule
+-0.0075,False,n_close,short,695,250,0.0525,0.1412,0.9904,1.0571,0.5266,36.4656,PRIMARY exit=close
+-0.0075,False,n_px_1015,short,695,250,0.1507,0.173,1.6985,1.2567,0.5252,104.7308,SECONDARY exit=10:15
