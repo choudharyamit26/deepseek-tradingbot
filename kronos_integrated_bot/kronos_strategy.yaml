@@ -28,7 +28,7 @@ params:
   max_daily_trades: 5
   max_signals_per_stock_per_day: 1
   max_trade_duration_minutes: 180
-  min_adx_trending: 22
+  min_adx_trending: 24
   min_confidence: 82
   min_prefilter_atr_pct: 0.3
   min_prefilter_volume_ratio: 0.3
@@ -42,4 +42,4 @@ params:
   same_direction_cooldown: 1800
   trailing_sl_activation_pct: 1.0
   trailing_sl_distance_atr: 1.5
-version: kronos-v20
+version: kronos-v21
