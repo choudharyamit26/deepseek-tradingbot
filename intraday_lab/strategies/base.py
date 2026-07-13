@@ -82,7 +82,11 @@ def supertrend_dir(df, period, mult):
     n = len(df)
     d = np.ones(n, dtype=np.int8)
     fub, flb = ub.copy(), lb.copy()
-    for i in range(1, n):
+    # ATR warm-up rows are NaN; every NaN comparison is False, which would
+    # freeze the bands (and the direction) forever — start at first finite bar
+    finite = np.isfinite(ub)
+    start = int(np.argmax(finite)) + 1 if finite.any() else n
+    for i in range(start, n):
         fub[i] = ub[i] if (ub[i] < fub[i - 1] or c[i - 1] > fub[i - 1]) else fub[i - 1]
         flb[i] = lb[i] if (lb[i] > flb[i - 1] or c[i - 1] < flb[i - 1]) else flb[i - 1]
         if d[i - 1] == 1:
